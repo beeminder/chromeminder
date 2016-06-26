@@ -1,9 +1,11 @@
 {
   "manifest_version": 2,
 
-  "name": "Pavlovian Beeminding",
-  "description": "Send a +1 to Beeminder? Show you beemergencies? For now it just shows you bees!",
-  "version": "0.0",
+  "name": "Beeminder App",
+  "description": "A companion app for Beeminder",
+  "version": "0.01",
+  // "default_locale": "en",
+  "author": "Jason Allan",
 
   "permissions": [
     "https://secure.flickr.com/"
