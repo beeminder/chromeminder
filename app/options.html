@@ -1,14 +1,29 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Beeminder App Options</title>
-    <style>
+<head>
+	<title>Beeminder App Options</title>
+	<style></style>
 
-    </style>
+</head>
+<body>
+	<h1>Beeminder App Options</h1>
 
-  </head>
-  <body>
-	  <h1>Beeminder App Options</h1>
-	  
-  </body>
+	Favorite color:
+	<select id="color">
+		<option value="red">red</option>
+		<option value="green">green</option>
+		<option value="blue">blue</option>
+		<option value="yellow">yellow</option>
+	</select>
+
+	<label>
+		<input type="checkbox" id="like">
+		I like colors.
+	</label>
+
+	<div id="status"></div>
+	<button id="save">Save</button>
+
+<script src="options.js"></script>
+</body>
 </html>
