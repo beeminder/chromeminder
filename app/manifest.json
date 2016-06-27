@@ -1,17 +1,19 @@
 {
-  "manifest_version": 2,
+	"manifest_version": 2,
 
-  "name": "Beeminder App",
-  "description": "A companion app for Beeminder",
-  "version": "0.01",
-  // "default_locale": "en",
-  "author": "Jason Allan",
+	"name": "Beeminder App",
+	"description": "A companion app for Beeminder",
+	"version": "0.01",
+	"author": "Jason Allan",
 
-  "permissions": [
-    "https://secure.flickr.com/"
-  ],
-  "browser_action": {
-    "default_icon": "infinibee19x19.png",
-    "default_popup": "popup.html"
-  }
+	"options_page": "options.html",
+
+	"omnibox": { "keyword" : "bm" },
+	"icons": {"19": "infinibee19x19.png"},
+
+	"permissions": ["storage"],
+	"browser_action": {
+		"default_icon": "infinibee19x19.png",
+		"default_popup": "popup.html"
+	}
 }
