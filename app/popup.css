@@ -1,0 +1,28 @@
+body {
+	min-width: 697px;
+}
+#Header .HeaderContainer {
+	text-align: center;
+	width: 222px;
+	float:left;
+	height:35px;
+	margin:5px;
+    border-radius: 5px 5px 5px 5px;
+}
+#Header #Menu {background:grey;}
+#Header #Countdown {background:red;}
+#Header #BareMin {background:blue;}
+
+#Footer {
+	font-family: 'Courier New', Courier, monospace
+}
+#data-points{
+	width: 464px;
+	float:left;
+	margin:0px
+}
+#info {
+	width: 232px;
+	float:left;
+	margin:0px
+}
