@@ -1,48 +1,30 @@
 <!doctype html>
 <html>
 <head>
-	<title>Hello World from Beeminder</title>
-	<style>
-		/*body {
-			min-width: 357px;
-			overflow-x: hidden;
-		}
-
-		img {
-			margin: 5px;
-			border: 2px solid black;
-			vertical-align: middle;
-			width: 75px;
-			height: 75px;
-		}*/
-	</style>
-
-	<!--
-	- JavaScript and HTML must be in separate files: see our Content Security
+	<title>Beeminder Popup - Why can you see this?</title>
+	<link rel="stylesheet" href="popup.css">
+<!--- JavaScript and HTML must be in separate files: see our Content Security
 	- Policy documentation[1] for details and explanation.
-	-
-	- [1]: http://developer.chrome.com/extensions/contentSecurityPolicy.html
-	-->
+	- [1]: http://developer.chrome.com/extensions/contentSecurityPolicy.html-->
 	<script src="popup.js"></script>
 </head>
 <body style="width: 696px">
-	<!--TODO:
 
-	-->
-	<div id="header">
-		<div style="text-align: center; width: 232px; float:left; height:35px; background:grey; margin:0px">
-			OiYouYeahYou / Writing
-			<small><a href="https://www.beeminder.com/oiyouyeahyou/writing" target="_blank">		GOTO</a></small><br />
-			<a href="https://www.beeminder.com/oiyouyeahyou/writing/refresh" target="_blank">		Refresh</a>
-			<a href="https://www.beeminder.com/oiyouyeahyou/writing/datapoints" target="_blank">	Data</a>
-			<a href="https://www.beeminder.com/oiyouyeahyou/writing/settings" target="_blank">		Settings</a>
-			<a href="" target="_blank">App Option</a>
+	<div id="Header">
+		<div id="Menu" class="HeaderContainer">
+			<span id="UserSelector" class="Selectors">OiYouYeahYou</span> /
+			<span id="SlugSelector" class="Selectors">Writing<span>
+			<small><a id="">GOTO</a></small><br />
+			<a id="" href="https://www.beeminder.com/oiyouyeahyou/writing/refresh">Refresh</a>
+			<a id="" href="https://www.beeminder.com/oiyouyeahyou/writing/datapoints">Data</a>
+			<a id="" href="https://www.beeminder.com/oiyouyeahyou/writing/settings">Settings</a>
+			<a id="OptLink" target="_blank">Options</a>
 		</div>
-		<div style="text-align: center; width: 232px; float:left; height:35px; background:red; margin:0px">
+		<div id="Countdown" class="HeaderContainer">
 			Countdown
 			<div id="time">Time</div>
 		</div>
-		<div style="text-align: center; width: 232px; float:left; height:35px; background:blue; margin:0px">
+		<div id="BareMin" class="HeaderContainer">
 			Bare Min<br/>
 			+150 until 6750 words
 		</div>
@@ -50,18 +32,17 @@
 	<div id="graph-img">
 		<a href="https://www.beeminder.com/oiyouyeahyou/writing" target="_blank">
 			<img src="https://www.beeminder.com/oiyouyeahyou/writing/graph">
-			<!-- TODO: add to CSS =>style="width:696px; height=453px"  -->
 		</a>
 	</div>
-	<div style="font-family: 'Courier New', Courier, monospace;">
-		<div id="data-points" style="width: 464px; float:left; margin:0px">
+	<div id="Footer">
+		<div id="data-points">
 			23 234 "Auto-entered via Draft at 23:59"<br />
 			24 0 "Auto-entered via Draft at 03:02"<br />
 			25 340 "Auto-entered via Draft at 22:53"<br />
 			26 176 "Auto-entered via Draft at 23:45"<br />
 			27 60 "Auto-entered via Draft at 16:48"
 		</div>
-		<div style="width: 232px; float:left; margin:0px">
+		<div id="info">
 			START&#160;&#160;2016-05-22 → 0<br />
 			NOW&#160;&#160;&#160;&#160;2016-06-27 → 6600<br />
 			TARGET&#160;2016-08-15 → 19250
