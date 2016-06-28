@@ -2,12 +2,10 @@
 <html>
 <head>
 	<title>Beeminder App Options</title>
-	<style></style>
-
+	<link rel="stylesheet" href="options.css">
 </head>
 <body>
 	<h1>Beeminder App Options</h1>
-
 	Favorite color:
 	<select id="color">
 		<option value="red">red</option>
@@ -15,15 +13,35 @@
 		<option value="blue">blue</option>
 		<option value="yellow">yellow</option>
 	</select>
-
 	<label>
 		<input type="checkbox" id="like">
 		I like colors.
 	</label>
-
 	<div id="status"></div>
 	<button id="save">Save</button>
-
-<script src="options.js"></script>
+	Username
+	Token
+	<div id="">
+		Minder list
+		<ul id="HeaderRow">
+			<li>User</li>
+			<li>Slug</li>
+			<li>notify</li>
+			<li>show in Popup</li>
+			<li>Delete</li>
+		</ul>
+		<ul class="OptionsRow" id="OiYouYeahYou-writing">
+			<li>
+				<a href="https://www.beeminder.com/oiyouyeahyou">OiYouYeahYou</a>
+			</li>
+			<li>
+				<a href="https://www.beeminder.com/oiyouyeahyou/writing">writing</a>
+			</li>
+			<li>notify</li>
+			<li>show in Popup</li>
+			<li>Delete</li>
+		</ul>
+	</div>
+	<script src="options.js"></script>
 </body>
 </html>

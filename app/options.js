@@ -31,6 +31,11 @@ function restore_options() {
 		}
 	);
 }
-
+function DM(){
+	var elem = document.getElementById('OiYouYeahYou-writing');
+	elem.parentNode.removeChild(elem);
+	return false;
+}
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
+document.getElementById('OiYouYeahYou-writing').addEventListener('click', DM);

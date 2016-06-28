@@ -1,0 +1,30 @@
+ul#HeaderRow {
+    padding: 0;
+}
+ul#HeaderRow li {
+    display: inline-block;
+    background-color: black;
+    color: white;
+    padding: 5px 5px;
+    text-decoration: none;
+    border-radius: 5px 5px 5px 5px;
+	width: 150px;
+}
+ul#HeaderRow li:hover {
+    background-color: orange;
+}
+ul.OptionsRow {
+    padding: 0;
+}
+ul.OptionsRow li {
+    display: inline-block;
+    background-color: orange;
+    color: white;
+    padding: 5px 5px;
+    text-decoration: none;
+    border-radius: 5px 5px 5px 5px;
+	width: 150px;
+}
+ul.OptionsRow li:hover {
+    background-color: lightblue;
+}
