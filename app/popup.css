@@ -1,28 +1,76 @@
 body {
 	min-width: 697px;
+	background: lightgrey;
+	margin:2px !important;
 }
 #Header .HeaderContainer {
 	text-align: center;
-	width: 222px;
+	width: 212px;
 	float:left;
-	height:35px;
+	height:40px;
 	margin:5px;
     border-radius: 5px 5px 5px 5px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	padding: 5px;
+}
+#links a {
+	background-color: darkgrey;
+	color: white;
+	border-radius: 5px 5px 5px 5px;
+    text-decoration: none;
+	width:50px;
+    display: inline-block;
+	margin-top: 3px;
+}
+#links a:hover {
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+.TheButton {
+	background-color: darkgrey;
+	color: white;
+	border-radius: 5px 5px 5px 5px;
+    text-decoration: none;
+	width:155px;
+    display: inline-block;
+	margin-top: 3px;
 }
 #Header #Menu {background:grey;}
 #Header #Countdown {background:red;}
-#Header #BareMin {background:blue;}
-
-#Footer {
-	font-family: 'Courier New', Courier, monospace
+#Header #BareMin {background:lightblue;}
+img {
+	border-radius: 5px 5px 5px 5px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
 }
-#data-points{
-	width: 464px;
+#Footer div {
+	border-radius: 5px 5px 5px 5px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	margin:5px;
+	padding: 5px;
 	float:left;
-	margin:0px
+	font-family: 'Courier New', Courier, monospace;
 }
-#info {
-	width: 232px;
-	float:left;
-	margin:0px
+#data-points{width: 444px;}
+#info {width: 212px;}
+/**********************************************************/
+.TheContainer {
+    position: relative;
+    display: inline-block;
 }
+.TheContent {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	border-radius: 5px 5px 5px 5px;
+}
+.TheContent a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    border-radius: 5px 5px 5px 5px;
+}
+.TheContent a:hover {background-color: #f1f1f1}
+.TheContainer:hover .TheContent {display: block;}
+.TheContainer:hover .TheButton {background-color: Orange;}

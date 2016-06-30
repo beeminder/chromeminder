@@ -3,22 +3,44 @@
 <head>
 	<title>Beeminder Popup - Why can you see this?</title>
 	<link rel="stylesheet" href="popup.css">
-<!--- JavaScript and HTML must be in separate files: see our Content Security
+	<!--- JavaScript and HTML must be in separate files: see our Content Security
 	- Policy documentation[1] for details and explanation.
 	- [1]: http://developer.chrome.com/extensions/contentSecurityPolicy.html-->
 	<script src="popup.js"></script>
 </head>
 <body style="width: 696px">
-
 	<div id="Header">
 		<div id="Menu" class="HeaderContainer">
-			<span id="UserSelector" class="Selectors">OiYouYeahYou</span> /
-			<span id="SlugSelector" class="Selectors">Writing<span>
-			<small><a id="">GOTO</a></small><br />
-			<a id="" href="https://www.beeminder.com/oiyouyeahyou/writing/refresh">Refresh</a>
-			<a id="" href="https://www.beeminder.com/oiyouyeahyou/writing/datapoints">Data</a>
-			<a id="" href="https://www.beeminder.com/oiyouyeahyou/writing/settings">Settings</a>
-			<a id="OptLink" target="_blank">Options</a>
+			<div class="TheContainer">
+				<span class="TheButton">
+					OiYouYeahYou / Writing
+				</span>
+				<div class="TheContent">
+					<a>Graph 1</a>
+					<a>Graph 2</a>
+					<a>Graph 3</a>
+					<a>Graph 4</a>
+					<a>Graph 5</a>
+					<a>Graph 6</a>
+				</div>
+			</div>
+			<span id="links">
+				<a target="_blank" id="ButtonGoal">
+					<small>GOTO</small><br />
+				</a>
+				<a target="_blank" id="ButtonRefresh">
+					Refresh
+				</a>
+				<a target="_blank" id="ButtonData">
+					Data
+				</a>
+				<a target="_blank" id="ButtonSettings">
+					Settings
+				</a>
+				<a target="_blank" id="OptLink">
+					Options
+				</a>
+			</span>
 		</div>
 		<div id="Countdown" class="HeaderContainer">
 			Countdown
