@@ -6,14 +6,15 @@
 	<!--- JavaScript and HTML must be in separate files: see our Content Security
 	- Policy documentation[1] for details and explanation.
 	- [1]: http://developer.chrome.com/extensions/contentSecurityPolicy.html-->
+	<script src="_common.js"></script>
 	<script src="popup.js"></script>
 </head>
 <body style="width: 696px">
 	<div id="Header">
 		<div id="Menu" class="HeaderContainer">
 			<div class="TheContainer">
-				<span class="TheButton">
-					OiYouYeahYou / Writing
+				<span id="GoalLoc">
+					auto gen content
 				</span>
 				<div class="TheContent">
 					<a>Graph 1</a>
@@ -37,8 +38,8 @@
 				<a target="_blank" id="ButtonSettings">
 					Settings
 				</a>
-				<a target="_blank" id="OptLink">
-					Options
+				<a target="_blank" id="OptLink" href="/options.html">
+					Options <!--DO NOT CAHNGE THIS URL, NO NEED TO FIDDLE-->
 				</a>
 			</span>
 		</div>
@@ -51,9 +52,9 @@
 			+150 until 6750 words
 		</div>
 	</div>
-	<div id="graph-img">
-		<a href="https://www.beeminder.com/oiyouyeahyou/writing" target="_blank">
-			<img src="https://www.beeminder.com/oiyouyeahyou/writing/graph">
+	<div id="GraphContainer">
+		<a id="GraphLink" target="_blank">
+			<img id="graph-img"><!-- src="https://www.beeminder.com/oiyouyeahyou/writing/graph"-->
 		</a>
 	</div>
 	<div id="Footer">

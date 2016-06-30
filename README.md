@@ -21,11 +21,11 @@ Popup functions
 		Refresh
 		Data
 	Functions
-		"Boolmark" other peoples Minders
+		"Boolmark" other people's Minders
 Omnibox functions
 	Enter Data
 	Go to
 Background
 	Eep notifaications
-	Daily reminders
+	Daily reminder notifications
 	Accountability for other people
