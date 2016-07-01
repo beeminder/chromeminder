@@ -2,6 +2,7 @@ var TimingVariable; //= setInterval(myTimer, 1000);
 var UName,		Slug,		Deadline;
 var ArrayUName,	ArraySlug,	ArrayDeadline;
 var BeeURL = "https://www.beeminder.com";
+var DefaultGoal = 0;
 function myTimer() {
 	var d = new Date();
 	document.getElementById("time").innerHTML =
@@ -10,7 +11,7 @@ function myTimer() {
 }///////////////////////////////////////////////////////////_pop
 function PUinit(){ //
 	TimingVariable = setInterval(myTimer, 1000);
-	TestLoadData()
+	TestLoadData();
 	/* TODO
 		Load data from memory
 		Load data from Beeminder
@@ -22,12 +23,35 @@ function PUinit(){ //
 				If Arrays are not equal in length > Do something
 			load default
 	*/
-	SetOutput()
+	var i;
+	for (i = 0; i < ArrayUName.length; i++){
+		var GraphID = ArrayUName[i] + '-' + ArraySlug[i];
+		var dumb;
+		dumb = i;
+		document.getElementById("TheContent").innerHTML +=
+			'<a id="' + GraphID + '">'
+			+ ArrayUName[i] + ' / '+ ArraySlug[i] + '</a>';
+		//LinkBM(GraphID,"");
+		SetClick(dumb, GraphID);
+
+
+		// document.getElementById(GraphID).addEventListener(
+		// 	'click',
+		// 	function() {
+		// 		SetOutput(i);
+		// 		console.log()
+		// 	}
+		// );
+		// console.log("Click Set : " + i)
+
+	}
+
+	SetOutput(DefaultGoal)
 }///////////////////////////////////////////////////////////_pop
 function TestLoadData(){
 	var inFuncDate
-	UName		= "OiYouYeahYou";
-	Slug		= "writing";
+	// UName		= "OiYouYeahYou";
+	// Slug		= "writing";
 	inFuncDate	= new Date();
 	inFuncDate	. setDate(inFuncDate.getDate() + 1);
 	inFuncDate	. setHours(0);
@@ -51,16 +75,34 @@ function TestLoadData(){
 		new Date("2017-02-15")
 	]
 }///////////////////////////////////////////////////////////_pop
-function SetOutput(someVariable){
-	document.getElementById("GoalLoc").innerHTML = UName + " / " + Slug;
-	LinkBM(	"ButtonGoal",		""				);
-	LinkBM(	"GraphLink",		""				);
-	LinkBM(	"ButtonRefresh",	"refresh"		);
-	LinkBM(	"ButtonData",		"datapoints"	);
-	LinkBM(	"ButtonSettings",	"settings"		);
-	// TODO: Set picture
-	document.getElementById("graph-img").src=
-		BeeURL + "/" + UName + "/" + Slug + "/graph";
+function SetClick(c, ID){
+	document.getElementById(ID).addEventListener(
+		'click',
+		function() {
+			SetOutput(c);
+			console.log("Click Made")
+		}
+	);
+	console.log("Click Set : " + c + " for " + ID)
+}///////////////////////////////////////////////////////////_pop
+function SetOutput(e){
+	// if(i <= ArrayUName.length && parseInt(i)){
+		UName = ArrayUName[e]
+		Slug = ArraySlug[e]
+		document.getElementById("GoalLoc").innerHTML = UName + " / " + Slug;
+		LinkBM(	"ButtonGoal",		""				);
+		LinkBM(	"GraphLink",		""				);
+		LinkBM(	"ButtonRefresh",	"refresh"		);
+		LinkBM(	"ButtonData",		"datapoints"	);
+		LinkBM(	"ButtonSettings",	"settings"		);
+		// TODO: Set picture
+		document.getElementById("graph-img").src=
+			BeeURL + "/" + UName + "/" + Slug + "/graph";
+	// }
+	// else {
+		// alert("There has been an error in setting the page up")
+	// }
+	console.log("Output Set : " + e)
 }///////////////////////////////////////////////////////////_pop
 function LoadGoal (GoalNumber){
 	//from sync or server?
