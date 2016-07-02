@@ -23,30 +23,18 @@ function PUinit(){ //
 				If Arrays are not equal in length > Do something
 			load default
 	*/
-	var i;
+	SetOutput(DefaultGoal);
 	for (i = 0; i < ArrayUName.length; i++){
-		var GraphID = ArrayUName[i] + '-' + ArraySlug[i];
-		var dumb;
-		dumb = i;
-		document.getElementById("TheContent").innerHTML +=
-			'<a id="' + GraphID + '">'
-			+ ArrayUName[i] + ' / '+ ArraySlug[i] + '</a>';
-		//LinkBM(GraphID,"");
-		SetClick(dumb, GraphID);
-
-
-		// document.getElementById(GraphID).addEventListener(
-		// 	'click',
-		// 	function() {
-		// 		SetOutput(i);
-		// 		console.log()
-		// 	}
-		// );
-		// console.log("Click Set : " + i)
-
+		var a = document.createElement('a');
+		a.className = 'GoalIDBtn';
+		a.id = ArrayUName[i] + '-' + ArraySlug[i];
+		a.textContent = ArrayUName[i] + ' / ' + ArraySlug[i];
+		document.getElementById("TheContent").appendChild(a);
+		(function(_i) {
+			a.addEventListener("click", function() {SetOutput(_i);});
+		})(i);
+		// TODO: Add an additonal goto link
 	}
-
-	SetOutput(DefaultGoal)
 }///////////////////////////////////////////////////////////_pop
 function TestLoadData(){
 	var inFuncDate
@@ -74,16 +62,6 @@ function TestLoadData(){
 		new Date("2016-08-18"),
 		new Date("2017-02-15")
 	]
-}///////////////////////////////////////////////////////////_pop
-function SetClick(c, ID){
-	document.getElementById(ID).addEventListener(
-		'click',
-		function() {
-			SetOutput(c);
-			console.log("Click Made")
-		}
-	);
-	console.log("Click Set : " + c + " for " + ID)
 }///////////////////////////////////////////////////////////_pop
 function SetOutput(e){
 	// if(i <= ArrayUName.length && parseInt(i)){
