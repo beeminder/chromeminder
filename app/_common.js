@@ -3,6 +3,8 @@ var UName,		Slug,		Deadline;
 var ArrayUName,	ArraySlug,	ArrayDeadline;
 var BeeURL = "https://www.beeminder.com";
 var DefaultGoal = 0;
+	var response, data, responseusername;
+
 function myTimer() {
 	var d = new Date();
 	document.getElementById("time").innerHTML =
@@ -35,7 +37,29 @@ function PUinit(){ //
 		})(i);
 		// TODO: Add an additonal goto link
 	}
+	stupid()
+	console.log("TST" + responseusername);
 }///////////////////////////////////////////////////////////_pop
+function stupid(){
+	var xhr = new XMLHttpRequest();
+	var baseURL = BeeURL + "/api/v1/users/"
+	var token = "r4sC31AYqC9bGzeSWDcx";
+	var url1 = baseURL + UName + ".json?auth_token=" + token;
+	var url2 = baseURL + UName + "/goals/writing.json?auth_token=" + token;
+	xhr.onreadystatechange = function (){
+		console.log(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
+		if (xhr.readyState == 4){
+			data = xhr.responseText;
+			console.log(data);
+			response = JSON.parse(data);
+			console.log(response.username);
+			responseusername = response.username;
+		}
+	}
+	xhr.open("GET",url1);
+	xhr.send();
+}///////////////////////////////////////////////////////////_pop
+function why(){console.log("responseusername = " + responseusername)}
 function TestLoadData(){
 	var inFuncDate
 	// UName		= "OiYouYeahYou";
