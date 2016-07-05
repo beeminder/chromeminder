@@ -36,21 +36,20 @@ function PUinit(){ //
 			a.addEventListener("click", function() {SetOutput(_i);});
 		})(i);
 		// TODO: Add an additonal goto link
-	}
-	stupid()
-	console.log("TST" + responseusername);
+	};
+
+	stupid();
 }///////////////////////////////////////////////////////////_pop
 function stupid(){
 	var xhr = new XMLHttpRequest();
 	var baseURL = BeeURL + "/api/v1/users/"
-	var token = "r4sC31AYqC9bGzeSWDcx";
 	var url1 = baseURL + UName + ".json?auth_token=" + token;
 	var url2 = baseURL + UName + "/goals/writing.json?auth_token=" + token;
 	xhr.onreadystatechange = function (){
 		console.log(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 		if (xhr.readyState == 4){
 			data = xhr.responseText;
-			console.log(data);
+			console.log(data + ">>>" + url2);
 			response = JSON.parse(data);
 			console.log(response.username);
 			responseusername = response.username;
