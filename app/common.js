@@ -1,9 +1,9 @@
 var TimingVariable; //= setInterval(myTimer, 1000);
-var UName,		Slug,		Deadline;
+var UName,		Slug,		Deadline,	UserJSON, updated_at;
 var ArrayUName,	ArraySlug,	ArrayDeadline;
 var BeeURL = "https://www.beeminder.com";
 var DefaultGoal = 0;
-	var response, data, responseusername;
+var response, data, responseusername;
 
 function myTimer() {
 	var d = new Date();
@@ -14,17 +14,7 @@ function myTimer() {
 function PUinit(){ //
 	TimingVariable = setInterval(myTimer, 1000);
 	TestLoadData();
-	/* TODO
-		Load data from memory
-		Load data from Beeminder
-		Populate varaibles with data
-		Set page content with data
-	*/
-	/* PSUEDO:
-			Pull default from memory
-				If Arrays are not equal in length > Do something
-			load default
-	*/
+
 	SetOutput(DefaultGoal);
 	for (i = 0; i < ArrayUName.length; i++){
 		var a = document.createElement('a');
@@ -34,8 +24,7 @@ function PUinit(){ //
 		document.getElementById("TheContent").appendChild(a);
 		(function(_i) {
 			a.addEventListener("click", function() {SetOutput(_i);});
-		})(i);
-		// TODO: Add an additonal goto link
+		})(i);// TODO: Add an additonal goto link w/ each Selector
 	};
 
 	stupid();
@@ -70,87 +59,42 @@ function TestLoadData(){
 	inFuncDate	. setSeconds(0);
 	Deadline	= inFuncDate
 	//Array Muck
-	ArrayUName = [
-		"OiYouYeahYou",
-		"OiYouYeahYou",
-		"OiYouYeahYou"
-	]
-	ArraySlug = [
-		"writing",
-		"writemore",
-		"emailmore"
-	]
-	ArrayDeadline = [
-		inFuncDate,
-		new Date("2016-08-18"),
-		new Date("2017-02-15")
-	]
+	ArrayUName = [		"OiYouYeahYou",
+						"OiYouYeahYou",
+						"OiYouYeahYou"			]
+	ArraySlug = [		"writing",
+						"writemore",
+						"emailmore"				]
+	ArrayDeadline = [	inFuncDate,
+						new Date("2016-08-18"),
+						new Date("2017-02-15")	]
 }///////////////////////////////////////////////////////////_pop
 function SetOutput(e){
-	// if(i <= ArrayUName.length && parseInt(i)){
-		UName = ArrayUName[e]
-		Slug = ArraySlug[e]
-		document.getElementById("GoalLoc").innerHTML = UName + " / " + Slug;
-		LinkBM(	"ButtonGoal",		""				);
-		LinkBM(	"GraphLink",		""				);
-		LinkBM(	"ButtonRefresh",	"refresh"		);
-		LinkBM(	"ButtonData",		"datapoints"	);
-		LinkBM(	"ButtonSettings",	"settings"		);
-		// TODO: Set picture
-		document.getElementById("graph-img").src=
-			BeeURL + "/" + UName + "/" + Slug + "/graph";
-	// }
-	// else {
-		// alert("There has been an error in setting the page up")
-	// }
+	UName = ArrayUName[e]
+	Slug = ArraySlug[e]
+	document.getElementById("GoalLoc").innerHTML = UName + " / " + Slug;
+	LinkBM(	"ButtonGoal",		""				);
+	LinkBM(	"GraphLink",		""				);
+	LinkBM(	"ButtonRefresh",	"refresh"		);
+	LinkBM(	"ButtonData",		"datapoints"	);
+	LinkBM(	"ButtonSettings",	"settings"		);
+	// TODO: Set picture
+	document.getElementById("graph-img").src=
+		BeeURL + "/" + UName + "/" + Slug + "/graph";
 	console.log("Output Set : " + e)
-}///////////////////////////////////////////////////////////_pop
-function LoadGoal (GoalNumber){
-	//from sync or server?
-}///////////////////////////////////////////////////////////_pop
-function TotalRecall(){
-	/* PSUEDO:
-			IF > Does saved data exist
-				TRUE >
-					How old is that data, IF > Age young
-						TRUE >
-							//
-						FALSE >
-							Load new
-				FALSE >
-					Load new
-	*/
 }///////////////////////////////////////////////////////////_pop
 function LinkBM(x,y){
 	document.getElementById(x)
 		.href = BeeURL + "/" + UName + "/" + Slug + "/" + y;
 }
 ////////////////////////////////////////////////////////////_pop
-/* TODO: What Needs to be written?
-			Menu Links:
-				Goal Selector		.
-				Dropdown content	.
-				Break out links		.UName and Slug to construct links
-			Countdown				.Deadline Date
-			BareMin					.
-			Graph Image				.
-			Data Points				.
-			Stats					.
-	TODO: Vars I need for single goal
-			UName
-			Slug
-			Deadline
-			?BareMin: Current, NextMile, CALC:Delta
-			?data-points
-			?stats
-*/
 function save_options() {
-	var color = document.getElementById('color').value;
-	var likesColor = document.getElementById('like').checked;
+	var username	= document.getElementById( 'username'	).value;
+	var token		= document.getElementById( 'token'		).value;
 	chrome.storage.sync.set(
 		{
-			favoriteColor: color,
-			likesColor: likesColor
+			username: username,
+			token: token
 		},
 		notify()
 	);
@@ -158,23 +102,7 @@ function save_options() {
 function notify() {
 	var status = document.getElementById('status');
 	status.textContent = 'Options saved.';
-	setTimeout(
-		function() {status.textContent = '';},
-		2000
-	);
-}///////////////////////////////////////////////////////////Opt
-function restore_options() {
-	// Use default value color = 'red' and likesColor = true.
-	chrome.storage.sync.get(
-		{
-			favoriteColor: 'red',
-			likesColor: true
-		},
-		function(items) {
-			document.getElementById('color').value = items.favoriteColor;
-			document.getElementById('like').checked = items.likesColor;
-		}
-	);
+	setTimeout(function() {status.textContent = '';},2000);
 }///////////////////////////////////////////////////////////Opt
 function DM(){
 	var elem = document.getElementById('OiYouYeahYou-writing');
@@ -182,7 +110,49 @@ function DM(){
 	return false;
 }///////////////////////////////////////////////////////////Opt
 function OPTinit(){
-	document.addEventListener('DOMContentLoaded', restore_options);
+	chrome.storage.sync.get(
+		{
+			username: 	"",
+			token: 		"",
+			updated_at:	""
+		},
+		function(items) {
+			document.getElementById( 'username'	).value = items.username;
+			document.getElementById( 'token'	).value = items.token;
+			updated_at = items.updated_at;
+			UName = items.username;
+			token = items.token;
+			console.log(items.username + "inside");
+			( function(){ UserGET(); } )();
+		}
+	);
+	// UName = "oy3software";
+	// console.log(UName + "outside");
+	// UserGET();
 	document.getElementById('save').addEventListener('click', save_options);
 	document.getElementById('OiYouYeahYou-writing').addEventListener('click', DM);
 }
+function UserGET(){
+	var xhr = new XMLHttpRequest();
+	var url1 = BeeURL + "/api/v1/users/" + UName + ".json?auth_token=" + token;
+
+	xhr.onreadystatechange = function (){
+		console.log(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
+		document.getElementById("ServerStaus").innerHTML =	xhr.status
+												+ " / " + 	xhr.statusText
+												+ " / " + 	xhr.readyState;
+		if (xhr.readyState == 4){
+			UserJSON = JSON.parse(xhr.responseText);
+
+			if (updated_at === UserJSON.updated_at){
+				// No need to update
+				document.getElementById("UpdateDifference").innerHTML = "No Difference " + updated_at + " - " + UserJSON.updated_at;
+			} else {
+				// There needs to be an update
+				document.getElementById("UpdateDifference").innerHTML = "Difference " + updated_at + " - " + UserJSON.updated_at;
+			}
+		}
+	}
+	xhr.open("GET",url1);
+	xhr.send();
+}///////////////////////////////////////////////////////////_pop

@@ -3,28 +3,29 @@
 <head>
 	<title>Beeminder App Options</title>
 	<link rel="stylesheet" href="options.css">
-	<script src="_common.js"></script>
+	<script src="token.js"></script>
+	<script src="common.js"></script>
 	<script src="options.js"></script>
 </head>
 <body>
 	<h1>Beeminder App Options</h1>
-	Favorite color:
-	<select id="color">
-		<option value="red">red</option>
-		<option value="green">green</option>
-		<option value="blue">blue</option>
-		<option value="yellow">yellow</option>
-	</select>
-	<label>
-		<input type="checkbox" id="like">
-		I like colors.
-	</label>
-	<div id="status"></div>
-	<button id="save">Save</button>
-	Username
-	Token
+
+	Username:</br>
+	<input type="text" id="username"></br>
+	Token:</br>
+	<input type="text" id="token"></br>
+	<span id="status">&nbsp;</span></br>
+	<button id="save">Save</button></br></br>
+	<span id="ServerStaus">Conection Idle</span></br>
+	<span id="UpdateDifference">Unchanged</span></br>
+	</br></br></br></br>
+
+	=============== Below is in Develompent ===============
+
+	</br></br></br></br>
+
 	<div id="">
-		Minder list
+		<h2>Goal list</h2>
 		<ul id="HeaderRow">
 			<li>User</li>
 			<li>Slug</li>
