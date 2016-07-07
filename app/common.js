@@ -1,4 +1,4 @@
-var TimingVariable; //= setInterval(myTimer, 1000);
+var TimingVariable, TimingPicture; //= setInterval(myTimer, 1000);
 var UName,		Slug,		Deadline,	UserJSON, updated_at;
 var ArrayUName,	ArraySlug,	ArrayDeadline;
 var BeeURL = "https://www.beeminder.com";
@@ -38,7 +38,7 @@ function stupid(){
 		console.log(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 		if (xhr.readyState == 4){
 			data = xhr.responseText;
-			console.log(data + ">>>" + url2);
+			//console.log(data + ">>>" + url2);
 			response = JSON.parse(data);
 			console.log(response.username);
 			responseusername = response.username;
@@ -80,9 +80,39 @@ function SetOutput(e){
 	LinkBM(	"ButtonSettings",	"settings"		);
 	// TODO: Set picture
 	document.getElementById("graph-img").src=
-		BeeURL + "/" + UName + "/" + Slug + "/graph";
+		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
 	console.log("Output Set : " + e)
 }///////////////////////////////////////////////////////////_pop
+function RefeshCurrentGraph(){
+	var xhr = new XMLHttpRequest();
+	var SeverStatus = document.getElementById("SeverStatus");
+	xhr.onreadystatechange = function (){
+
+		if (xhr.status === 404) {
+			console.log("Server 404 error");
+			SeverStatus.innerHTML = "Server 404 error";
+			xhr.abort();
+		}
+		else { console.log("why"+xhr.responseText);
+			/* LOGGING*/console.log( xhr.status + " / " + xhr.statusText + " / " + xhr.readyState );
+			/* LOGGING*/SeverStatus.innerHTML =	xhr.status + " / " + xhr.statusText + " / " + xhr.readyState;
+			if (xhr.readyState == 4 && xhr.responseText === "true"){
+				setTimeout(function (){
+					document.getElementById("graph-img").src=
+						BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
+					SeverStatus.innerHTML = "Graph Refreshed"
+					console.log("its happened "+xhr.responseText)
+				}, 5000);
+				console.log("delivered "+xhr.responseText)
+			} else {
+				SeverStatus.innerHTML = "Beeminder Sever Says no"
+			} //If Ready to access data & If refresh true
+		} // If Access denied / allowed
+	} // func xhr readyState
+
+	xhr.open("GET",BeeURL + "/api/v1/users/" + UName + "/goals/" + Slug + "/refresh_graph.json?auth_token=" + token);
+	xhr.send();
+}
 function LinkBM(x,y){
 	document.getElementById(x)
 		.href = BeeURL + "/" + UName + "/" + Slug + "/" + y;
@@ -145,22 +175,23 @@ function UserGET(){
 		} else {
 			/* LOGGING*/console.log( xhr.status + " / " + xhr.statusText + " / " + xhr.readyState );
 			/* LOGGING*/document.getElementById("ServerStaus").innerHTML =	xhr.status
-																 + " / " + 	xhr.statusText
-																 + " / " + 	xhr.readyState;
+			/* LOGGING*/										 + " / " + 	xhr.statusText
+			/* LOGGING*/										 + " / " + 	xhr.readyState;
 			if (xhr.readyState == 4){
 				UserJSON = JSON.parse(xhr.responseText);
 
 				if (updated_at === UserJSON.updated_at){
 					// TODO No need to update > write output
 					document.getElementById("UpdateDifference").innerHTML 	= "No Difference "
-																			+ updated_at
-																			+ " - "
-																			+ UserJSON.updated_at;
+					/**/													+ updated_at + " - "
+					/**/													+ UserJSON.updated_at;
 				} else {
 					// TODO There needs to be an update
 					document.getElementById("UpdateDifference").innerHTML 	= "Difference "
-																			+ updated_at + " - "
-																			+ UserJSON.updated_at;
+					/**/													+ updated_at + " - "
+					/**/													+ UserJSON.updated_at;
+					var NTUT = "blah";
+					alert(NTUT)
 				} // If differnece detection
 			} //If Ready to access data
 		} // If Access denied / allowed
