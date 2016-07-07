@@ -32,7 +32,7 @@ function PUinit(){ //
 function stupid(){
 	var xhr = new XMLHttpRequest();
 	var baseURL = BeeURL + "/api/v1/users/"
-	var url1 = baseURL + UName + ".json?auth_token=" + token;
+	var url1 = baseURL + UName + "/goals.json?auth_token=" + token;
 	var url2 = baseURL + UName + "/goals/writing.json?auth_token=" + token;
 	xhr.onreadystatechange = function (){
 		console.log(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
@@ -112,9 +112,9 @@ function DM(){
 function OPTinit(){
 	chrome.storage.sync.get(
 		{
-			username: 	"",
-			token: 		"",
-			updated_at:	""
+			username	: 	"",
+			token		: 	"",
+			updated_at	:	""
 		},
 		function(items) {
 			document.getElementById( 'username'	).value = items.username;
@@ -122,37 +122,50 @@ function OPTinit(){
 			updated_at = items.updated_at;
 			UName = items.username;
 			token = items.token;
-			console.log(items.username + "inside");
-			( function(){ UserGET(); } )();
-		}
+			if (items.username === "" || items.token === "") {
+				// TODO Goto options page
+				console.log("There be no data")
+			} else {
+				( function(){ UserGET(); } )( /**/ );
+				// TODO get User data
+			} //If Data is blank
+		} // function Sync Get
 	);
-	// UName = "oy3software";
-	// console.log(UName + "outside");
-	// UserGET();
 	document.getElementById('save').addEventListener('click', save_options);
 	document.getElementById('OiYouYeahYou-writing').addEventListener('click', DM);
 }
 function UserGET(){
 	var xhr = new XMLHttpRequest();
-	var url1 = BeeURL + "/api/v1/users/" + UName + ".json?auth_token=" + token;
-
 	xhr.onreadystatechange = function (){
-		console.log(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
-		document.getElementById("ServerStaus").innerHTML =	xhr.status
-												+ " / " + 	xhr.statusText
-												+ " / " + 	xhr.readyState;
-		if (xhr.readyState == 4){
-			UserJSON = JSON.parse(xhr.responseText);
 
-			if (updated_at === UserJSON.updated_at){
-				// No need to update
-				document.getElementById("UpdateDifference").innerHTML = "No Difference " + updated_at + " - " + UserJSON.updated_at;
-			} else {
-				// There needs to be an update
-				document.getElementById("UpdateDifference").innerHTML = "Difference " + updated_at + " - " + UserJSON.updated_at;
-			}
-		}
-	}
-	xhr.open("GET",url1);
+		if (xhr.status === 404) {
+			console.log("Server 404 error");
+			xhr.abort();
+			// TODO Notify User, Suggest checking options, Load old data if possible
+		} else {
+			/* LOGGING*/console.log( xhr.status + " / " + xhr.statusText + " / " + xhr.readyState );
+			/* LOGGING*/document.getElementById("ServerStaus").innerHTML =	xhr.status
+																 + " / " + 	xhr.statusText
+																 + " / " + 	xhr.readyState;
+			if (xhr.readyState == 4){
+				UserJSON = JSON.parse(xhr.responseText);
+
+				if (updated_at === UserJSON.updated_at){
+					// TODO No need to update > write output
+					document.getElementById("UpdateDifference").innerHTML 	= "No Difference "
+																			+ updated_at
+																			+ " - "
+																			+ UserJSON.updated_at;
+				} else {
+					// TODO There needs to be an update
+					document.getElementById("UpdateDifference").innerHTML 	= "Difference "
+																			+ updated_at + " - "
+																			+ UserJSON.updated_at;
+				} // If differnece detection
+			} //If Ready to access data
+		} // If Access denied / allowed
+	} // func xhr readyState
+
+	xhr.open("GET",BeeURL + "/api/v1/users/" + UName + ".json?auth_token=" + token);
 	xhr.send();
 }///////////////////////////////////////////////////////////_pop
