@@ -1,9 +1,11 @@
-var TimingVariable, TimingPicture; //= setInterval(myTimer, 1000);
+var TimingVariable, TimingPicture;
+var ServerStatusTimer = "empty";
 var UName,		Slug,		Deadline,	UserJSON, updated_at;
 var ArrayUName,	ArraySlug,	ArrayDeadline;
 var BeeURL = "https://www.beeminder.com";
+var ApiURL = "https://www.beeminder.com/api/v1/users/";
 var DefaultGoal = 0;
-var response, data, responseusername;
+var response;
 
 function myTimer() {
 	var d = new Date();
@@ -13,69 +15,62 @@ function myTimer() {
 }///////////////////////////////////////////////////////////_pop
 function PUinit(){ //
 	TimingVariable = setInterval(myTimer, 1000);
-	TestLoadData();
-
-	SetOutput(DefaultGoal);
-	for (i = 0; i < ArrayUName.length; i++){
-		var a = document.createElement('a');
-		a.className = 'GoalIDBtn';
-		a.id = ArrayUName[i] + '-' + ArraySlug[i];
-		a.textContent = ArrayUName[i] + ' / ' + ArraySlug[i];
-		document.getElementById("TheContent").appendChild(a);
-		(function(_i) {
-			a.addEventListener("click", function() {SetOutput(_i);});
-		})(i);// TODO: Add an additonal goto link w/ each Selector
-	};
-
-	stupid();
+	document.getElementById("ButtonRefresh").addEventListener("click", RefreshCurrentGraph)
+	chrome.storage.sync.get(
+		{
+			username	: 	"",
+			token		: 	"",
+			DefaultGoal	:	0
+		},
+		function(items) {
+			UName = items.username;
+			token = items.token;
+			DefaultGoal = items.DefaultGoal;
+			if (items.username === "" || items.token === "") {
+				var a = document.createElement('a');
+				a.textContent = "You need to enter your details in the options page ";
+				a.href = "/options.html"
+				a.target = "_blank"
+				document.getElementById("SeverStatus").insertBefore(a, document.getElementById(SeverStatus))
+			} else {
+				( function(){ GoalsGET(); } )( /**/ );
+			} //If Data is blank
+		} // function Sync Get
+	);
 }///////////////////////////////////////////////////////////_pop
-function stupid(){
+function GoalsGET(){
 	var xhr = new XMLHttpRequest();
 	var baseURL = BeeURL + "/api/v1/users/"
-	var url1 = baseURL + UName + "/goals.json?auth_token=" + token;
-	var url2 = baseURL + UName + "/goals/writing.json?auth_token=" + token;
+	var url = baseURL + UName + "/goals.json?auth_token=" + token;
 	xhr.onreadystatechange = function (){
 		console.log(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 		if (xhr.readyState == 4){
-			data = xhr.responseText;
-			//console.log(data + ">>>" + url2);
-			response = JSON.parse(data);
-			console.log(response.username);
-			responseusername = response.username;
+			response = JSON.parse(xhr.responseText);
+			HandleDownload()
 		}
 	}
-	xhr.open("GET",url1);
+	xhr.open("GET",url);
 	xhr.send();
 }///////////////////////////////////////////////////////////_pop
+function HandleDownload(){
+	SetOutput(DefaultGoal)
+	for (i = 0; i < response.length; i++){
+		var a = document.createElement('a');
+		a.className = 'GoalIDBtn';
+		a.id = UName + '-' + response[i].slug;
+		a.textContent = UName + ' / ' + response[i].slug;
+		document.getElementById("TheContent").appendChild(a);
+		(function(_i) {
+				a.addEventListener("click", function() {SetOutput(_i);});
+		})(i);// TODO: Add an additonal goto link w/ each Selector
+	};
+}
 function why(){console.log("responseusername = " + responseusername)}
-function TestLoadData(){
-	var inFuncDate
-	// UName		= "OiYouYeahYou";
-	// Slug		= "writing";
-	inFuncDate	= new Date();
-	inFuncDate	. setDate(inFuncDate.getDate() + 1);
-	inFuncDate	. setHours(0);
-	inFuncDate	. setMinutes(0);
-	inFuncDate	. setSeconds(0);
-	Deadline	= inFuncDate
-	//Array Muck
-	ArrayUName = [		"OiYouYeahYou",
-						"OiYouYeahYou",
-						"OiYouYeahYou"			]
-	ArraySlug = [		"writing",
-						"writemore",
-						"emailmore"				]
-	ArrayDeadline = [	inFuncDate,
-						new Date("2016-08-18"),
-						new Date("2017-02-15")	]
-}///////////////////////////////////////////////////////////_pop
 function SetOutput(e){
-	UName = ArrayUName[e]
-	Slug = ArraySlug[e]
+	Slug = response[e].slug
 	document.getElementById("GoalLoc").innerHTML = UName + " / " + Slug;
 	LinkBM(	"ButtonGoal",		""				);
 	LinkBM(	"GraphLink",		""				);
-	LinkBM(	"ButtonRefresh",	"refresh"		);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
 	// TODO: Set picture
@@ -83,48 +78,56 @@ function SetOutput(e){
 		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
 	console.log("Output Set : " + e)
 }///////////////////////////////////////////////////////////_pop
-function RefeshCurrentGraph(){
+function RefreshCurrentGraph(){
 	var xhr = new XMLHttpRequest();
-	var SeverStatus = document.getElementById("SeverStatus");
 	xhr.onreadystatechange = function (){
 
 		if (xhr.status === 404) {
 			console.log("Server 404 error");
-			SeverStatus.innerHTML = "Server 404 error";
+			ServerStatusUpdate("Server 404 error");
 			xhr.abort();
 		}
 		else { console.log("why"+xhr.responseText);
 			/* LOGGING*/console.log( xhr.status + " / " + xhr.statusText + " / " + xhr.readyState );
-			/* LOGGING*/SeverStatus.innerHTML =	xhr.status + " / " + xhr.statusText + " / " + xhr.readyState;
+			/* LOGGING*/ServerStatusUpdate(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 			if (xhr.readyState == 4 && xhr.responseText === "true"){
+				ServerStatusUpdate("Waiting for Graph to refresh")
 				setTimeout(function (){
 					document.getElementById("graph-img").src=
 						BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
-					SeverStatus.innerHTML = "Graph Refreshed"
-					console.log("its happened "+xhr.responseText)
+					ServerStatusUpdate("Graph Refreshed");
 				}, 5000);
-				console.log("delivered "+xhr.responseText)
 			} else {
-				SeverStatus.innerHTML = "Beeminder Sever Says no"
+				ServerStatusUpdate("Beeminder Sever Says no");
 			} //If Ready to access data & If refresh true
 		} // If Access denied / allowed
 	} // func xhr readyState
 
-	xhr.open("GET",BeeURL + "/api/v1/users/" + UName + "/goals/" + Slug + "/refresh_graph.json?auth_token=" + token);
+	xhr.open("GET",ApiURL + UName + "/goals/" + Slug + "/refresh_graph.json?auth_token=" + token);
 	xhr.send();
 }
-function LinkBM(x,y){
-	document.getElementById(x)
-		.href = BeeURL + "/" + UName + "/" + Slug + "/" + y;
+function ServerStatusUpdate (text){
+	var SeverStatus = document.getElementById("SeverStatus");
+	if (ServerStatusTimer !== "empty"){clearTimeout(ServerStatusTimer)};
+	SeverStatus.innerHTML = text;
+	ServerStatusTimer = setTimeout(
+		function() {
+			SeverStatus.textContent = '';
+			ServerStatusTimer="empty"
+		},
+		5000
+	);
 }
-////////////////////////////////////////////////////////////_pop
+function LinkBM(x,y){document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
 function save_options() {
 	var username	= document.getElementById( 'username'	).value;
 	var token		= document.getElementById( 'token'		).value;
+	var DefaultGoal	= document.getElementById( 'defGoal'	).value;
 	chrome.storage.sync.set(
 		{
 			username: username,
-			token: token
+			token: token,
+			DefaultGoal: DefaultGoal
 		},
 		notify()
 	);
@@ -144,14 +147,17 @@ function OPTinit(){
 		{
 			username	: 	"",
 			token		: 	"",
-			updated_at	:	""
+			updated_at	:	"",
+			DefaultGoal	:	0
 		},
 		function(items) {
 			document.getElementById( 'username'	).value = items.username;
 			document.getElementById( 'token'	).value = items.token;
+			document.getElementById( 'defGoal'	).value = items.DefaultGoal;
 			updated_at = items.updated_at;
 			UName = items.username;
 			token = items.token;
+			DefaultGoal = items.DefaultGoal;
 			if (items.username === "" || items.token === "") {
 				// TODO Goto options page
 				console.log("There be no data")
@@ -173,10 +179,8 @@ function UserGET(){
 			xhr.abort();
 			// TODO Notify User, Suggest checking options, Load old data if possible
 		} else {
-			/* LOGGING*/console.log( xhr.status + " / " + xhr.statusText + " / " + xhr.readyState );
-			/* LOGGING*/document.getElementById("ServerStaus").innerHTML =	xhr.status
-			/* LOGGING*/										 + " / " + 	xhr.statusText
-			/* LOGGING*/										 + " / " + 	xhr.readyState;
+			console.log( xhr.status + " / " + xhr.statusText + " / " + xhr.readyState );
+			ServerStatusUpdate(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 			if (xhr.readyState == 4){
 				UserJSON = JSON.parse(xhr.responseText);
 
@@ -190,8 +194,6 @@ function UserGET(){
 					document.getElementById("UpdateDifference").innerHTML 	= "Difference "
 					/**/													+ updated_at + " - "
 					/**/													+ UserJSON.updated_at;
-					var NTUT = "blah";
-					alert(NTUT)
 				} // If differnece detection
 			} //If Ready to access data
 		} // If Access denied / allowed
