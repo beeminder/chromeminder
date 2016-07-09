@@ -7,7 +7,6 @@
 	- Policy documentation[1] for details and explanation.
 	- [1]: http://developer.chrome.com/extensions/contentSecurityPolicy.html-->
 	<script src="moment.js"></script>
-	<script src="token.js"></script>
 	<script src="common.js"></script>
 	<script src="popup.js"></script>
 </head>
@@ -40,17 +39,17 @@
 			</span>
 		</div>
 		<div id="Countdown" class="HeaderContainer">
-			Countdown
+			Deadline : <span id="dlout"></span>
 			<div id="time">Time</div>
 		</div>
 		<div id="BareMin" class="HeaderContainer">
 			Bare Min<br/>
-			+150 until 6750 words
+			<span id="limsum"></span>
 		</div>
 	</div>
 	<div id="GraphContainer">
 		<a id="GraphLink" target="_blank">
-			<img id="graph-img"><!-- src="https://www.beeminder.com/oiyouyeahyou/writing/graph"-->
+			<img id="graph-img">
 		</a>
 	</div>
 	<div id="Footer">

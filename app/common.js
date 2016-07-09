@@ -43,32 +43,56 @@ function GoalsGET(){
 	var baseURL = BeeURL + "/api/v1/users/"
 	var url = baseURL + UName + "/goals.json?auth_token=" + token;
 	xhr.onreadystatechange = function (){
-		console.log(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
-		if (xhr.readyState == 4){
-			response = JSON.parse(xhr.responseText);
-			HandleDownload()
+		if (xhr.status === 404) {
+			ServerStatusUpdate("Server 404 error");
+			xhr.abort();
+		} else {
+			/*LOGGING*/ServerStatusUpdate(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
+			if (xhr.readyState == 4){
+				response = JSON.parse(xhr.responseText);
+				ServerStatusUpdate("Data has been downloaded")
+				HandleDownload()
+			}
 		}
 	}
 	xhr.open("GET",url);
 	xhr.send();
 }///////////////////////////////////////////////////////////_pop
 function HandleDownload(){
+	if (DefaultGoal > response.length){DefaultGoal=0}
 	SetOutput(DefaultGoal)
 	for (i = 0; i < response.length; i++){
 		var a = document.createElement('a');
 		a.className = 'GoalIDBtn';
-		a.id = UName + '-' + response[i].slug;
-		a.textContent = UName + ' / ' + response[i].slug;
+		a.id = /*UName + '-' +*/ response[i].slug;
+		a.textContent = /*UName + ' / ' +*/ response[i].slug;
 		document.getElementById("TheContent").appendChild(a);
 		(function(_i) {
 				a.addEventListener("click", function() {SetOutput(_i);});
 		})(i);// TODO: Add an additonal goto link w/ each Selector
 	};
 }
-function why(){console.log("responseusername = " + responseusername)}
+////////////////////////////////////////////////////////////_pop
+function UNIXtoReadable(i){
+	/* Copied from
+		http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
+	*/
+	var a = new Date(i * 1000);
+	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+	var year = a.getFullYear();
+	var month = months[a.getMonth()];
+	var date = a.getDate();
+	var hour = a.getHours();
+	var min = a.getMinutes();
+	var sec = a.getSeconds();
+	var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+	return time;
+}///////////////////////////////////////////////////////////_pop
 function SetOutput(e){
 	Slug = response[e].slug
-	document.getElementById("GoalLoc").innerHTML = UName + " / " + Slug;
+	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ Slug;
+	document.getElementById("dlout").innerHTML = UNIXtoReadable(response[e].losedate);
+	document.getElementById("limsum").innerHTML = response[e].limsum;
 	LinkBM(	"ButtonGoal",		""				);
 	LinkBM(	"GraphLink",		""				);
 	LinkBM(	"ButtonData",		"datapoints"	);
@@ -76,26 +100,23 @@ function SetOutput(e){
 	// TODO: Set picture
 	document.getElementById("graph-img").src=
 		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
-	console.log("Output Set : " + e)
+	ServerStatusUpdate("Output Set : " + e)
 }///////////////////////////////////////////////////////////_pop
 function RefreshCurrentGraph(){
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
-
 		if (xhr.status === 404) {
-			console.log("Server 404 error");
 			ServerStatusUpdate("Server 404 error");
 			xhr.abort();
-		}
-		else { console.log("why"+xhr.responseText);
-			/* LOGGING*/console.log( xhr.status + " / " + xhr.statusText + " / " + xhr.readyState );
-			/* LOGGING*/ServerStatusUpdate(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
+		} else {
+			/*LOGGING*/ServerStatusUpdate(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 			if (xhr.readyState == 4 && xhr.responseText === "true"){
 				ServerStatusUpdate("Waiting for Graph to refresh")
 				setTimeout(function (){
 					document.getElementById("graph-img").src=
 						BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
-					ServerStatusUpdate("Graph Refreshed");
+					ServerStatusUpdate("Graph Refreshed, but a page refresh needs to happen for new data");
+					// TODO SetOutput with new data from a new xhr
 				}, 5000);
 			} else {
 				ServerStatusUpdate("Beeminder Sever Says no");
@@ -110,6 +131,7 @@ function ServerStatusUpdate (text){
 	var SeverStatus = document.getElementById("SeverStatus");
 	if (ServerStatusTimer !== "empty"){clearTimeout(ServerStatusTimer)};
 	SeverStatus.innerHTML = text;
+	console.log(text)
 	ServerStatusTimer = setTimeout(
 		function() {
 			SeverStatus.textContent = '';
@@ -175,11 +197,10 @@ function UserGET(){
 	xhr.onreadystatechange = function (){
 
 		if (xhr.status === 404) {
-			console.log("Server 404 error");
+			ServerStatusUpdate("Server 404 error");
 			xhr.abort();
 			// TODO Notify User, Suggest checking options, Load old data if possible
 		} else {
-			console.log( xhr.status + " / " + xhr.statusText + " / " + xhr.readyState );
 			ServerStatusUpdate(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 			if (xhr.readyState == 4){
 				UserJSON = JSON.parse(xhr.responseText);
