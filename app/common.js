@@ -1,21 +1,11 @@
-var TimingVariable, TimingPicture;
+var TimingVariable;
 var ServerStatusTimer = "empty";
-var UName,		Slug,		Deadline,	UserJSON, updated_at;
-var ArrayUName,	ArraySlug,	ArrayDeadline;
+var UName,		Slug,		Deadline,	UserJSON, updated_at, response;
 var BeeURL = "https://www.beeminder.com";
 var ApiURL = "https://www.beeminder.com/api/v1/users/";
 var DefaultGoal = 0;
-var response;
 
-function myTimer() {
-	var d = new Date();
-	document.getElementById("time").innerHTML =
-		d.toLocaleTimeString() +
-		" <small>Totally not a Countdown</small>";
-}///////////////////////////////////////////////////////////_pop
 function PUinit(){ //
-	TimingVariable = setInterval(myTimer, 1000);
-	document.getElementById("ButtonRefresh").addEventListener("click", RefreshCurrentGraph)
 	chrome.storage.sync.get(
 		{
 			username	: 	"",
@@ -40,8 +30,7 @@ function PUinit(){ //
 }///////////////////////////////////////////////////////////_pop
 function GoalsGET(){
 	var xhr = new XMLHttpRequest();
-	var baseURL = BeeURL + "/api/v1/users/"
-	var url = baseURL + UName + "/goals.json?auth_token=" + token;
+	var url = ApiURL + UName + "/goals.json?auth_token=" + token;
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
 			ServerStatusUpdate("Server 404 error");
@@ -59,18 +48,23 @@ function GoalsGET(){
 	xhr.send();
 }///////////////////////////////////////////////////////////_pop
 function HandleDownload(){
-	if (DefaultGoal > response.length){DefaultGoal=0}
-	SetOutput(DefaultGoal)
+	if (DefaultGoal > response.length){DefaultGoal=0};
+	SetOutput(DefaultGoal);
+	TimingVariable = setInterval(
+		function(){document.getElementById("dlout").innerHTML=countdown(Deadline).toString();},
+		100
+	);
 	for (i = 0; i < response.length; i++){
 		var a = document.createElement('a');
 		a.className = 'GoalIDBtn';
 		a.id = /*UName + '-' +*/ response[i].slug;
-		a.textContent = /*UName + ' / ' +*/ response[i].slug;
+		a.textContent = /*UName + ' / ' +*/ response[i].title;
 		document.getElementById("TheContent").appendChild(a);
 		(function(_i) {
 				a.addEventListener("click", function() {SetOutput(_i);});
 		})(i);// TODO: Add an additonal goto link w/ each Selector
 	};
+	document.getElementById("ButtonRefresh").addEventListener("click", RefreshCurrentGraph)
 }
 ////////////////////////////////////////////////////////////_pop
 function UNIXtoReadable(i){
@@ -90,16 +84,15 @@ function UNIXtoReadable(i){
 }///////////////////////////////////////////////////////////_pop
 function SetOutput(e){
 	Slug = response[e].slug
-	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ Slug;
-	document.getElementById("dlout").innerHTML = UNIXtoReadable(response[e].losedate);
+	document.getElementById("graph-img").src=
+		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
+	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ response[e].title;
+	Deadline = response[e].losedate*1000
 	document.getElementById("limsum").innerHTML = response[e].limsum;
 	LinkBM(	"ButtonGoal",		""				);
 	LinkBM(	"GraphLink",		""				);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
-	// TODO: Set picture
-	document.getElementById("graph-img").src=
-		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
 	ServerStatusUpdate("Output Set : " + e)
 }///////////////////////////////////////////////////////////_pop
 function RefreshCurrentGraph(){
@@ -118,7 +111,7 @@ function RefreshCurrentGraph(){
 					ServerStatusUpdate("Graph Refreshed, but a page refresh needs to happen for new data");
 					// TODO SetOutput with new data from a new xhr
 				}, 5000);
-			} else {
+			} else if (xhr.readyState == 4 && xhr.responseText !== "true") {
 				ServerStatusUpdate("Beeminder Sever Says no");
 			} //If Ready to access data & If refresh true
 		} // If Access denied / allowed
@@ -131,33 +124,25 @@ function ServerStatusUpdate (text){
 	var SeverStatus = document.getElementById("SeverStatus");
 	if (ServerStatusTimer !== "empty"){clearTimeout(ServerStatusTimer)};
 	SeverStatus.innerHTML = text;
-	console.log(text)
+	console.log(text);
 	ServerStatusTimer = setTimeout(
-		function() {
-			SeverStatus.textContent = '';
-			ServerStatusTimer="empty"
-		},
+		function() {SeverStatus.textContent = '';ServerStatusTimer="empty"},
 		5000
 	);
 }
 function LinkBM(x,y){document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
 function save_options() {
-	var username	= document.getElementById( 'username'	).value;
-	var token		= document.getElementById( 'token'		).value;
-	var DefaultGoal	= document.getElementById( 'defGoal'	).value;
 	chrome.storage.sync.set(
 		{
-			username: username,
-			token: token,
-			DefaultGoal: DefaultGoal
+			username:		document.getElementById( 'username'	).value,
+			token:			document.getElementById( 'token'	).value,
+			DefaultGoal:	document.getElementById( 'defGoal'	).value
 		},
-		notify()
+		function() {
+			document.getElementById('status').textContent = 'Options saved.';
+			setTimeout(function() {status.textContent = '';},2000);
+		}
 	);
-}///////////////////////////////////////////////////////////Opt
-function notify() {
-	var status = document.getElementById('status');
-	status.textContent = 'Options saved.';
-	setTimeout(function() {status.textContent = '';},2000);
 }///////////////////////////////////////////////////////////Opt
 function DM(){
 	var elem = document.getElementById('OiYouYeahYou-writing');
@@ -182,7 +167,7 @@ function OPTinit(){
 			DefaultGoal = items.DefaultGoal;
 			if (items.username === "" || items.token === "") {
 				// TODO Goto options page
-				console.log("There be no data")
+				ServerStatusUpdate("There be no data")
 			} else {
 				( function(){ UserGET(); } )( /**/ );
 				// TODO get User data
