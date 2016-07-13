@@ -61,12 +61,11 @@ function HandleDownload(){
 		a.textContent = /*UName + ' / ' +*/ response[i].title;
 		document.getElementById("TheContent").appendChild(a);
 		(function(_i) {
-				a.addEventListener("click", function() {SetOutput(_i);});
+			a.addEventListener("click", function() {SetOutput(_i);});
 		})(i);// TODO: Add an additonal goto link w/ each Selector
 	};
 	document.getElementById("ButtonRefresh").addEventListener("click", RefreshCurrentGraph)
-}
-////////////////////////////////////////////////////////////_pop
+}////////////////////////////////////////////////////////////_pop
 function UNIXtoReadable(i){
 	/* Copied from
 		http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
@@ -130,13 +129,13 @@ function ServerStatusUpdate (text){
 		5000
 	);
 }
-function LinkBM(x,y){document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
+function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
 function save_options() {
 	chrome.storage.sync.set(
 		{
 			username:		document.getElementById( 'username'	).value,
 			token:			document.getElementById( 'token'	).value,
-			DefaultGoal:	document.getElementById( 'defGoal'	).value
+			DefaultGoal:	DefaultGoal
 		},
 		function() {
 			document.getElementById('status').textContent = 'Options saved.';
@@ -160,11 +159,10 @@ function OPTinit(){
 		function(items) {
 			document.getElementById( 'username'	).value = items.username;
 			document.getElementById( 'token'	).value = items.token;
-			document.getElementById( 'defGoal'	).value = items.DefaultGoal;
 			updated_at = items.updated_at;
 			UName = items.username;
 			token = items.token;
-			DefaultGoal = items.DefaultGoal;
+			DefaultGoal = parseInt(items.DefaultGoal);
 			if (items.username === "" || items.token === "") {
 				// TODO Goto options page
 				ServerStatusUpdate("There be no data")
@@ -175,7 +173,7 @@ function OPTinit(){
 		} // function Sync Get
 	);
 	document.getElementById('save').addEventListener('click', save_options);
-	document.getElementById('OiYouYeahYou-writing').addEventListener('click', DM);
+	//document.getElementById('OiYouYeahYou-writing').addEventListener('click', DM);
 }
 function UserGET(){
 	var xhr = new XMLHttpRequest();
@@ -189,6 +187,8 @@ function UserGET(){
 			ServerStatusUpdate(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 			if (xhr.readyState == 4){
 				UserJSON = JSON.parse(xhr.responseText);
+
+				drawList()
 
 				if (updated_at === UserJSON.updated_at){
 					// TODO No need to update > write output
@@ -208,3 +208,57 @@ function UserGET(){
 	xhr.open("GET",BeeURL + "/api/v1/users/" + UName + ".json?auth_token=" + token);
 	xhr.send();
 }///////////////////////////////////////////////////////////_pop
+var w = []
+var aT = []
+var aD = []
+var aH = []
+var aN = []
+function drawList(){
+	for (i = 0; i < UserJSON.goals.length; i++){
+		w[i]  = document.createElement('li')
+		aT[i] = document.createElement('a');
+		aD[i] = document.createElement('a');
+		aH[i] = document.createElement('a');
+		aN[i] = document.createElement('a');
+		w[i].className  = "item";
+		aT[i].className = "title";
+		aD[i].className = "default";
+		aH[i].className = "hide";
+		aN[i].className = "notify";
+		w[i].id  = UserJSON.goals[i] + "-item";
+		aT[i].id = UserJSON.goals[i] + "-title";
+		aD[i].id = UserJSON.goals[i] + "-defaultBtn";
+		aH[i].id = UserJSON.goals[i] + "-HideBtn";
+		aN[i].id = UserJSON.goals[i] + "-NotifyBtn";
+		aT[i].textContent = UserJSON.goals[i];
+		aD[i].textContent = "-";
+		aH[i].textContent = "Hi";
+		aN[i].textContent = "Hi";
+		aT[i].href = BeeURL + "/" + UName + "/" + UserJSON.goals[i] + "/"
+		document.getElementById("TheList").appendChild(w[i]);
+		document.getElementById(w[i].id).appendChild(aT[i]);
+		document.getElementById(w[i].id).appendChild(aD[i]);
+		document.getElementById(w[i].id).appendChild(aH[i]);
+		document.getElementById(w[i].id).appendChild(aN[i]);
+		(function(_i) {
+			aD[i].addEventListener( "click", function() {DefaultHandle(_i);});
+			// aH[i].addEventListener( "click", functions(){ HideHandle(i) } );
+			// aN[i].addEventListener( "click", functions(){ NotifyHandle(i) } );
+		})(i);
+	}
+	DefaultHandle (DefaultGoal)
+}
+/*
+	==Goal title
+	Default goal
+	Hide in popup
+	Notify
+
+	Funcitons to append:	change default variable
+
+*/
+function DefaultHandle (i) {
+	document.getElementById(aD[DefaultGoal].id).innerHTML = "-";
+	document.getElementById(aD[i].id).innerHTML = "Default";
+	DefaultGoal = i;
+}

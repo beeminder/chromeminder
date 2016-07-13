@@ -28,3 +28,28 @@ ul.OptionsRow li {
 ul.OptionsRow li:hover {
     background-color: lightblue;
 }
+a {
+    display: inline-block;
+    background-color: orange;
+    color: white;
+    padding: 5px 5px;
+    text-decoration: none;
+    border-radius: 5px 5px 5px 5px;
+	width: 150px;
+	margin: 2.5px;
+}
+a:hover {
+    background-color: lightblue;
+}
+li#HeaderRow a {
+    display: inline-block;
+    background-color: black;
+    color: white;
+    /*padding: 5px 5px;*/
+    text-decoration: none;
+    border-radius: 5px 5px 5px 5px;
+	width: 150px;
+}
+li#HeaderRow a:hover {
+    background-color: orange;
+}
