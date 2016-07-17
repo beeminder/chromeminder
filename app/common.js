@@ -1,6 +1,6 @@
 var TimingVariable;
 var ServerStatusTimer = "empty";
-var UName,		Slug,		Deadline,	UserJSON, updated_at, response;
+var UName,		Slug,		Deadline,	UserJSON, updated_at, GoalsJSON;
 var BeeURL = "https://www.beeminder.com";
 var ApiURL = "https://www.beeminder.com/api/v1/users/";
 var DefaultGoal = 0;
@@ -38,32 +38,32 @@ function GoalsGET(){
 		} else {
 			/*LOGGING*/ServerStatusUpdate(xhr.status + " / " + xhr.statusText + " / " + xhr.readyState);
 			if (xhr.readyState == 4){
-				response = JSON.parse(xhr.responseText);
+				GoalsJSON = JSON.parse(xhr.responseText);
 				ServerStatusUpdate("Data has been downloaded")
-				HandleDownload()
+				if (pg="popup") {HandleDownload()}
 			}
 		}
 	}
 	xhr.open("GET",url);
 	xhr.send();
-}///////////////////////////////////////////////////////////_pop
+}///////////////////////////////////////////////////////////_common
 function HandleDownload(){
-	if (DefaultGoal > response.length){DefaultGoal=0};
+	if (DefaultGoal > GoalsJSON.length){DefaultGoal=0};
 	SetOutput(DefaultGoal);
 	TimingVariable = setInterval(
 		function(){document.getElementById("dlout").innerHTML=countdown(Deadline).toString();},
 		100
 	);
-	for (i = 0; i < response.length; i++){
+	if (GoalsJSON.length > 1) { for (i = 0; i < GoalsJSON.length; i++){
 		var a = document.createElement('a');
 		a.className = 'GoalIDBtn';
-		a.id = /*UName + '-' +*/ response[i].slug;
-		a.textContent = /*UName + ' / ' +*/ response[i].title;
+		a.id = /*UName + '-' +*/ GoalsJSON[i].slug;
+		a.textContent = /*UName + ' / ' +*/ GoalsJSON[i].title;
 		document.getElementById("TheContent").appendChild(a);
 		(function(_i) {
 			a.addEventListener("click", function() {SetOutput(_i);});
 		})(i);// TODO: Add an additonal goto link w/ each Selector
-	};
+	}};
 	document.getElementById("ButtonRefresh").addEventListener("click", RefreshCurrentGraph)
 }////////////////////////////////////////////////////////////_pop
 function UNIXtoReadable(i){
@@ -82,12 +82,12 @@ function UNIXtoReadable(i){
 	return time;
 }///////////////////////////////////////////////////////////_pop
 function SetOutput(e){
-	Slug = response[e].slug
+	Slug = GoalsJSON[e].slug
 	document.getElementById("graph-img").src=
 		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
-	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ response[e].title;
-	Deadline = response[e].losedate*1000
-	document.getElementById("limsum").innerHTML = response[e].limsum;
+	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ GoalsJSON[e].title;
+	Deadline = GoalsJSON[e].losedate*1000
+	document.getElementById("limsum").innerHTML = GoalsJSON[e].limsum;
 	LinkBM(	"ButtonGoal",		""				);
 	LinkBM(	"GraphLink",		""				);
 	LinkBM(	"ButtonData",		"datapoints"	);
@@ -133,9 +133,10 @@ function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+
 function save_options() {
 	chrome.storage.sync.set(
 		{
-			username:		document.getElementById( 'username'	).value,
-			token:			document.getElementById( 'token'	).value,
-			DefaultGoal:	DefaultGoal
+			username	:	document.getElementById( 'username'	).value,
+			token		:	document.getElementById( 'token'	).value,
+			DefaultGoal	:	DefaultGoal,
+			GoalArray	:	UserJSON.goals
 		},
 		function() {
 			document.getElementById('status').textContent = 'Options saved.';
@@ -154,9 +155,11 @@ function OPTinit(){
 			username	: 	"",
 			token		: 	"",
 			updated_at	:	"",
-			DefaultGoal	:	0
+			DefaultGoal	:	0,
+			GoalArray	:	{}
 		},
 		function(items) {
+			console.log(items.GoalArray.length);
 			document.getElementById( 'username'	).value = items.username;
 			document.getElementById( 'token'	).value = items.token;
 			updated_at = items.updated_at;
@@ -192,14 +195,12 @@ function UserGET(){
 
 				if (updated_at === UserJSON.updated_at){
 					// TODO No need to update > write output
-					document.getElementById("UpdateDifference").innerHTML 	= "No Difference "
-					/**/													+ updated_at + " - "
-					/**/													+ UserJSON.updated_at;
+					document.getElementById("UpdateDifference").innerHTML 	=
+					/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
 				} else {
 					// TODO There needs to be an update
-					document.getElementById("UpdateDifference").innerHTML 	= "Difference "
-					/**/													+ updated_at + " - "
-					/**/													+ UserJSON.updated_at;
+					document.getElementById("UpdateDifference").innerHTML 	=
+					/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
 				} // If differnece detection
 			} //If Ready to access data
 		} // If Access denied / allowed
@@ -208,12 +209,9 @@ function UserGET(){
 	xhr.open("GET",BeeURL + "/api/v1/users/" + UName + ".json?auth_token=" + token);
 	xhr.send();
 }///////////////////////////////////////////////////////////_pop
-var w = []
-var aT = []
-var aD = []
-var aH = []
-var aN = []
+var w = [];var aT = [];var aD = [];var aH = [];var aN = []
 function drawList(){
+	var TheList = document.getElementById("TheList");
 	for (i = 0; i < UserJSON.goals.length; i++){
 		w[i]  = document.createElement('li')
 		aT[i] = document.createElement('a');
@@ -235,18 +233,18 @@ function drawList(){
 		aH[i].textContent = "Hi";
 		aN[i].textContent = "Hi";
 		aT[i].href = BeeURL + "/" + UName + "/" + UserJSON.goals[i] + "/"
-		document.getElementById("TheList").appendChild(w[i]);
-		document.getElementById(w[i].id).appendChild(aT[i]);
-		document.getElementById(w[i].id).appendChild(aD[i]);
-		document.getElementById(w[i].id).appendChild(aH[i]);
-		document.getElementById(w[i].id).appendChild(aN[i]);
+		TheList.appendChild( w[i]);
+		   w[i].appendChild(aT[i]);
+		   w[i].appendChild(aD[i]);
+		   w[i].appendChild(aH[i]);
+		   w[i].appendChild(aN[i]);
 		(function(_i) {
 			aD[i].addEventListener( "click", function() {DefaultHandle(_i);});
 			// aH[i].addEventListener( "click", functions(){ HideHandle(i) } );
 			// aN[i].addEventListener( "click", functions(){ NotifyHandle(i) } );
 		})(i);
 	}
-	DefaultHandle (DefaultGoal)
+	aD[DefaultGoal].innerHTML = "Default";
 }
 /*
 	==Goal title
@@ -258,7 +256,31 @@ function drawList(){
 
 */
 function DefaultHandle (i) {
-	document.getElementById(aD[DefaultGoal].id).innerHTML = "-";
-	document.getElementById(aD[i].id).innerHTML = "Default";
-	DefaultGoal = i;
+	aD[DefaultGoal].innerHTML="-";DefaultGoal =i;aD[DefaultGoal].innerHTML="Default";
+}
+var GoalsArray = []
+function MakeGoalsArray () {
+	for (i = 0; i < GoalsJSON.length; i++){
+		var Construct = {
+			"Slug"		: GoalsJSON[i].slug,
+			"Title" 	: GoalsJSON[i].title,
+			"Descrip"	: GoalsJSON[i].description,
+			"GraphURL"	: GoalsJSON[i].graph_url,
+			"LoseDate"	: GoalsJSON[i].losedate,
+			"BareMin"	: GoalsJSON[i].limsum,
+			"Notify"	: true,
+			"Show"		: true
+		};
+
+	}
+	/*
+		TODO:
+			Assess if the two data structures sre different
+			How to handle new graphs
+			How to handle deleted graphs
+			Default New Goal Behaviour
+	*/
+}
+function AsessGoalsArray(){
+
 }
