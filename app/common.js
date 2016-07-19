@@ -4,6 +4,8 @@ var UName,		Slug,		Deadline,	UserJSON, updated_at, GoalsJSON;
 var BeeURL = "https://www.beeminder.com";
 var ApiURL = "https://www.beeminder.com/api/v1/users/";
 var DefaultGoal = 0;
+var GoalsArray = []
+var w = [];var aT = [];var aD = [];var aH = [];var aN = []
 
 function PUinit(){ //
 	chrome.storage.sync.get(
@@ -40,7 +42,7 @@ function GoalsGET(){
 			if (xhr.readyState == 4){
 				GoalsJSON = JSON.parse(xhr.responseText);
 				ServerStatusUpdate("Data has been downloaded")
-				if (pg="popup") {HandleDownload()}
+				if (pg==="popup") {HandleDownload()}
 			}
 		}
 	}
@@ -170,7 +172,7 @@ function OPTinit(){
 				// TODO Goto options page
 				ServerStatusUpdate("There be no data")
 			} else {
-				( function(){ UserGET(); } )( /**/ );
+				( function(){ UserGET();GoalsGET() } )( /**/ );
 				// TODO get User data
 			} //If Data is blank
 		} // function Sync Get
@@ -209,7 +211,6 @@ function UserGET(){
 	xhr.open("GET",BeeURL + "/api/v1/users/" + UName + ".json?auth_token=" + token);
 	xhr.send();
 }///////////////////////////////////////////////////////////_pop
-var w = [];var aT = [];var aD = [];var aH = [];var aN = []
 function drawList(){
 	var TheList = document.getElementById("TheList");
 	for (i = 0; i < UserJSON.goals.length; i++){
@@ -240,39 +241,33 @@ function drawList(){
 		   w[i].appendChild(aN[i]);
 		(function(_i) {
 			aD[i].addEventListener( "click", function() {DefaultHandle(_i);});
-			// aH[i].addEventListener( "click", functions(){ HideHandle(i) } );
+			aH[i].addEventListener( "click", MakeGoalsArray );
 			// aN[i].addEventListener( "click", functions(){ NotifyHandle(i) } );
 		})(i);
 	}
 	aD[DefaultGoal].innerHTML = "Default";
 }
-/*
-	==Goal title
-	Default goal
-	Hide in popup
-	Notify
-
-	Funcitons to append:	change default variable
-
-*/
 function DefaultHandle (i) {
 	aD[DefaultGoal].innerHTML="-";DefaultGoal =i;aD[DefaultGoal].innerHTML="Default";
 }
-var GoalsArray = []
 function MakeGoalsArray () {
+	console.log("run")
+		// This is the first time and wipe slate clean function
 	for (i = 0; i < GoalsJSON.length; i++){
-		var Construct = {
+		GoalsArray[i] = {
 			"Slug"		: GoalsJSON[i].slug,
 			"Title" 	: GoalsJSON[i].title,
 			"Descrip"	: GoalsJSON[i].description,
+			"ID"		: GoalsJSON[i].id,
 			"GraphURL"	: GoalsJSON[i].graph_url,
 			"LoseDate"	: GoalsJSON[i].losedate,
 			"BareMin"	: GoalsJSON[i].limsum,
 			"Notify"	: true,
 			"Show"		: true
 		};
-
 	}
+
+	console.log(GoalsJSON[1].slug)
 	/*
 		TODO:
 			Assess if the two data structures sre different
@@ -282,5 +277,38 @@ function MakeGoalsArray () {
 	*/
 }
 function AsessGoalsArray(){
+	var GoalsOfflineArray = [];
+	var GoalsResponseArray = [];
 
+	for (i = 0; i < GoalsArray.length; i++){
+		GoalsOfflineArray[item] = false
+		for (j = 0; j < GoalsJSON.length; j++){
+			GoalsResponseArray[item] = false
+			if (GoalsArray[i].id === GoalsJSON[j]) {
+				//
+				break;
+			}
+		}
+	}
+
+	GoalsOfflineArray.forEach(function(item){
+		if (GoalsOfflineArray = false){
+			// new goal
+		}
+	})
+	GoalsResponseArray.forEach(function(item){
+		if (GoalsResponseArray = false){
+			//delete goal
+		}
+	})
 }
+/*
+	on array diffrece detection {
+		contrast IDs of each array
+		asses if there has been a deletion
+		asses if there is a new goal
+		forget deleted goal data
+		set new goal data as default
+		ask user to look over
+	}
+*/
