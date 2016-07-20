@@ -18,6 +18,9 @@
 	"browser_action": {
 		"default_icon": "infinibee19x19.png",
 		"default_popup": "popup.html"
-	}
+	},
 
+	"background": {
+		"scripts": ["background.js"]
+	}
 }
