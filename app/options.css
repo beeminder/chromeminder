@@ -53,3 +53,9 @@ li#HeaderRow a {
 li#HeaderRow a:hover {
     background-color: orange;
 }
+#MainForm {
+	display: inline-block;
+}
+.FormObject {
+	display: inline-block;
+}
