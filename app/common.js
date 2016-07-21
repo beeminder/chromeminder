@@ -248,7 +248,9 @@ function drawList(){
 	aD[DefaultGoal].innerHTML = "Default";
 }
 function DefaultHandle (i) {
-	aD[DefaultGoal].innerHTML="-";DefaultGoal =i;aD[DefaultGoal].innerHTML="Default";
+	aD[DefaultGoal].textContent="-";
+	DefaultGoal =i;
+	aD[DefaultGoal].textContent="Default";
 }
 function MakeGoalsArray () {
 	console.log("run")
@@ -266,8 +268,17 @@ function MakeGoalsArray () {
 			"Show"		: true
 		};
 	}
-
-	console.log(GoalsJSON[1].slug)
+	console.log(GoalsArray[1].ID)
+	GoalsArray.sort(function (a,b) {
+		console.log(a["ID"])
+		if( a["ID"] > b["ID"]){
+			return 1;
+		} else if ( a["ID"] < b["ID"] ){
+			return -1;
+		}
+		return 0;
+	})
+	console.log(GoalsArray[1].ID)
 	/*
 		TODO:
 			Assess if the two data structures sre different
