@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>API Documentation</title>
+	<meta charset="utf-8">
+	<style>
+		html, body {
+			padding:0px;
+			margin:0px auto;;
+			background-color: rgb(247, 247, 247);
+			font-family:"Helvetica Neue", Arial, "Liberation Sans", FreeSans, sans-serif;
+			width: 80%;
+		}
+		.api-docs {
+			/*width:400px;*/
+			/*margin:0 auto;*/
+			padding: 10px 10px 10px 20px;
+			background-color: white;
+		}
+		#contentsbanner {
+			background:#fec907;
+			width:200px;
+			/*height:200px;*/
+			position: fixed;
+			/*top: 0;
+			left: 50%;*/
+			margin-left: -200px;
+			margin-top: 20px;
+			padding: 5px 5px 5px 5px;
+			border-radius: 5px 5px 5px 5px;
+		}
+		#contentsbanner ol {
+			list-style-type: decimal;
+		}
+		pre {
+			background-color: black;
+			color:white;
+		}
+		code {
+			background-color: black;
+			color:white;
+		}
+	</style>
+</head>
+<body>
+	<div id="contentsbanner">
+		<h2 id="contents">Contents</h2>
+		<small><ol>
+			<li><a href="#top">Top</a></li>
+			<li><a href="#auth">Authentication</a></li>
+			<li>
+				<a href="#user">User</a>
+				<ol>
+					<li><a href="#getuser">GET</a></li>
+				</ol>
+			</li>
+			<li>
+				<a href="#goal">Goal</a>
+				<ol>
+					<li><a href="#getgoal">GET</a></li>
+					<li><a href="#getgoals">GET all</a></li>
+					<li><a href="#creategoal">POST</a></li>
+					<li><a href="#putgoal">PUT</a></li>
+					<li><a href="#refresh">Refresh</a></li>
+					<li><a href="#dialroad">[deprecated] Dial Road</a></li>
+					<li><a href="#shortcircuit">Short Circuit</a></li>
+					<li><a href="#stepdown">Step Pledge Down</a></li>
+					<li><a href="#cancelstepdown">Cancel Stepdown</a></li>
+				</ol>
+			</li>
+			<li>
+				<a href="#datapoint">Datapoint</a>
+				<ol>
+					<li><a href="#dataall">GET</a></li>
+					<li><a href="#postdata">POST</a></li>
+					<li><a href="#postdatas">POST multiple</a></li>
+					<li><a href="#putdata">PUT</a></li>
+					<li><a href="#deletedata">DELETE</a></li>
+				</ol>
+			</li>
+			<li>
+				<a href="#charge">Charge</a>
+				<ol>
+					<li><a href="#postcharge">POST</a></li>
+				</ol>
+			</li>
+			<li><a href="#webhooks">Webhooks</a></li>
+		</ol></small>
+	</div>
+	<div class="api-docs">
+		<div id="lede">
+			<h1>Beeminder API Documentation</h1>
+			<h2 id="introduction">Introduction</h2>
+			<p>
+				In case you're here to automate adding data to Beeminder, there's a good chance we've got you covered with our <a href="http://beeminder.com/zapier" title="Zapier is a service like IFTTT that connects hundreds of disparate webservices. In the case of Beeminder you can create triggers in other webservices that automatically cause data to be added to Beeminder graphs.">Zapier integration</a> or our <a href="http://ifthisMINDthat.com" title="IFTTT = If This Then That">IFTTT integration</a>. If you're looking for ideas for things to do with the Beeminder API, we have a <a href="http://blog.beeminder.com/api" title="This was the blog post that originally announced our API in 2012 but we've updated occasionally since then with links to things people are doing with it">blog post with lots of examples</a>. The <a href="http://forum.beeminder.com/c/tech" title="Yay Discourse.org!">tech category of our forum</a> is a good place to ask questions and show off what you're working on.
+			</p>
+			<p>
+				It's really important to us that this API be easy for developers to use so please don't be shy about asking us questions. Whether you post in <a href="http://forum.beeminder.com" title="The above link is the Tech subset of the forum; this link is to the main page for the forum">the forum</a> or email us at support@beeminder.com we've invariably found that questions people avoided asking for fear they were dumb turned out to point to things we needed to improve in the API or the documentation. So lean on us heavily as you're hacking away with our API — it helps us a lot when you do!
+			</p>
+			<h2>Preliminaries</h2>
+			<p>The base URL for all requests is <code>https://www.beeminder.com/api/v1/</code></p>
+			<p>
+				You may also consume the Beeminder API via <a href="http://mashape.com" title="Mashape is a hub for cloud APIs (is how Wikipedia puts it)">Mashape</a>: <span data-api="beeminder" data-icon="1" data-name="beeminder" id="mashape-button"></span>
+			</p>
+		</div>
+		<div id="authmethod">
+			<h1 id="auth">Authentication</h1>
+			<p>All API endpoints require authentication. There are two ways to authenticate.</p>
+			<h2>Personal authentication token</h2>
+			<p>This authentication pattern is for making API calls just to your own Beeminder account.</p>
+			<p>
+				After you <a href="https://www.beeminder.com/users/sign_in">sign in to Beeminder</a>, visit <a href="https://www.beeminder.com/api/v1/auth_token.json"><code>https://www.beeminder.com/api/v1/auth_token.json</code></a> to get your personal auth token. Append it to API requests you make as an additional GET or POST parameter. For example, if your username is “alice” and your token is “abc123” you can query information about your “weight” goal like so:
+			</p>
+			<pre class="prettyprint">GET https://www.beeminder.com/api/v1/users/alice/goals/weight.json?auth_token=abc123</pre>
+			<h2 id="oauth">Client Oauth</h2>
+			<p>
+				This authentication pattern is for clients (applications) accessing the Beeminder API on a user's behalf. Beeminder implements the <a href="http://oauth.net/" title="Specifically Oauth2">OAuth</a> provider protocol to allow access reasonably securely.
+			</p>
+			<p>There are four steps to build a client:</p>
+			<h3>1. Register your app</h3>
+			<p>
+				Register your app at <a href="https://www.beeminder.com/apps/new">beeminder.com/apps/new</a>. Application name and redirect URL are required. The redirect URL is where the user is sent after authorizing your app. <!-- If the user de-authorizes your app, we will POST to your callback endpoint. You can optionally specify a URL that users are redirected to if they deauthorize as well.-->
+			</p>
+			<h3>2. Send your users to the Beeminder authorization URL</h3>
+			<p>The base URL is the same for all apps: <code>https://www.beeminder.com/apps/authorize</code>. You'll need to add the following parameters:</p>
+			<ul>
+				<li>
+					<code>client_id</code>: Your application's client ID. You can see a list of your registered apps and retrieve their <code>client_id</code>s at <a href="https://www.beeminder.com/apps" title="List of apps you've registered, not to be confused with the list of apps you've authorized to access your Beeminder account, or the list of services you've authorized Beeminder to access">beeminder.com/apps</a>.
+				</li>
+				<li>
+					<code>redirect_uri</code>: This is where Beeminder will send the user after they have authorized your app. This <em>must match</em> the redirect URL you supplied when you registered your app above. Make sure to <a href="http://en.wikipedia.org/wiki/Percent-encoding" title="Where you replace characters that have special meaning in URLs with a percent sign and their ascii number (or plus signs for spaces)">url-encode</a> this if it contains any special characters like question marks or ampersands.
+				</li>
+				<li>
+					<code>response_type</code>: Currently this should just always be set to the value “<code>token</code>”.
+				</li>
+			</ul>
+			<p>Example authorization URL:</p>
+			<pre class="prettyprint">https://www.beeminder.com/apps/authorize?client_id=xyz456&amp;redirect_uri=http://foo.com/auth_callback&amp;response_type=token</pre>
+			<h3>3. Receive and store user's access token</h3>
+			<p>
+				After the user authorizes your application they'll be redirected to the <code>redirect_uri</code> that you specified, with two additional parameters, <code>access_token</code> and <code>username</code>, in the <a href="http://en.wikipedia.org/wiki/Query_string" title="The query string is the parameters that come after the question mark in a URL">query string</a>. For example, if the user “alice” has access token “abc123” then the following string would be appended to the URL:
+			</p>
+			<pre class="prettyprint">?access_token=abc123&amp;username=alice</pre>
+			<p>
+				You should set up your server to handle this GET request and have it remember each user's access token. The access token uniquely identifies the user's authorization for your app.
+			</p>
+			<p>
+				The username is provided here for convenenience. You can retrieve the username for a given access token at any time by sending a GET request for <code>/api/v1/me.json</code> with the token appended as a parameter.
+			</p>
+			<h3>4. Include access token as a parameter</h3>
+			<p>
+				Append the access token as a parameter on any API requests you make on behalf of that user. For example, your first request will probably be to get information about the <a href="#user">User</a> who just authorized your app and so will look something like this:
+			</p>
+			<pre class="prettyprint">GET https://www.beeminder.com/api/v1/users/me.json?access_token=abc123</pre>
+			<p>You can literally use “me” in place of the username for any endpoint and it will be macro-expanded to the username of the authorized user.</p>
+			<h3>5. Optional: De-authorization callback</h3>
+			<p>
+				If you provide a Post De-Authorization Callback url when you register your client, we will make a POST to your endpoint when a user removes your app. The POST will include the access_token removed in the body of the request.
+			</p>
+		</div>
+		<div id="getuser">
+			<h1 id="user">User Resource</h1>
+			<p>
+				A User object (“object” in the <a href="http://json.org" title="JavaScript Objection Notation aka how data is passed around on the internet">JSON</a> sense) includes information about a user, like their list of goals.
+			</p>
+			<h3>Attributes</h3>
+			<ul>
+				<li><code>username</code> (string)</li>
+				<li><code>timezone</code> (string)</li>
+				<li><code>updated_at</code> (number): <a href="http://en.wikipedia.org/wiki/Unix_time" title="Number of seconds since 1970-01-01 at midnight GMT">Unix timestamp</a> (in seconds) of the last update to this user or any of their goals or datapoints.</li>
+				<li><code>goals</code> (array): A list of slugs for each of the user's goals, or an array of goal hashes (objects) if <code>diff_since</code> or <code>associations</code> is sent.</li>
+				<li><code>deadbeat</code> (boolean): True if the user's payment info is out of date, or a an attempted payment has failed.</li>
+				<li><code>deleted_goals</code> (array): An array of hashes, each with one key/value pair for the id of the deleted goal. Only returned if <code>diff_since</code> is sent.</li>
+			</ul>
+			<h2 id="getuser">Get information about a user</h2>
+			<p><code>GET /users/</code><em>u</em><code>.json</code></p>
+			<p>Retrieves information and a list of goalnames for the user with username <em>u</em>.</p>
+			<p>
+				Since appending an <code>access_token</code> to the request uniquely identifies a user, you can alternatively make the request to /users/me.json (without the username).
+			</p>
+			<h3>Parameters</h3>
+			<ul>
+				<li>
+					[<code>goals_filter</code>] (string): One of {<code>all</code>, <code>frontburner</code>, <code>backburner</code>}. Default: <code>all</code>, which returns an unfiltered list of all goals.<br>
+					Send <code>frontburner</code> if you want the list of goals the user has marked as frontburner goals (those which appear above the fold in the web interface), or <code>backburner</code> for just the below-the-fold goals.
+				</li>
+				<li>
+					[<code>associations</code>] (boolean): Convenience method to fetch all information about a user. Please use sparingly and see also the <code>diff_since</code> parameter. Default: false<br>
+					Send <code>true</code> if you want to receive all of the user's goal and datapoints as attributes of the user object.
+				</li>
+				<li>
+					[<code>diff_since</code>] (number): Unix timestamp in seconds. Default: null, which will return all goals and datapoints<br>
+					Send a Unix timestamp to receive a filtered list of the user's goals and datapoints. Only goals and datapoints that have been created or updated since the timestamp will be returned. Sending <code>diff_since</code> implies that you want the user's associations, so you don't need to send both.
+				</li>
+				<li>
+					[<code>skinny</code>] (boolean): Convenience method to only get a subset of goal attributes and the most recent datapoint for the goal. Default: false, which will return all goal attributes and all datapoints created or updated since <code>diff_since</code>.<br>
+					<code>skinny</code> must be sent along with <code>diff_since</code>. If <code>diff_since</code> is not present, <code>skinny</code> is ignored. Some goal attributes, as well as fetching all datapoints, can take some additional time to compute on the server side, so you can send <code>skinny</code> if you only need the latest datapoint and the following subset of attributes:
+				</li>
+			</ul>
+			<p>
+				<code>slug, title, description, goalval, rate, goaldate, graph_url, thumb_url, goal_type, autodata, losedate, deadline, leadtime, alertstart, id, queued, panic, updated_at, burner, yaw, lane, lanewidth, delta, runits, limsum, frozen, lost, won, contract, delta_text, safebump</code>
+			</p>
+			<p>
+				Instead of a <code>datapoints</code> attribute, sending <code>skinny</code> will replace that attribute with a <code>last_datapoint</code> attribute. Its value is a Datapoint hash.
+			</p>
+			<ul>
+				<li>[<code>datapoints_count</code>] (number): number of datapoints. Default: null, which will return all goals and datapoints<br>
+					Send a number <code>n</code> to only recieve the <code>n</code> most recently added datapoints, sorted by <code>updated_at</code>. Note that the most recently added datapoint could have been a datapoint whose timestamp is well in the past and therefore before other datapoints in that respect. For example, my datapoints might look like:<br>
+					12 1<br>
+					14 1<br>
+					15 1<br>
+					16 1
+				</li>
+			</ul>
+			<p>
+				If I go back and realize that I forgot to enter data on the 13th, the datapoint for the 13th will be sorted ahead of the one on the 16th:<br>
+				12 1<br>
+				14 1<br>
+				15 1<br>
+				16 1<br>
+				13 1
+			</p>
+			<h3>Returns</h3>
+			<p>A <a href="#user">User</a> object.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+				GET /api/v1/users/alice.json?goals_filter=frontburner
+
+				{	"username": "alice",
+					"timezone": "America/Los_Angeles",
+					"updated_at": 1343449880,
+					"goals": ["gmailzero", "weight"] }
+			</pre>
+			<p>
+				Use the <code>updated_at</code> field to be a good Beeminder API citizen and avoid unnecessary requests for goals and datapoints. Any updates to a user, their goals, or any datapoints on any of their goals will cause this field to be updated to the current unix timestamp. If you store the returned value and, on your next call to this endpoint, the value is the same, there's no need to make requests to other endpoints.
+			</p>
+			<p>Checking the timestamp is an order of magnitude faster than retrieving all the data, so it's definitely wise to use this approach.</p>
+			<pre class="prettyprint">
+				GET /api/v1/users/alice.json?diff_since=1352561989
+
+				{	"username": "alice",
+					"timezone": "America/Los_Angeles",
+					"updated_at": 1343449880,
+					"goals": [
+						{
+							"slug": "weight", ...,
+							"datapoints": [
+								{	"timestamp": 1325523600,
+									"value": 70.45,
+									"comment": "blah blah",
+									"id": "4f9dd9fd86f22478d3"},
+								{
+									"timestamp": 1325610000,
+									"value": 70.85,
+									"comment": "blah blah",
+									"id": "5f9d79fd86f33468d4"}
+								],
+							"title": "Weight Loss", ...
+						},
+						{
+							another goal
+						}, ...
+					],
+					"deleted_goals": [
+						{ "id": "519279fd86f33468ne"}, ...
+					]
+				}
+			</pre>
+			<h2 id="redirectuser">Authenticate and redirect the user</h2>
+			<p><code>GET /users/</code><em>u</em><code>.json</code></p>
+			<p>
+				Attempts to authenticate the user and if successful redirects to the given URL. Allows third-party apps to send the user to a specific part of the website without getting intercepted by a login screen, for doing things not available through the API.
+			</p>
+			<h3>Parameters</h3>
+			<ul><li>[<code>redirect_to_url</code>] (string): Url to redirect the user to.</li></ul>
+			<h3>Examples</h3>
+			<pre class="prettyprint">GET /api/v1/users/alice.json?redirect_to_url=https%3A%2F%2Fwww.beeminder.com%2Fpledges</pre>
+
+		</div>
+		<div id="getgoal">
+			<h1 id="goal">Goal Resource</h1>
+			<p>
+				A Goal object includes the everything about a specific goal for a specific user, including the target value and date, the steepness of the yellow brick road, the graph image, and various settings for the goal.
+			</p>
+			<h3>Attributes</h3>
+			<ul>
+				<li><code>slug</code> (string): The final part of the URL of the goal, used as an identifier. E.g, if user “alice” has a goal at beeminder.com/alice/weight then the goal's slug is “weight”.</li>
+				<li><code>updated_at</code> (number): <a href="http://en.wikipedia.org/wiki/Unix_time">Unix timestamp</a> of the last time this goal was updated.</li>
+				<li><code>burner</code> (string): One of <code>frontburner</code>, <code>backburner</code>. Indicates whether the goal is on the “frontburner” for the user in their gallery or whether the goal has been relegated to the “backburner” (below the fold on the web interface).</li>
+				<li><code>title</code> (string): The title that the user specified for the goal. E.g., “Weight Loss”.</li>
+				<li><code>yaxis</code> (string): The label for the y-axis of the graph. E.g., “Cumulative total hours”.</li>
+				<li><code>goaldate</code> (number): Unix timestamp (in seconds) of the goal date.</li>
+				<li><code>goalval</code> (number): Goal value — the number the yellow brick road will eventually reach. E.g., 70 kilograms.</li>
+				<li><code>rate</code> (number): The slope of the (final section of the) yellow brick road.</li>
+				<li><code>graph_url</code> (string): URL for the goal's graph image. E.g., “http://static.beeminder.com/alice/weight.png”.</li>
+				<li><code>thumb_url</code> (string): URL for the goal's graph thumbnail image. E.g., “http://static.beeminder.com/alice/weight-thumb.png”.</li>
+				<li><code>autodata</code> (string): The name of automatic data source, if this goal has one. Will be null for manual goals.</li>
+				<li>
+					<code>goal_type</code> (string): One of the following symbols:
+					<ul>
+						<li><code>hustler</code>: Do More</li>
+						<li><code>biker</code>: Odometer</li>
+						<li><code>fatloser</code>: Weight loss</li>
+						<li><code>gainer</code>: Gain Weight</li>
+						<li><code>inboxer</code>: Inbox Fewer</li>
+						<li><code>drinker</code>: Do Less</li>
+						<li><code>custom</code>: Full access to the underlying goal parameters</li>
+					</ul>
+				</li>
+				<li><code>losedate</code> (number): Unix timestamp of derailment. When you'll be off the road if nothing is reported.</li>
+				<li><code>panic</code> (number): Panic threshold. How long before derailment to panic. Default: 54000 (15 hours).</li>
+				<li><code>queued</code> (boolean): Whether the graph is currently being updated to reflect new data.</li>
+				<li><code>secret</code> (boolean): Whether you have to be signed in as owner of the goal to view it. Default: <code>false</code>.</li>
+				<li><code>datapublic</code> (boolean): Whether you have to be signed in as the owner of the goal to view the datapoints. Default: <code>false</code>.</li>
+				<li><code>datapoints</code> (array of <a href="#datapoint">Datapoints</a>): The datapoints for this goal.</li>
+				<li><code>numpts</code> (number): Number of datapoints.</li>
+				<li><code>pledge</code> (number): Amount pledged (USD) on the goal.</li>
+				<li><code>initday</code> (number): Unix timestamp (in seconds) of the start of the yellow brick road.</li>
+				<li><code>initval</code> (number): The y-value of the start of the yellow brick road.</li>
+				<li><code>curday</code> (number): Unix timestamp (in seconds) of the end of the yellow brick road, i.e., the most recent (inferred) datapoint.</li>
+				<li><code>curval</code> (number): The value of the most recent datapoint.</li>
+				<li><code>lastday</code> (number): Unix timestamp (in seconds) of the last (explicitly entered) datapoint.</li>
+				<li><code>runits</code> (string): Rate units. One of <code>y</code>, <code>m</code>, <code>w</code>, <code>d</code>, <code>h</code> indicating that the rate of the yellow brick road is yearly, monthly, weekly, daily, or hourly.</li>
+				<li><code>yaw</code> (number): Good side of the road. I.e., the side of the road (+1/-1 = above/below) that makes you say “yay”.</li>
+				<li><code>dir</code> (number): Direction the road is sloping, usually the same as yaw.</li>
+				<li><code>lane</code> (number): Where you are with respect to the yellow brick road (2 or more = above the road, 1 = top lane, -1 = bottom lane, -2 or less = below the road).</li>
+				<li><code>mathishard</code> (array of 3 numbers): The goaldate, goalval, and rate — all filled in. (The road dial specifies 2 out of 3 and you can check this if you want Beeminder to do the math for you on inferring the third one.)</li>
+				<li><code>headsum</code> (string): Summary of where you are with respect to the yellow brick road, e.g., “Right on track in the top lane”.</li>
+				<li><code>limsum</code> (string): Summary of what you need to do to eke by, e.g., “+2 within 1 day”.</li>
+				<li><code>exprd</code> (boolean): Exponential road; interpret rate as fractional, not absolute, change.</li>
+				<li><code>kyoom</code> (boolean): Cumulative; plot values as the sum of all those entered so far, aka auto-summing.</li>
+				<li><code>odom</code> (boolean): Treat zeros as accidental odometer resets.</li>
+				<li><code>edgy</code> (boolean): Put the initial point on the road edge instead of centerline.</li>
+				<li><code>noisy</code> (boolean): Compute road width based on data, not just road rate.</li>
+				<li><code>aggday</code> (string): How to aggregate points on the same day, eg, min/max/mean.</li>
+				<li><code>steppy</code> (boolean): Join dots with purple steppy-style line.</li>
+				<li><code>rosy</code> (boolean): Show the rose-colored dots and connecting line.</li>
+				<li><code>movingav</code> (boolean): Show moving average line superimposed on the data.</li>
+				<li><code>aura</code> (boolean): Show turquoise swath, aka blue-green aura.</li>
+				<li><code>frozen</code> (boolean): Whether the goal is currently frozen and therefore must be restarted before continuing to accept data.</li>
+				<li><code>won</code> (boolean): Whether the goal has been successfully completed.</li>
+				<li><code>lost</code> (boolean): Whether the goal is currently off track.</li>
+				<li><code>nomercy</code> (boolean): Whether to recommit without the usual week of safety buffer, should you derail.</li>
+				<li><code>contract</code> (dictionary): Dictionary with two attributes. <code>amount</code> is the amount at risk on the contract, and <code>stepdown_at</code> is a Unix timestamp of when the contract is scheduled to revert to the next lowest pledge amount. <code>null</code> indicates that it is not scheduled to revert.</li>
+				<li><code>road</code> (array): Array of tuples that can be used to construct the Yellow Brick Road. This field is also known as the road matrix. Each tuple specifies 2 out of 3 of [<code>time</code>, <code>goal</code>, <code>rate</code>]. To construct the road, start with a known starting point (time, value) and then each row of the road matrix specifies 2 out of 3 of {t,v,r} which gives the segment ending at time t. You can walk forward filling in the missing 1-out-of-3 from the (time, value) in the previous row.</li>
+				<li><code>roadall</code> (array): Like <code>road</code> but with an additional initial row consisting of [<code>initday</code>, <code>initval</code>, null] and an additional final row consisting of [<code>goaldate</code>, <code>goalval</code>, <code>rate</code>].</li>
+				<li><code>fullroad</code> (array): Like <code>roadall</code> but with the nulls filled in.</li>
+				<li><code>rah</code> (number): Road value (y-value of the centerline of the yellow brick road) at the akrasia horizon (today plus one week).</li>
+				<li><code>delta</code> (number): Distance from the centerline of the yellow brick road to today's datapoint (<code>curval</code>).</li>
+				<li><code>delta_text</code> (string): The text that describes how far the goal is from each lane of the road — orange, blue, green. If the goal is on the good side of a given lane, the “✔” character will appear.</li>
+				<li><code>safebump</code> (number): The absolute y-axis number you need to reach to get one additional day of safety buffer.</li>
+				<li><code>id</code> (string of hex digits): Deprecated. We always use user/slug as the goal identifier in the API.</li>
+				<li><code>callback_url</code> (string): Callback URL, as <a href="http://forum.beeminder.com/t/webhook-callback-documentation/313" title="In short: you can add a callback to your own server whenever data is added on Beeminder">discussed in the forum</a>. WARNING: If different apps change this they'll step on each other's toes.</li>
+				<li><code>description</code> (string): Deprecated. User-supplied description of goal (listed in sidebar of graph page as “Goal Statement”).</li>
+				<li><code>graphsum</code> (string): Deprecated. Text summary of the graph, not used in the web UI anymore.</li>
+				<li><code>lanewidth</code> (number): Width of the lanes on either side of the centerline of the yellow brick road, i.e., half the road width.</li>
+				<li><code>deadline</code> (number): Seconds by which your deadline differs from midnight. Negative is before midnight, positive is after midnight. Allowed range is -17*3600 to 6*3600 (7am to 6am).</li>
+				<li><code>leadtime</code> (number): Days before derailing we start sending you reminders. Zero means we start sending them on the eep day, when you will derail later that day.</li>
+				<li><code>alertstart</code> (number): Seconds after midnight that we start sending you reminders (on the day that you're scheduled to start getting them, see <code>leadtime</code> above).</li>
+				<li><code>plotall</code> (boolean): Whether to plot all the datapoints, or only the <code>aggday</code>‘d one. So if false then only the official datapoint that's counted is plotted.</li>
+				<li><code>ephem</code> (boolean): Deprecated and should be removed. Whether a goal is a temporary test goal, of which there is no longer any such thing.</li>
+			</ul>
+			<p>
+				The goal types are shorthand for a collection of settings of more fundamental goal attributes. Note that changing the goal type of an already-created goal has no effect on those fundamental goal attributes. The following table lists what those attributes are.
+			</p>
+			<center>
+				<table>
+					<tr>
+						<th></th>
+						<td><code>hustler</code></td>
+						<td><code>biker</code></td>
+						<td><code>fatloser</code></td>
+						<td><code>gainer</code></td>
+						<td><code>inboxer</code></td>
+						<td><code>drinker</code></td>
+					</tr>
+					<tr>
+						<td><code>yaw</code></td>
+						<td>1</td>
+						<td>1</td>
+						<td>-1</td>
+						<td>1</td>
+						<td>-1</td>
+						<td>-1</td>
+					</tr>
+					<tr>
+						<td><code>dir</code></td>
+						<td>1</td>
+						<td>1</td>
+						<td>-1</td>
+						<td>1</td>
+						<td>-1</td>
+						<td>1</td>
+					</tr>
+					<tr>
+						<td><code>exprd</code></td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+					</tr>
+					<tr>
+						<td><code>kyoom</code></td>
+						<td>true</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>true</td>
+					</tr>
+					<tr>
+						<td><code>odom</code></td>
+						<td>false</td>
+						<td>true</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+					</tr>
+					<tr>
+						<td><code>edgy</code></td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>false</td>
+						<td>true</td>
+					</tr>
+					<tr>
+						<td><code>noisy</code></td>
+						<td>false</td>
+						<td>false</td>
+						<td>true</td>
+						<td>true</td>
+						<td>false</td>
+						<td>false</td>
+					</tr>
+					<tr>
+						<td><code>aggday</code></td>
+						<td>“sum”</td>
+						<td>“last”</td>
+						<td>“min”</td>
+						<td>“last”</td>
+						<td>“min”</td>
+						<td>“sum”</td>
+					</tr>
+					<tr>
+						<td><code>steppy</code></td>
+						<td>true</td>
+						<td>true</td>
+						<td>false</td>
+						<td>false</td>
+						<td>true</td>
+						<td>true</td>
+					</tr>
+					<tr>
+						<td><code>rosy</code></td>
+						<td>false</td>
+						<td>false</td>
+						<td>true</td>
+						<td>true</td>
+						<td>false</td>
+						<td>false</td>
+					</tr>
+					<tr>
+						<td><code>movingav</code></td>
+						<td>false</td>
+						<td>false</td>
+						<td>true</td>
+						<td>true</td>
+						<td>false</td>
+						<td>false</td>
+					</tr>
+					<tr>
+						<td><code>aura</code></td>
+						<td>false</td>
+						<td>false</td>
+						<td>true</td>
+						<td>true</td>
+						<td>false</td>
+						<td>false</td>
+					</tr>
+				</table>
+				<p></p>
+			</center>
+			<p>
+				There are four broad, theoretical categories — called the platonic goal types — that goals fall into, defined by <code>dir</code> and <code>yaw</code>:
+			</p>
+			<pre>
+				PHAT = dir -1 &amp; yaw -1 = "go down, like weightloss or gmailzero"
+				MOAR = dir +1 &amp; yaw +1 = "go up, like work out more"
+				WEEN = dir +1 &amp; yaw -1 = "go up less, like quit smoking"
+				RASH = dir -1 &amp; yaw +1 = "go down less, ie, rationing, eg, <a href="http://beeminder.com/d/contacts" title="The Beeminder CEO with an early Beeminder graph to ration his supply of 'daily' contact lenses to last for 2 years, till 2013">bmndr.com/d/contacts</a>"
+			</pre>
+			<p>The <code>dir</code> parameter is mostly just for the above categorization, but is used specifically in the following ways:</p>
+			<ol>
+				<li>Where to draw the watermarks (amount pledged and number of safe days)</li>
+				<li>How to phrase things like “bare min of +123 in 4 days” and the status line (also used in bot email subjects)</li>
+				<li>Which direction is the optimistic one for the rosy dots algorithm</li>
+			</ol>
+			<p>If you just want the dot color, here's how to infer it from <code>lane</code> and <code>yaw</code>:</p>
+			<ul>
+				<li><code>lane*yaw &gt;= -1</code>: on the road or on the good side of it (blue or green)</li>
+				<li><code>lane*yaw &gt; 1</code>: good side of the road (green dot)</li>
+				<li><code>lane*yaw == 1</code>: right lane (blue dot)</li>
+				<li><code>lane*yaw == -1</code>: wrong lane (orange dot)</li>
+				<li><code>lane*yaw &lt;= -2</code>: emergency day or derailed (red dot)</li>
+			</ul>
+			<p>
+				Finally, the way to tell if a goal has finished successfully is <code>now &gt;= goaldate &amp;&amp; goaldate &lt; losedate</code>. That is, you win if you hit the goal date before hitting <code>losedate</code>. You don't have to actually reach the goal value — staying on the yellow brick road till the end suffices.
+			</p>
+			<h2 id="getgoal">Get information about a goal</h2>
+			<p><code>GET /users/</code><em>u</em><code>/goals/</code><em>g</em><code>.json</code></p>
+			<p>Gets goal details for user <em>u</em>'s goal <em>g</em> — beeminder.com/<em>u</em>/<em>g</em>.</p>
+			<h3>Parameters</h3>
+			<ul><li>[<code>datapoints</code>] (boolean): Whether to send the goal's datapoints in the response. Default: <code>false</code>.</li></ul>
+			<h3>Returns</h3>
+			<p>A <a href="#goal">Goal</a> object, possibly without the datapoints attribute.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+			  GET /api/v1/users/alice/goals/weight.json?datapoints=true
+
+			  { "slug": "weight",
+			    "title": "Weight Loss",
+			    "goaldate": 1358524800,
+			    "goalval": 166,
+			    "rate": null,
+			    "graph_url": "http://static.beeminder.com/alice+weight.png",
+			    "thumb_url": "http://static.beeminder.com/alice+weight-thumb.png",
+			    "goal_type": "fatloser",
+			    "losedate": 1358524800,
+			    "panic": 54000,
+			    "queued": false,
+			    "updated_at": 1337479214,
+			    "datapoints": [{"timestamp": 1325523600,
+			                    "value": 70.45,
+			                    "comment": "blah blah",
+			                    "id": "4f9dd9fd86f22478d3"},
+			                   {"timestamp": 1325610000,
+			                    "value": 70.85,
+			                    "comment": "blah blah",
+			                    "id": "5f9d79fd86f33468d4"}]}
+
+			</pre>
+			<h2 id="getgoals">Get all goals for a user</h2>
+			<p><code>GET /users/</code><em>u</em><code>/goals.json</code></p>
+			<p>Get user <em>u</em>'s list of goals.</p>
+			<h3>Parameters</h3>
+			<ul><li>
+				[<code>filter</code>] (string): One of {<code>all</code>, <code>frontburner</code>, <code>backburner</code>}. Default: <code>all</code>.<br>See the <a href="#getuser">similar GET request for the User resource</a> for the explanation of frontburner/backburner.
+			</li></ul>
+			<h3>Returns</h3>
+			<p>A list of <a href="#goal">Goal</a> objects for the user.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+				  GET /api/v1/users/alice/goals.json?filter=frontburner
+
+				  [
+				    { "slug": "gmailzero",
+				      "title": "Inbox Zero",
+				      "goal_type": "inboxer",
+				      "graph_url": "http://static.beeminder.com/alice+gmailzero.png",
+				      "thumb_url": "http://static.beeminder.com/alice+weight-thumb.png",
+				      "panic":54000,
+				      "losedate": 1347519599,
+				      "goaldate": 0,
+				      "goalval": 25.0,
+				      "rate": -0.5,
+				      "updated_at": 1345774578,
+				      "queued": false },
+				    { "slug": "fitbit-me",
+				      "title": "Never stop moving",
+				      "goal_type": "hustler",
+				      "graph_url": "http://static.beeminder.com/alice+fitbit-me.png",
+				      "thumb_url": "http://static.beeminder.com/alice+fitbit-thumb.png",
+				      "panic": 86400,
+				      "losedate": 1346482799,
+				      "goaldate": 1349582400,
+				      "goalval": null,
+				      "rate": 8.0,
+				      "updated_at": 1345771188,
+				      "queued": false }
+				  ]
+
+			</pre>
+			<h2 id="creategoal">Create a goal for a user</h2>
+			<p><code>POST /users/</code><em>u</em><code>/goals.json</code></p>
+			<p>Create a new goal for user <em>u</em>.</p>
+			<h3>Parameters</h3>
+			<ul>
+				<li><code>slug</code> (string)</li>
+				<li><code>title</code> (string)</li>
+				<li><code>goal_type</code> (string)</li>
+				<li><code>goaldate</code> (number or null)</li>
+				<li><code>goalval</code> (number or null)</li>
+				<li><code>rate</code> (number or null)</li>
+				<li><code>initval</code> (number): Initial value for today's date. Default: 0.</li>
+				<li>[<code>panic</code>] (number)</li>
+				<li>[<code>secret</code>] (boolean)</li>
+				<li>[<code>datapublic</code>] (boolean)</li>
+				<li><code>dryrun</code> (boolean). Pass this to test the endpoint without actually creating a goal. Defaults to false.</li>
+			</ul>
+			<p><a href="http://youtu.be/QM9Bynjh2Lk?t=4m14s">Exactly</a> two out of three of <code>goaldate</code>, <code>goalval</code>, and <code>rate</code> are required.</p>
+			<h3>Returns</h3>
+			<p>The newly created <a href="#goal">Goal</a> object.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+				  POST /api/v1/users/alice/goals.json?slug=exercise&amp;title=Work+Out+More&amp;goal_type=hustler&amp;goaldate=1400000000&amp;rate=5&amp;goalval=null
+
+				  { "slug": "exercise",
+				    "title": "Work Out More",
+				    "goal_type": "hustler",
+				    "graph_url": "http://static.beeminder.com/alice+exercise.png",
+				    "thumb_url": "http://static.beeminder.com/alice+exercise-thumb.png",
+				    "panic": 54000,
+				    "losedate": 1447519599,
+				    "goaldate": 1400000000,
+				    "goalval": null,
+				    "rate": 5,
+				    "updated_at": 1345774578,
+				    "queued": false }
+
+			</pre>
+			<p>
+				One of the three fields <code>goaldate</code>, <code>goalval</code>, and <code>rate</code> will return a null value. This indicates that the value is calculated based on the other two fields, as selected by the user.
+			</p>
+			<h2 id="putgoal">Update a goal for a user</h2>
+			<p><code>PUT /users/</code><em>u</em><code>/goals/</code><em>g</em><code>.json</code></p>
+			<p>
+				Update user <em>u</em>'s goal with slug <em>g</em>. This is similar to the call to create a new goal, but the goal type (<code>goal_type</code>) cannot be changed. To change any of {<code>goaldate</code>, <code>goalval</code>, <code>rate</code>} use the <code>dial_road</code> call below.
+			</p>
+			<h3>Parameters</h3>
+			<ul>
+				<li>[<code>slug</code>] (string)</li>
+				<li>[<code>title</code>] (string)</li>
+				<li>[<code>yaxis</code>] (string)</li>
+				<li>[<code>panic</code>] (number)</li>
+				<li>[<code>secret</code>] (boolean)</li>
+				<li>[<code>datapublic</code>] (boolean)</li>
+				<li>[<code>nomercy</code>] (boolean)</li>
+				<li>[<code>roadall</code>] (array of arrays like <code>[date::int, value::float, rate::float]</code> each with exactly one field null)
+					<ul>
+						<li>This must not make the goal easier between now and the akrasia horizon (unless you are an admin).</li>
+						<li>Use <code>roadall</code> returned by <a href="#getgoal">goal GET</a>, not <code>road</code> — the latter is missing the first and last rows (for the sake of backwards compatibility).</li>
+						<li>The first row must be <code>[date, value, null]</code> and gives the start of the road, same as <code>initday</code> and <code>initval</code> in <a href="#getgoal">goal GET</a>.</li>
+						<li>The last row can be <code>[null, value, rate]</code> but no other row can be.</li>
+						<li>This is a superset of <code>dial_road</code> (which changes just the last row of this roadall).</li>
+						<li>Validation is not yet implemented for exponential goals (so this will error on them, unless you are an admin).</li>
+					</ul>
+				</li>
+			</ul>
+			<h3>Returns</h3>
+			<p>The updated <a href="#goal">Goal</a> object.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+				  PUT /api/v1/users/alice/goals.json?slug=exercise&amp;title=Work+Out+Even+More&amp;panic=3600
+
+				  { "slug": "exercise",
+				    "title": "Work Out Even More",
+				    "goal_type": "hustler",
+				    "graph_url": "http://static.beeminder.com/alice+exercise.png",
+				    "thumb_url": "http://static.beeminder.com/alice+exercise-thumb.png",
+				    "panic": 3600,
+				    "losedate": 1447519599,
+				    "goaldate": 1400000000,
+				    "goalval": null,
+				    "rate": 5,
+				    "updated_at": 1345774578,
+				    "queued": false }
+
+			</pre>
+			<h2 id="refresh">Force a fetch of autodata and graph refresh</h2>
+			<p><code>GET /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/refresh_graph.json</code></p>
+			<p>
+				Analagous to the refresh button on the goal page. Forces a refetch of autodata for goals with automatic data sources. Refreshes the graph image regardless. <em><strong>**Please be extremely conservative with this endpoint!</strong></em>
+			</p>
+			<h3>Parameters</h3>
+			<p>None.</p>
+			<h3>Returns</h3>
+			<p>
+				This is an asynchronous operation, so this endpoint simply returns <strong>true</strong> if the goal was queued and <strong>false</strong> if not. It is up to you to watch for an updated graph image.
+			</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+			  GET /api/v1/users/alice/goals/weight/refresh_graph.json
+
+			  true
+
+			</pre>
+			<h2 id="dialroad">[deprecated] Update a yellow brick road</h2>
+			<p><code>POST /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/dial_road.json</code></p>
+			<p>
+				<em><strong>Note:</strong> the dial_road endpoint is deprecated in favor of <a href="#putgoal" title="on the goal update endpoint">roadall</a> which, despite its highly confusing state, is the future.</em>
+			</p>
+			<p>
+				Change the slope of the yellow brick road (starting after the one-week <a href="http://blog.beeminder.com/dial">Akrasia Horizon</a>) for beeminder.com/<em>u</em>/<em>g</em>.
+			</p>
+			<h3>Parameters</h3>
+			<ul>
+				<li><code>rate</code> (number or null)</li>
+				<li><code>goaldate</code> (number or null)</li>
+				<li><code>goalval</code> (number or null)</li>
+			</ul>
+			<p>Exactly two of <code>goaldate</code>, <code>goalval</code>, and <code>rate</code> should be specified — setting two implies the third.</p>
+			<h3>Returns</h3>
+			<p>The updated <a href="#goal">Goal</a> object.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+			  POST /api/v1/users/alice/goals/weight/dial_road.json?rate=-0.5&amp;goalval=166&amp;goaldate=null
+
+			  { "slug": "weight",
+			    "title": "Weight Loss",
+			    "goal_type": "fatloser",
+			    "graph_url": "http://static.beeminder.com/alice+weight.png",
+			    "thumb_url": "http://static.beeminder.com/alice+weight-thumb.png",
+			    "goaldate": null,
+			    "goalval": 166,
+			    "rate": -0.5,
+			    "losedate": 1358524800 }
+
+			</pre>
+			<h2 id="shortcircuit">Short circuit a goal's pledge</h2>
+			<p><code>POST /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/shortcircuit.json</code></p>
+			<p>
+				Increase the goal's pledge level and <strong>charge the user the amount of the current pledge</strong>.</p>
+			<h3>Parameters</h3>
+			<p>None</p>
+			<h3>Returns</h3>
+			<p>The updated <a href="#goal">Goal</a> object.</p>
+			<h2 id="stepdown">Step down a goal's pledge</h2>
+			<p><code>POST /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/stepdown.json</code></p>
+			<p>
+				Decrease the goal's pledge level <strong>subject to the akrasia horizon</strong>, i.e., not immediately. After a successful request the goal will have a countdown to when it will revert to the lower pledge level.
+			</p>
+			<h3>Parameters</h3>
+			<p>None</p>
+			<h3>Returns</h3>
+			<p>The updated <a href="#goal">Goal</a> object.</p>
+			<h2 id="cancelstepdown">Cancel a scheduled step down</h2>
+			<p><code>POST /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/cancel_stepdown.json</code></p>
+			<p>Cancel a pending stepdown of a goal's pledge. The pledge will remain at the current amount.</p>
+			<h3>Parameters</h3>
+			<p>None</p>
+			<h3>Returns</h3>
+			<p>The updated <a href="#goal">Goal</a> object.</p>
+
+		</div>
+		<div id="getdatapoints">
+			<h1 id="datapoint">Datapoint Resource</h1>
+			<p>
+				A Datapoint consists of a timestamp and a value, an optional comment, and meta information. A Datapoint belongs to a <a href="#goal">Goal</a>, which has many Datapoints.
+			</p>
+			<h3>Attributes</h3>
+			<ul>
+				<li><code>id</code> (string): A unique ID, used to identify a datapoint when deleting or editing it.</li>
+				<li><code>timestamp</code> (number): The <a href="http://en.wikipedia.org/wiki/Unix_time">unix time</a> (in seconds) of the datapoint.</li>
+				<li><code>daystamp</code> (string): The date of the datapoint (e.g., “20150831”). Sometimes timestamps are surprising due to goal deadlines, so if you're looking at Beeminder data, you're probably interested in the daystamp.</li>
+				<li><code>value</code> (number): The value, e.g., how much you weighed on the day indicated by the timestamp.</li>
+				<li><code>comment</code> (string): An optional comment about the datapoint.</li>
+				<li><code>updated_at</code> (number): The unix time that this datapoint was entered or last updated.</li>
+				<li><code>requestid</code> (string): If a datapoint was created via the API and this parameter was included, it will be echoed back.</li>
+			</ul>
+			<h2 id="dataall">Get all the datapoints</h2>
+			<p><code>GET /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/datapoints.json</code></p>
+			<p>Get the list of datapoints for user <em>u</em>'s goal <em>g</em> — beeminder.com/<em>u</em>/<em>g</em>.</p>
+			<h3>Parameters</h3>
+			<p>None.</p>
+			<h3>Returns</h3>
+			<p>The list of <a href="#datapoint">Datapoint</a> objects.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+			  GET /api/v1/users/alice/goals/weight/datapoints.json
+
+			  [{"id":"1", "timestamp":1234567890, "daystamp":"20090213", "value":7, "comment":"", "updated_at":123, "requestid":"a"},
+			   {"id":"2", "timestamp":1234567891, "daystamp":"20090214", "value":8, "comment":"", "updated_at":123, "requestid":"b"}]
+
+			</pre>
+			<h2 id="postdata">Create a datapoint</h2>
+			<p><code>POST /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/datapoints.json</code></p>
+			<p>Add a new datapoint to user <em>u</em>'s goal <em>g</em> — beeminder.com/<em>u</em>/<em>g</em>.</p>
+			<h3>Parameters</h3>
+			<ul>
+				<li>[<code>timestamp</code>] (number). Default: now, or the existing timestamp if the datapoint is being updated rather than created.</li>
+				<li>[<code>daystamp</code>] (string). Optionally you can include daystamp instead of the timestamp. If both are included, timestamp takes precedence.</li>
+				<li><code>value</code> (number)</li>
+				<li>[<code>comment</code>] (string)</li>
+				<li>[<code>requestid</code>] (string): Alphanumeric string to uniquely identify this datapoint (within this goal. The same requestid can be used for different goals without being considered a duplicate). Clients can use this to verify that Beeminder received a datapoint (important for clients with spotty connectivity). Using requestids also means clients can safely resend datapoints without accidentally creating duplicates. If <code>requestid</code> is included and the datapoint is identical to the existing datapoint with that requestid then the datapoint will be ignored (the API will return “duplicate datapoint”). If <code>requestid</code> is included and the datapoint differs from the existing one with the same requestid then the datapoint will be updated. If no datapoint with the requestid exists then of course the datapoint is simply created. In other words, this is an upsert endpoint and requestid is an idempotency key. NB: Must contain only alphanumeric characters or it will be ignored.</li>
+			</ul>
+			<h3>Returns</h3>
+			<p>The updated <a href="#datapoint">Datapoint</a> object.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+			  POST /api/v1/users/alice/goals/weight/datapoints.json?timestamp=1325523600&amp;value=130.1&amp;comment=sweat+a+lot+today
+
+			  { "timestamp": 1325523600,
+			    "daystamp": "20120102",
+			    "value": 130.1,
+			    "comment": "sweat a lot today",
+			    "id": "4f9dd9fd86f22478d3000008",
+			    "requestid":"abcd182475925"}
+
+			</pre>
+			<h2 id="postdatas">Create multiple datapoints</h2>
+			<p><code>POST /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/datapoints/create_all.json</code></p>
+			<p>Create multiple new datapoints for beeminder.com/<em>u</em>/<em>g</em>.</p>
+			<h3>Parameters</h3>
+			<ul>
+				<li><code>datapoints</code> (array of Datapoints): Each must include <code>timestamp</code>, <code>value</code>, and <code>comment</code>, with <code>requestid</code> optional.</li>
+			</ul>
+			<h3>Returns</h3>
+			<p>The list of created <a href="#datapoint">Datapoints</a>.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+			  POST /api/v1/users/alice/goals/weight/datapoints/create_all.json?datapoints=[{"timestamp":1343577600,"value":220.6,"comment":"blah+blah", "requestid":"abcd182475929"},\
+			                                             {"timestamp":1343491200,"value":220.7, "requestid":"abcd182475930"}]
+
+			  [ { "id": "5016fa9adad11576ad00000f",
+			      "timestamp": 1343577600,
+			      "daystamp": "20120729",
+			      "value": 220.6,
+			      "comment": "blah blah",
+			      "updated_at": 1343577600,
+			      "requestid":"abcd182475923"},
+			    { "id": "5016fa9bdad11576ad000010",
+			      "timestamp": 1343491200,
+			      "daystamp": "20120728",
+			      "value": 220.7,
+			      "comment": "",
+			      "updated_at": 1343491200,
+			      "requestid":"abcd182475923" } ]
+
+			</pre>
+			<h2 id="putdata">Update a datapoint</h2>
+			<p><code>PUT /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/datapoints/</code><em>id</em><code>.json</code></p>
+			<p>Update the datapoint with ID <em>id</em> for user <em>u</em>'s goal <em>g</em> (beeminder.com/<em>u</em>/<em>g</em>).</p>
+			<h3>Parameters</h3>
+			<ul>
+				<li>[<code>timestamp</code>] (number)</li>
+				<li>[<code>value</code>] (number)</li>
+				<li>[<code>comment</code>] (string)</li>
+			</ul>
+			<h3>Returns</h3>
+			<p>The updated <a href="#datapoint">Datapoint</a> object.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+			  PUT /api/v1/users/alice/goals/weight/datapoints/5016fa9adad11576ad00000f.json&amp;comment=a+real+comment
+
+			  { "id": "5016fa9adad11576ad00000f",
+			    "value": 220.6,
+			    "comment": "a real comment",
+			    "timestamp": 1343577600,
+			    "daystamp": "20120729",
+			    "updated_at": 1343577609 }
+
+			</pre>
+			<h2 id="deletedata">Delete a datapoint</h2>
+			<p><code>DELETE /users/</code><em>u</em><code>/goals/</code><em>g</em><code>/datapoints/</code><em>id</em><code>.json</code></p>
+			<p>Delete the datapoint with ID <em>id</em> for user <em>u</em>'s goal <em>g</em> (beeminder.com/<em>u</em>/<em>g</em>).</p>
+			<h3>Parameters</h3>
+			<p>None.</p>
+			<h3>Returns</h3>
+			<p>The deleted <a href="#datapoint">Datapoint</a> object.</p>
+			<h3>Examples</h3>
+			<pre class="prettyprint">
+
+			  DELETE /api/v1/users/alice/goals/weight/datapoints/5016fa9adad11576ad00000f.json
+
+			  { "id": "5016fa9adad11576ad00000f",
+			    "value": 220.6,
+			    "comment": "a real comment",
+			    "timestamp": 1343577600,
+			    "daystamp": "20120729",
+			    "updated_at": 1343577609 }
+
+			</pre>
+
+		</div>
+		<div id="charge">
+			<h1 id="charge">Charge Resource</h1>
+			<p>
+				Beeminder provides an endpoint to charge an arbitrary amount to a Beeminder user. The user is inferred from the <code>access_token</code> or <code>auth_token</code> provided. A <code>Charge</code> object has the following attributes:
+			</p>
+			<h3>Attributes</h3>
+			<ul>
+				<li><code>amount</code> (number): The amount to charge the user, in US dollars.</li>
+				<li><code>note</code> (string): An explanation of why the charge was made, or <code>null</code> if none was provided.</li>
+				<li><code>username</code> (string): The Beeminder username of the user being charged.</li>
+			</ul>
+			<h2 id="postcharge">Create a charge</h2>
+			<p><code>POST /charges</code></p>
+			<p>Create a charge of a given amount and optionally add a note.</p>
+			<h3>Parameters</h3>
+			<ul>
+				<li><code>amount</code> (number): The amount to charge the user, in US dollars.</li>
+				<li>[<code>note</code>] (string): An explanation of why the charge was made.</li>
+				<li>[<code>dryrun</code>] (string): If passed, the Charge is not actually created, but the JSON for it is returned as if it were. Default: false.</li>
+			</ul>
+			<h3>Returns</h3>
+			<p>The Charge object, or a dictionary with the error message(s) if the request was not successful.</p>
+			<h3>Example</h3>
+			<pre class="prettyprint">
+
+			  POST /api/v1/charges.json?amount=1&amp;note=I%27m+not+worthy%3B+charge+myself+%241
+
+			  { "id": "5016fa9adad11576ad00000f",
+			    "amount": 1,
+			    "note": "I'm not worthy; charge myself $1",
+			    "username": "alice" }
+
+			</pre>
+
+		</div>
+		<div id="Webhooks">
+			<h1>Webhooks</h1>
+			<p>
+				You can configure Beeminder to remind you about goals that are about to derail via webhook, either on the individual goal settings page or on your <a href="https://www.beeminder.com/settings/account">account defaults page</a>.
+			</p>
+			<p>
+				Beeminder will remind you via POST request to the URL you specify with a JSON body with all the attributes specified <a href="#goal">above</a>, for example:
+			</p>
+			<pre class="prettyprint">
+
+			  { "goal":
+			    { "id": "5016fa9adad11576ad00000f",
+			    "slug": "example", ... }
+			  }
+
+			</pre>
+		</div>
+	</div>
+</body>
+</html>
