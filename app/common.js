@@ -1,29 +1,36 @@
-var TimingVariable;
 var ServerStatusTimer = "empty";
-var UName,		Slug,		Deadline,	UserJSON, updated_at, GoalsJSON;
+var UName, Slug, Deadline, UserJSON, updated_at, GoalsJSON;
 var BeeURL = "https://www.beeminder.com";
 var ApiURL = "https://www.beeminder.com/api/v1/users/";
 var DefaultGoal = 0;
-var GoalsArray = []
+var GoalsArray = [];
 var w = [];var aT = [];var aD = [];var aH = [];var aN = []
+var DefaultSettings = {
+	"id"		: "default"
+	"notify"	: true,
+	"show"		: true
+}
 
 function PUinit(){ //
 	chrome.storage.sync.get(
 		{
 			username	: 	"",
 			token		: 	"",
-			DefaultGoal	:	0
+			DefaultGoal	:	0,
+			GoalArray	:	[]
 		},
 		function(items) {
 			UName = items.username;
 			token = items.token;
 			DefaultGoal = items.DefaultGoal;
-			if (items.username === "" || items.token === "") {
+			if (UName === "" || token === "") {
 				var a = document.createElement('a');
 				a.textContent = "You need to enter your details in the options page ";
 				a.href = "/options.html"
 				a.target = "_blank"
-				document.getElementById("SeverStatus").insertBefore(a, document.getElementById(SeverStatus))
+				document.getElementById("SeverStatus").insertBefore(
+					a, document.getElementById(SeverStatus)
+				)
 			} else {
 				( function(){ GoalsGET(); } )( /**/ );
 			} //If Data is blank
@@ -52,9 +59,10 @@ function GoalsGET(){
 function HandleDownload(){
 	if (DefaultGoal > GoalsJSON.length){DefaultGoal=0};
 	SetOutput(DefaultGoal);
-	TimingVariable = setInterval(
-		function(){document.getElementById("dlout").innerHTML=countdown(Deadline).toString();},
-		100
+	setInterval(
+		function(){
+			document.getElementById("dlout").innerHTML=countdown(Deadline).toString();
+		},100
 	);
 	if (GoalsJSON.length > 1) { for (i = 0; i < GoalsJSON.length; i++){
 		var a = document.createElement('a');
@@ -253,32 +261,33 @@ function DefaultHandle (i) {
 	aD[DefaultGoal].textContent="Default";
 }
 function MakeGoalsArray () {
-	console.log("run")
+	console.log("run " + GoalsJSON.length)
 		// This is the first time and wipe slate clean function
 	for (i = 0; i < GoalsJSON.length; i++){
 		GoalsArray[i] = {
-			"Slug"		: GoalsJSON[i].slug,
-			"Title" 	: GoalsJSON[i].title,
-			"Descrip"	: GoalsJSON[i].description,
-			"ID"		: GoalsJSON[i].id,
-			"GraphURL"	: GoalsJSON[i].graph_url,
-			"LoseDate"	: GoalsJSON[i].losedate,
-			"BareMin"	: GoalsJSON[i].limsum,
-			"Notify"	: true,
-			"Show"		: true
+			"slug"			: GoalsJSON[i].slug,
+			"title"			: GoalsJSON[i].title,
+			"description"	: GoalsJSON[i].description,
+			"id"			: GoalsJSON[i].id,
+			"graph_url"		: GoalsJSON[i].graph_url,
+			"losedate"		: GoalsJSON[i].losedate,
+			"limsum"		: GoalsJSON[i].limsum,
+			"DataPoints"	: [],
+			"updated_at"	: GoalsJSON[i].updated_at,
+			"Notify"		: true,
+			"Show"			: true
 		};
 	}
-	console.log(GoalsArray[1].ID)
+	console.log(GoalsArray)
 	GoalsArray.sort(function (a,b) {
-		console.log(a["ID"])
-		if( a["ID"] > b["ID"]){
+		console.log(a["id"])
+		if( a["id"] > b["id"]){
 			return 1;
-		} else if ( a["ID"] < b["ID"] ){
+		} else if ( a["id"] < b["id"] ){
 			return -1;
 		}
 		return 0;
 	})
-	console.log(GoalsArray[1].ID)
 	/*
 		TODO:
 			Assess if the two data structures sre different
@@ -288,30 +297,50 @@ function MakeGoalsArray () {
 	*/
 }
 function AsessGoalsArray(){
-	var GoalsOfflineArray = [];
-	var GoalsResponseArray = [];
+	var NewDataArray = [];
+	var GoalsToDelete = [];
 
 	for (i = 0; i < GoalsArray.length; i++){
-		GoalsOfflineArray[item] = false
-		for (j = 0; j < GoalsJSON.length; j++){
-			GoalsResponseArray[item] = false
-			if (GoalsArray[i].id === GoalsJSON[j]) {
-				//
-				break;
-			}
-		}
+		var r = GoalsJSON.length;
+		while (r--) { if ( GoalsJSON[r].id === GoalsArray[i].id ){ break; }}
+
+		if ( r === -1 ) { GoalsToDelete.push(i)}
 	}
 
-	GoalsOfflineArray.forEach(function(item){
-		if (GoalsOfflineArray = false){
-			// new goal
-		}
-	})
-	GoalsResponseArray.forEach(function(item){
-		if (GoalsResponseArray = false){
-			//delete goal
-		}
-	})
+
+	for (r = 0; r < GoalsToDelete.length; r++){
+		GoalsArray.splice(r,1)
+	} // TODO : NOT GOING TO WORK
+
+	// GoalsOfflineArray.forEach(function(item){
+	// 	if (GoalsOfflineArray = false){
+	// 		// new goal
+	// 	}
+	// })
+}
+function ReturnGoalData (neu, old){
+	var oldid = old.id
+	if (oldid === "default") {oldid = neu.id}
+	if (neu.id === oldid){
+		return {
+			"slug"			: neu.slug,
+			"title"			: neu.title,
+			"description"	: neu.description,
+			"id"			: oldid,
+			"graph_url"		: neu.graph_url,
+			"losedate"		: neu.losedate,
+			"limsum"		: neu.limsum,
+			"datapoints"	: ReturnDataPoints(neu,old),
+			"updated_at"	: neu.updated_at,
+			"Notify"		: old.notify,
+			"Show"			: old.show
+		};
+	}
+}
+function ReturnDataPoints (neu, old) {
+	var object = [];
+	object.concat(neu.datapoints,old.datapoints);
+	return object
 }
 /*
 	on array diffrece detection {
