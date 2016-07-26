@@ -4,7 +4,7 @@ var BeeURL = "https://www.beeminder.com";
 var ApiURL = "https://www.beeminder.com/api/v1/users/";
 var DefaultGoal = 0;
 var GoalsArray = [];
-var w = [];var aT = [];var aD = [];var aH = [];var aN = []
+var ElementsList = []
 var DefaultSettings = {
 	"id"		: "default"
 	"notify"	: true,
@@ -187,43 +187,45 @@ function UserGET(){
 function drawList(){
 	var TheList = document.getElementById("TheList");
 	for (i = 0; i < UserJSON.goals.length; i++){
-		w[i]  = document.createElement('li')
-		aT[i] = document.createElement('a');
-		aD[i] = document.createElement('a');
-		aH[i] = document.createElement('a');
-		aN[i] = document.createElement('a');
-		w[i].className  = "item";
-		aT[i].className = "title";
-		aD[i].className = "default";
-		aH[i].className = "hide";
-		aN[i].className = "notify";
-		w[i].id  = UserJSON.goals[i] + "-item";
-		aT[i].id = UserJSON.goals[i] + "-title";
-		aD[i].id = UserJSON.goals[i] + "-defaultBtn";
-		aH[i].id = UserJSON.goals[i] + "-HideBtn";
-		aN[i].id = UserJSON.goals[i] + "-NotifyBtn";
-		aT[i].textContent = UserJSON.goals[i];
-		aD[i].textContent = "-";
-		aH[i].textContent = "Hi";
-		aN[i].textContent = "Hi";
-		aT[i].href = BeeURL + "/" + UName + "/" + UserJSON.goals[i] + "/"
-		TheList.appendChild( w[i]);
-		   w[i].appendChild(aT[i]);
-		   w[i].appendChild(aD[i]);
-		   w[i].appendChild(aH[i]);
-		   w[i].appendChild(aN[i]);
+		ElementsList[i] = {
+			"item"	: document.createElement('li'),
+			"title"	: document.createElement('a'),
+			"defa"	: document.createElement('a'),
+			"hide"	: document.createElement('a'),
+			"notify": document.createElement('a')
+		}
+		ElementsList[i].item.className  = "item";
+		ElementsList[i].title.className = "title";
+		ElementsList[i].defa.className = "default";
+		ElementsList[i].hide.className = "hide";
+		ElementsList[i].notify.className = "notify";
+		ElementsList[i].item.id  = UserJSON.goals[i] + "-item";
+		ElementsList[i].title.id = UserJSON.goals[i] + "-title";
+		ElementsList[i].defa.id = UserJSON.goals[i] + "-defaultBtn";
+		ElementsList[i].hide.id = UserJSON.goals[i] + "-HideBtn";
+		ElementsList[i].notify.id = UserJSON.goals[i] + "-NotifyBtn";
+		ElementsList[i].title.textContent = UserJSON.goals[i];
+		ElementsList[i].defa.textContent = "-";
+		ElementsList[i].hide.textContent = "Hi";
+		ElementsList[i].notify.textContent = "Hi";
+		ElementsList[i].title.href = BeeURL + "/" + UName + "/" + UserJSON.goals[i] + "/"
+		TheList.appendChild( ElementsList[i].item);
+		   ElementsList[i].item.appendChild(ElementsList[i].title);
+		   ElementsList[i].item.appendChild(ElementsList[i].defa);
+		   ElementsList[i].item.appendChild(ElementsList[i].hide);
+		   ElementsList[i].item.appendChild(ElementsList[i].notify);
 		(function(_i) {
-			aD[i].addEventListener( "click", function() {DefaultHandle(_i);});
-			aH[i].addEventListener( "click", MakeGoalsArray );
-			// aN[i].addEventListener( "click", functions(){ NotifyHandle(i) } );
+			ElementsList[_i].defa.addEventListener( "click", function() {DefaultHandle(_i);});
+			ElementsList[_i].hide.addEventListener( "click", MakeGoalsArray );
+			// notify.addEventListener( "click", functions(){ NotifyHandle(i) } );
 		})(i);
 	}
-	aD[DefaultGoal].innerHTML = "Default";
+	ElementsList[DefaultGoal].defa.innerHTML = "Default";
 }
 function DefaultHandle (i) {
-	aD[DefaultGoal].textContent="-";
+	ElementsList[DefaultGoal].defa.textContent="-";
 	DefaultGoal =i;
-	aD[DefaultGoal].textContent="Default";
+	ElementsList[DefaultGoal].defa.textContent="Default";
 }
 function MakeGoalsArray () {
 	console.log("run " + GoalsJSON.length)
