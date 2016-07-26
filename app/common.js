@@ -125,18 +125,32 @@ function InfoUpdate (text){
 }
 function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
 function save_options() {
-	chrome.storage.sync.set(
-		{
-			username	:	document.getElementById( 'username'	).value,
-			token		:	document.getElementById( 'token'	).value,
-			DefaultGoal	:	DefaultGoal,
-			GoalArray	:	UserJSON.goals
+	UName = document.getElementById( 'username'	).value
+	token = document.getElementById( 'token'	).value
+	var xhrFunctions = {
+		SuccessFunction : function (response){
+			chrome.storage.sync.set({
+				username	:	UName,
+				token		:	token,
+				DefaultGoal	:	DefaultGoal//,
+				//GoalArray	:	UserJSON.goals
+			},
+			function() {
+				document.getElementById('status').textContent = 'Options saved.';
+				setTimeout(function() {status.textContent = '';},2000);
+			});
 		},
-		function() {
-			document.getElementById('status').textContent = 'Options saved.';
-			setTimeout(function() {status.textContent = '';},2000);
+		FailFunction : function (){
+			InfoUpdate (
+				"404: \n" +
+				"There has been an error with the provided information.\n" +
+				"The details have not been saved.\n" +
+				"Please check of the details and try again."
+			)
 		}
-	);
+	}
+
+	xhrHandler(xhrFunctions)
 }///////////////////////////////////////////////////////////Opt
 function DM(){
 	var elem = document.getElementById('OiYouYeahYou-writing');
