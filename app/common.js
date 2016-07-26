@@ -38,11 +38,13 @@ function PUinit(){ //
 	);
 }///////////////////////////////////////////////////////////_pop
 function GoalsGET(){
-	var urlinput = ApiURL + UName + "/goals.json?auth_token=" + token
-	xhrHandler(urlinput, function (response){
+	xhrHandler({
+		url : "/goals",
+		SuccessFunction : function (response){
 			GoalsJSON = JSON.parse(response);
-			ServerStatusUpdate("Data has been downloaded")
+			InfoUpdate ("Data has been downloaded")
 			if (pg==="popup") {HandleDownload()}
+		}
 	})
 }///////////////////////////////////////////////////////////_common
 function HandleDownload(){
@@ -91,25 +93,27 @@ function SetOutput(e){
 	LinkBM(	"GraphLink",		""				);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
-	ServerStatusUpdate("Output Set : " + e)
+	InfoUpdate ("Output Set : " + e)
 }///////////////////////////////////////////////////////////_pop
 function RefreshCurrentGraph(){
-	var urlinput = ApiURL + UName + "/goals/" + Slug + "/refresh_graph.json?auth_token=" + token
-	xhrHandler(urlinput, function (response){
-		if (response === "true"){
-			ServerStatusUpdate("Waiting for Graph to refresh")
-			setTimeout(function (){
-				document.getElementById("graph-img").src=
-					BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
-				ServerStatusUpdate("Graph Refreshed, but a page refresh needs to happen for new data");
-				// TODO SetOutput with new data from a new xhr
-			}, 5000);
-		} else if (response !== "true") {
-			ServerStatusUpdate("Beeminder Sever Says no");
-		} //If refresh true / !true
+	xhrHandler({
+		url:"/goals/" + Slug + "/refresh_graph",
+		SuccessFunction : function (response){
+			if (response === "true"){
+				InfoUpdate ("Waiting for Graph to refresh")
+				setTimeout(function (){
+					document.getElementById("graph-img").src=
+						BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
+					InfoUpdate ("Graph Refreshed, but a page refresh needs to happen for new data");
+					// TODO SetOutput with new data from a new xhr
+				}, 5000);
+			} else if (response !== "true") {
+				InfoUpdate ("Beeminder Sever Says no");
+			} //If refresh true / !true
+		}
 	})
 }
-function ServerStatusUpdate (text){
+function InfoUpdate (text){
 	var SeverStatus = document.getElementById("SeverStatus");
 	if (ServerStatusTimer !== "empty"){clearTimeout(ServerStatusTimer)};
 	SeverStatus.innerHTML = text;
@@ -158,7 +162,7 @@ function OPTinit(){
 			DefaultGoal = parseInt(items.DefaultGoal);
 			if (items.username === "" || items.token === "") {
 				// TODO Goto options page
-				ServerStatusUpdate("There be no data")
+				InfoUpdate ("There be no data")
 			} else {
 				( function(){ UserGET();GoalsGET() } )( /**/ );
 				// TODO get User data
@@ -169,19 +173,20 @@ function OPTinit(){
 	//document.getElementById('OiYouYeahYou-writing').addEventListener('click', DM);
 }
 function UserGET(){
-	var urlinput = BeeURL + "/api/v1/users/" + UName + ".json?auth_token=" + token
-	xhrHandler(urlinput, function (response){
-		UserJSON = JSON.parse(response);
-		drawList()
-		if (updated_at === UserJSON.updated_at){
-			// TODO No need to update > write output
-			document.getElementById("UpdateDifference").innerHTML 	=
-			/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
-		} else {
-			// TODO There needs to be an update
-			document.getElementById("UpdateDifference").innerHTML 	=
-			/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
-		} // If differnece detection
+	xhrHandler({
+		SuccessFunction : function(response) {
+			UserJSON = JSON.parse(response);
+			drawList()
+			if (updated_at === UserJSON.updated_at){
+				// TODO No need to update > write output
+				document.getElementById("UpdateDifference").innerHTML 	=
+				/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
+			} else {
+				// TODO There needs to be an update
+				document.getElementById("UpdateDifference").innerHTML 	=
+				/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
+			} // If differnece detection
+		}
 	})
 }///////////////////////////////////////////////////////////_pop
 function drawList(){
@@ -319,24 +324,32 @@ function ReturnDataPoints (neu, old) {
 		ask user to look over
 	}
 */
-function xhrHandler(url, FunctionToInvoke){
+function xhrHandler(args){
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
-			ServerStatusUpdate("Server 404 error");
+			InfoUpdate ("Server 404 error");
 			xhr.abort();
+			if (args.FailFunction){args.FailFunction()}
 		} else {
-			ServerStatusUpdate(
-				"xhrHandler " + xhr.status +
-						" / " + xhr.statusText +
-						" / " + xhr.readyState
+			InfoUpdate (
+				"xhr Handler " + xhr.status +
+						 " / " + xhr.statusText +
+						 " / " + xhr.readyState
 			);
-			if (xhr.readyState == 4){
-				FunctionToInvoke(xhr.response)
+			if (xhr.status === 200 && xhr.readyState === 4){
+				args.SuccessFunction(xhr.response)
 			} //If Ready to access data
 		} // If Access denied / allowed
 	} // func xhr readyState
 
-	xhr.open("GET", url);
+	var neurl
+	if	(args.url)	{ neurl = args.url	}
+	else			{ neurl = ""		}
+
+	var nurl =	"https://www.beeminder.com/api/v1/users/" +
+	/**/		UName + neurl + ".json?auth_token=" +	token
+
+	xhr.open("GET", nurl);
 	xhr.send();
 }
