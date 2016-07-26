@@ -13,13 +13,47 @@ var DefaultSettings = {
 }
 
 // Global Functions
-// Popup Functions
-function DataRefresh(i){
-	//
-	if ( i <= 5 ) { DataRefresh ( i + 1 ) }
+function xhrHandler(args){
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function (){
+		if (xhr.status === 404) {
+			InfoUpdate ("Server 404 error");
+			xhr.abort();
+			if (args.FailFunction){args.FailFunction()}
+		} else {
+			InfoUpdate (
+				"xhr Handler " + xhr.status +
+						 " / " + xhr.statusText +
+						 " / " + xhr.readyState
+			);
+			if (xhr.status === 200 && xhr.readyState === 4){
+				args.SuccessFunction(xhr.response)
+			} //If Ready to access data
+		} // If Access denied / allowed
+	} // func xhr readyState
+
+	var neurl
+	if	(args.url)	{ neurl = args.url	}
+	else			{ neurl = ""		}
+
+	var nurl =	"https://www.beeminder.com/api/v1/users/" +
+	/**/		UName + neurl + ".json?auth_token=" +	token
+
+	xhr.open("GET", nurl);
+	xhr.send();
 }
-// Options Functions
-// Unsorted Functions
+function InfoUpdate (text, time){
+	var SeverStatus = document.getElementById("SeverStatus");
+	if (!time){var time = 5000}
+	if (ServerStatusTimer !== "empty"){clearTimeout(ServerStatusTimer)};
+	SeverStatus.innerHTML = text;
+	console.log(text);
+	ServerStatusTimer = setTimeout(
+		function() {SeverStatus.textContent = '';ServerStatusTimer="empty"},
+		time
+	);
+}
+// Popup Functions
 function PUinit(){ //
 	chrome.storage.sync.get(
 		{
@@ -45,17 +79,42 @@ function PUinit(){ //
 			} //If Data is blank
 		} // function Sync Get
 	);
-}///////////////////////////////////////////////////////////_pop
-function GoalsGET(){
+}
+function SetOutput(e){
+	Slug = GoalsJSON[e].slug
+	document.getElementById("graph-img").src=
+		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
+	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ GoalsJSON[e].title;
+	Deadline = GoalsJSON[e].losedate*1000
+	document.getElementById("limsum").innerHTML = GoalsJSON[e].limsum;
+	LinkBM(	"ButtonGoal",		""				);
+	LinkBM(	"GraphLink",		""				);
+	LinkBM(	"ButtonData",		"datapoints"	);
+	LinkBM(	"ButtonSettings",	"settings"		);
+	InfoUpdate ("Output Set : " + e)
+}
+function DataRefresh(i){
+	//
+	if ( i <= 5 ) { DataRefresh ( i + 1 ) }
+}
+function RefreshCurrentGraph(){
 	xhrHandler({
-		url : "/goals",
+		url:"/goals/" + Slug + "/refresh_graph",
 		SuccessFunction : function (response){
-			GoalsJSON = JSON.parse(response);
-			InfoUpdate ("Data has been downloaded")
-			if (pg==="popup") {HandleDownload()}
+			if (response === "true"){
+				InfoUpdate ("Waiting for Graph to refresh")
+				setTimeout(function (){
+					document.getElementById("graph-img").src=
+						BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
+					InfoUpdate ("Graph Refreshed, but a page refresh needs to happen for new data");
+					// TODO SetOutput with new data from a new xhr
+				}, 5000);
+			} else if (response !== "true") {
+				InfoUpdate ("Beeminder Sever Says no");
+			} //If refresh true / !true
 		}
 	})
-}///////////////////////////////////////////////////////////_common
+}
 function HandleDownload(){
 	if (DefaultGoal > GoalsJSON.length){DefaultGoal=0};
 	SetOutput(DefaultGoal);
@@ -75,99 +134,9 @@ function HandleDownload(){
 		})(i);// TODO: Add an additonal goto link w/ each Selector
 	}};
 	document.getElementById("ButtonRefresh").addEventListener("click", RefreshCurrentGraph)
-}////////////////////////////////////////////////////////////_pop
-function UNIXtoReadable(i){
-	/* Copied from
-		http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
-	*/
-	var a = new Date(i * 1000);
-	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-	var year = a.getFullYear();
-	var month = months[a.getMonth()];
-	var date = a.getDate();
-	var hour = a.getHours();
-	var min = a.getMinutes();
-	var sec = a.getSeconds();
-	var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
-	return time;
-}///////////////////////////////////////////////////////////_pop
-function SetOutput(e){
-	Slug = GoalsJSON[e].slug
-	document.getElementById("graph-img").src=
-		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
-	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ GoalsJSON[e].title;
-	Deadline = GoalsJSON[e].losedate*1000
-	document.getElementById("limsum").innerHTML = GoalsJSON[e].limsum;
-	LinkBM(	"ButtonGoal",		""				);
-	LinkBM(	"GraphLink",		""				);
-	LinkBM(	"ButtonData",		"datapoints"	);
-	LinkBM(	"ButtonSettings",	"settings"		);
-	InfoUpdate ("Output Set : " + e)
-}///////////////////////////////////////////////////////////_pop
-function RefreshCurrentGraph(){
-	xhrHandler({
-		url:"/goals/" + Slug + "/refresh_graph",
-		SuccessFunction : function (response){
-			if (response === "true"){
-				InfoUpdate ("Waiting for Graph to refresh")
-				setTimeout(function (){
-					document.getElementById("graph-img").src=
-						BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
-					InfoUpdate ("Graph Refreshed, but a page refresh needs to happen for new data");
-					// TODO SetOutput with new data from a new xhr
-				}, 5000);
-			} else if (response !== "true") {
-				InfoUpdate ("Beeminder Sever Says no");
-			} //If refresh true / !true
-		}
-	})
-}
-function InfoUpdate (text, time){
-	var SeverStatus = document.getElementById("SeverStatus");
-	if (!time){var time = 5000}
-	if (ServerStatusTimer !== "empty"){clearTimeout(ServerStatusTimer)};
-	SeverStatus.innerHTML = text;
-	console.log(text);
-	ServerStatusTimer = setTimeout(
-		function() {SeverStatus.textContent = '';ServerStatusTimer="empty"},
-		time
-	);
 }
 function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
-function save_options() {
-	UName = document.getElementById( 'username'	).value
-	token = document.getElementById( 'token'	).value
-	var xhrFunctions = {
-		SuccessFunction : function (response){
-			chrome.storage.sync.set({
-				username	:	UName,
-				token		:	token,
-				DefaultGoal	:	DefaultGoal//,
-				//GoalArray	:	UserJSON.goals
-			},
-			function() {
-				document.getElementById('status').textContent = 'Options saved.';
-				setTimeout(function() {status.textContent = '';},2000);
-			});
-		},
-		FailFunction : function (){
-			InfoUpdate (
-				"404: \n" +
-				"There has been an error with the provided information.\n" +
-				"The details have not been saved.\n" +
-				"Please check of the details and try again.",
-				60000
-			)
-		}
-	}
-
-	xhrHandler(xhrFunctions)
-}///////////////////////////////////////////////////////////Opt
-function DM(){
-	var elem = document.getElementById('OiYouYeahYou-writing');
-	elem.parentNode.removeChild(elem);
-	return false;
-}///////////////////////////////////////////////////////////Opt
+// Options Functions
 function OPTinit(){
 	chrome.storage.sync.get(
 		{
@@ -197,23 +166,40 @@ function OPTinit(){
 	document.getElementById('save').addEventListener('click', save_options);
 	//document.getElementById('OiYouYeahYou-writing').addEventListener('click', DM);
 }
-function UserGET(){
-	xhrHandler({
-		SuccessFunction : function(response) {
-			UserJSON = JSON.parse(response);
-			drawList()
-			if (updated_at === UserJSON.updated_at){
-				// TODO No need to update > write output
-				document.getElementById("UpdateDifference").innerHTML 	=
-				/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
-			} else {
-				// TODO There needs to be an update
-				document.getElementById("UpdateDifference").innerHTML 	=
-				/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
-			} // If differnece detection
+function save_options() {
+	UName = document.getElementById( 'username'	).value
+	token = document.getElementById( 'token'	).value
+	var xhrFunctions = {
+		SuccessFunction : function (response){
+			chrome.storage.sync.set({
+				username	:	UName,
+				token		:	token,
+				DefaultGoal	:	DefaultGoal//,
+				//GoalArray	:	UserJSON.goals
+			},
+			function() {
+				document.getElementById('status').textContent = 'Options saved.';
+				setTimeout(function() {status.textContent = '';},2000);
+			});
+		},
+		FailFunction : function (){
+			InfoUpdate (
+				"404: \n" +
+				"There has been an error with the provided information.\n" +
+				"The details have not been saved.\n" +
+				"Please check of the details and try again.",
+				60000
+			)
 		}
-	})
-}///////////////////////////////////////////////////////////_pop
+	}
+
+	xhrHandler(xhrFunctions)
+}
+function DefaultHandle (i) {
+	ElementsList[DefaultGoal].defa.textContent="-";
+	DefaultGoal =i;
+	ElementsList[DefaultGoal].defa.textContent="Default";
+}
 function drawList(){
 	var TheList = document.getElementById("TheList");
 	for (i = 0; i < UserJSON.goals.length; i++){
@@ -252,11 +238,34 @@ function drawList(){
 	}
 	ElementsList[DefaultGoal].defa.innerHTML = "Default";
 }
-function DefaultHandle (i) {
-	ElementsList[DefaultGoal].defa.textContent="-";
-	DefaultGoal =i;
-	ElementsList[DefaultGoal].defa.textContent="Default";
+// Unsorted Functions
+function GoalsGET(){
+	xhrHandler({
+		url : "/goals",
+		SuccessFunction : function (response){
+			GoalsJSON = JSON.parse(response);
+			InfoUpdate ("Data has been downloaded")
+			if (pg==="popup") {HandleDownload()}
+		}
+	})
 }
+function UserGET(){
+	xhrHandler({
+		SuccessFunction : function(response) {
+			UserJSON = JSON.parse(response);
+			drawList()
+			if (updated_at === UserJSON.updated_at){
+				// TODO No need to update > write output
+				document.getElementById("UpdateDifference").innerHTML 	=
+				/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
+			} else {
+				// TODO There needs to be an update
+				document.getElementById("UpdateDifference").innerHTML 	=
+				/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
+			} // If differnece detection
+		}
+	})
+}///////////////////////////////////////////////////////////_pop
 function MakeGoalsArray () {
 	console.log("run " + GoalsJSON.length)
 		// This is the first time and wipe slate clean function
@@ -360,32 +369,24 @@ function ReturnDataPoints (neu, old) {
 		ask user to look over
 	}
 */
-function xhrHandler(args){
-	var xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function (){
-		if (xhr.status === 404) {
-			InfoUpdate ("Server 404 error");
-			xhr.abort();
-			if (args.FailFunction){args.FailFunction()}
-		} else {
-			InfoUpdate (
-				"xhr Handler " + xhr.status +
-						 " / " + xhr.statusText +
-						 " / " + xhr.readyState
-			);
-			if (xhr.status === 200 && xhr.readyState === 4){
-				args.SuccessFunction(xhr.response)
-			} //If Ready to access data
-		} // If Access denied / allowed
-	} // func xhr readyState
-
-	var neurl
-	if	(args.url)	{ neurl = args.url	}
-	else			{ neurl = ""		}
-
-	var nurl =	"https://www.beeminder.com/api/v1/users/" +
-	/**/		UName + neurl + ".json?auth_token=" +	token
-
-	xhr.open("GET", nurl);
-	xhr.send();
+// Deprecieated Functions
+function DM(){
+	var elem = document.getElementById('OiYouYeahYou-writing');
+	elem.parentNode.removeChild(elem);
+	return false;
+}
+function UNIXtoReadable(i){
+	/* Copied from
+		http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
+	*/
+	var a = new Date(i * 1000);
+	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+	var year = a.getFullYear();
+	var month = months[a.getMonth()];
+	var date = a.getDate();
+	var hour = a.getHours();
+	var min = a.getMinutes();
+	var sec = a.getSeconds();
+	var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+	return time;
 }
