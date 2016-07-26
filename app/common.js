@@ -12,6 +12,14 @@ var DefaultSettings = {
 	updated_at	: ""
 }
 
+// Global Functions
+// Popup Functions
+function DataRefresh(i){
+	//
+	if ( i <= 5 ) { DataRefresh ( i + 1 ) }
+}
+// Options Functions
+// Unsorted Functions
 function PUinit(){ //
 	chrome.storage.sync.get(
 		{
@@ -114,14 +122,15 @@ function RefreshCurrentGraph(){
 		}
 	})
 }
-function InfoUpdate (text){
+function InfoUpdate (text, time){
 	var SeverStatus = document.getElementById("SeverStatus");
+	if (!time){var time = 5000}
 	if (ServerStatusTimer !== "empty"){clearTimeout(ServerStatusTimer)};
 	SeverStatus.innerHTML = text;
 	console.log(text);
 	ServerStatusTimer = setTimeout(
 		function() {SeverStatus.textContent = '';ServerStatusTimer="empty"},
-		5000
+		time
 	);
 }
 function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
@@ -146,7 +155,8 @@ function save_options() {
 				"404: \n" +
 				"There has been an error with the provided information.\n" +
 				"The details have not been saved.\n" +
-				"Please check of the details and try again."
+				"Please check of the details and try again.",
+				60000
 			)
 		}
 	}
