@@ -1,14 +1,15 @@
 var ServerStatusTimer = "empty";
 var UName, Slug, Deadline, UserJSON, updated_at, GoalsJSON;
 var BeeURL = "https://www.beeminder.com";
-var ApiURL = "https://www.beeminder.com/api/v1/users/";
 var DefaultGoal = 0;
 var GoalsArray = [];
 var ElementsList = []
 var DefaultSettings = {
-	"id"		: "default"
-	"notify"	: true,
-	"show"		: true
+	id			: "default",
+	notify		: true,
+	show		: true,
+	datapoints	: [],
+	updated_at	: ""
 }
 
 function PUinit(){ //
@@ -265,14 +266,11 @@ function MakeGoalsArray () {
 		};
 	}
 	console.log(GoalsArray)
-	GoalsArray.sort(function (a,b) {
-		console.log(a["id"])
-		if( a["id"] > b["id"]){
-			return 1;
-		} else if ( a["id"] < b["id"] ){
-			return -1;
-		}
-		return 0;
+	GoalsArray.sort(function (a,b) { // Sort Array by ID
+		console.log(a["id"] + ", " + b["id"]);
+		if		( a["id"] > b["id"] ){	return  1; }
+		else if	( a["id"] < b["id"] ){	return -1; }
+										return  0;
 	})
 	/*
 		TODO:
@@ -283,45 +281,59 @@ function MakeGoalsArray () {
 	*/
 }
 function AsessGoalsArray(){
-	var NewDataArray = [];
-	var GoalsToDelete = [];
+	var ResponseArray = GoalsJSON;
+	var OfflineArray = GoalsArray;
+	var ReturnArray = [];
 
-	for (i = 0; i < GoalsArray.length; i++){
-		var r = GoalsJSON.length;
-		while (r--) { if ( GoalsJSON[r].id === GoalsArray[i].id ){ break; }}
+	ResponseArray.sort(function (a,b) { // Sort Array by ID
+		console.log(a["id"] + ", " + b["id"]);
+		if		( a["id"] > b["id"] ){	return  1; }
+		else if	( a["id"] < b["id"] ){	return -1; }
+										return  0;
+	})
+	OfflineArray.sort(function (a,b) { // Sort Array by ID
+		console.log(a["id"] + ", " + b["id"]);
+		if		( a["id"] > b["id"] ){	return  1; }
+		else if	( a["id"] < b["id"] ){	return -1; }
+										return  0;
+	})
 
-		if ( r === -1 ) { GoalsToDelete.push(i)}
+	for (i = 0; i < ResponseArray.length; i++){
+		var r = OfflineArray.length;
+		var neu = ResponseArray.pop()
+		var old;
+
+		while (r--) { if ( OfflineArray[r].id === neu.id ){break;}}
+		if ( r === -1 ) { old = DefaultSettings;			}
+		else 			{ old = OfflineArray.splice(r,1);	}
+
+		if (neu.updated_at===old.updated_at)
+				{ReturnArray.push(old)						}
+		else 	{ReturnArray.push(ReturnGoalData(neu,old))	}
 	}
-
-
-	for (r = 0; r < GoalsToDelete.length; r++){
-		GoalsArray.splice(r,1)
-	} // TODO : NOT GOING TO WORK
-
-	// GoalsOfflineArray.forEach(function(item){
-	// 	if (GoalsOfflineArray = false){
-	// 		// new goal
-	// 	}
-	// })
+	GoalsArray = null
+	GoalsArray = OfflineArray;
+	chrome.storage.sync.set(
+		{GoalArray : OfflineArray},
+		function() {SeverStatusUpdate("Refresh data has been synced")}
+	);
 }
 function ReturnGoalData (neu, old){
-	var oldid = old.id
-	if (oldid === "default") {oldid = neu.id}
-	if (neu.id === oldid){
-		return {
+	var WrkID = old.id
+	if (WrkID === "default") {WrkID = neu.id}
+	if (neu.id === WrkID){return {
 			"slug"			: neu.slug,
 			"title"			: neu.title,
 			"description"	: neu.description,
-			"id"			: oldid,
+			"id"			: WrkID,
 			"graph_url"		: neu.graph_url,
 			"losedate"		: neu.losedate,
 			"limsum"		: neu.limsum,
-			"datapoints"	: ReturnDataPoints(neu,old),
+			//"datapoints"	: ReturnDataPoints(neu,old),
 			"updated_at"	: neu.updated_at,
 			"Notify"		: old.notify,
 			"Show"			: old.show
-		};
-	}
+	}}
 }
 function ReturnDataPoints (neu, old) {
 	var object = [];
