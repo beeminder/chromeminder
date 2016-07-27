@@ -12,7 +12,7 @@ var DefaultSettings = {
 	updated_at	: ""
 }
 
-// Global Functions
+/* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
@@ -53,7 +53,7 @@ function InfoUpdate (text, time){
 		time
 	);
 }
-// Popup Functions
+/* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
 	chrome.storage.sync.get(
 		{
@@ -136,7 +136,7 @@ function HandleDownload(){
 	document.getElementById("ButtonRefresh").addEventListener("click", RefreshCurrentGraph)
 }
 function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
-// Options Functions
+/* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
 	chrome.storage.sync.get(
 		{
@@ -238,7 +238,7 @@ function drawList(){
 	}
 	ElementsList[DefaultGoal].defa.innerHTML = "Default";
 }
-// Unsorted Functions
+/* --- --- --- ---		Unsorted Functions			--- --- --- --- */
 function GoalsGET(){
 	xhrHandler({
 		url : "/goals",
@@ -369,7 +369,7 @@ function ReturnDataPoints (neu, old) {
 		ask user to look over
 	}
 */
-// Deprecieated Functions
+/* --- --- --- ---		Deprecieated Functions		--- --- --- --- */
 function DM(){
 	var elem = document.getElementById('OiYouYeahYou-writing');
 	elem.parentNode.removeChild(elem);
