@@ -75,7 +75,16 @@ function PUinit(){ //
 					a, document.getElementById(SeverStatus)
 				)
 			} else {
-				( function(){ GoalsGET(); } )( /**/ );
+				( function(){
+					xhrHandler({ // Goals Get
+						url : "/goals",
+						SuccessFunction : function (response){
+							GoalsJSON = JSON.parse(response);
+							InfoUpdate ("Data has been downloaded")
+							HandleDownload()
+						}
+					})
+				} )( /**/ );
 			} //If Data is blank
 		} // function Sync Get
 	);
@@ -158,7 +167,16 @@ function OPTinit(){
 				// TODO Goto options page
 				InfoUpdate ("There be no data")
 			} else {
-				( function(){ UserGET();GoalsGET() } )( /**/ );
+				( function(){
+					UserGET();
+					xhrHandler({ // Goals Get
+						url : "/goals",
+						SuccessFunction : function (response){
+							GoalsJSON = JSON.parse(response);
+							InfoUpdate ("Data has been downloaded")
+						}
+					})
+				} )( /**/ );
 				// TODO get User data
 			} //If Data is blank
 		} // function Sync Get
@@ -239,16 +257,6 @@ function drawList(){
 	ElementsList[DefaultGoal].defa.innerHTML = "Default";
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
-function GoalsGET(){
-	xhrHandler({
-		url : "/goals",
-		SuccessFunction : function (response){
-			GoalsJSON = JSON.parse(response);
-			InfoUpdate ("Data has been downloaded")
-			if (pg==="popup") {HandleDownload()}
-		}
-	})
-}
 function UserGET(){
 	xhrHandler({
 		SuccessFunction : function(response) {
