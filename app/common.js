@@ -369,7 +369,17 @@ function ReturnDataPoints (neu, old) {
 		ask user to look over
 	}
 */
-/* --- --- --- ---		Deprecieated Functions		--- --- --- --- */
+/* --- --- --- ---		Depreciated Functions		--- --- --- --- */
+function GoalsGET(){
+	xhrHandler({
+		url : "/goals",
+		SuccessFunction : function (response){
+			GoalsJSON = JSON.parse(response);
+			InfoUpdate ("Data has been downloaded")
+			if (pg==="popup") {HandleDownload()}
+		}
+	})
+}
 function DM(){
 	var elem = document.getElementById('OiYouYeahYou-writing');
 	elem.parentNode.removeChild(elem);
