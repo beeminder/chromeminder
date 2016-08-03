@@ -11,6 +11,8 @@ var DefaultSettings = {
 	datapoints	: [],
 	updated_at	: ""
 }
+var someVar = {}
+var RefreshTimeout = "empty"
 var PictureArray = []
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
@@ -105,30 +107,66 @@ function SetOutput(e){
 	LinkBM(	"GraphLink",		""				);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
+	someVar.updated_at = GoalsJSON[e].updated_at;
+	someVar.ArrayNo = e
+	clearTimeout(RefreshTimeout)
 	InfoUpdate ("Output Set : " + e)
 }
 function DataRefresh(i){
-	//
-	if ( i <= 5 ) { DataRefresh ( i + 1 ) }
+	/*
+		TODO
+		[#]		xhr singular goal
+		[#]		if updated at values are differetn {
+		[ ]			merge neu and old goal
+		[#]			setoutpt
+		[ ]			sync new data with chrome
+				}
+	*/
+	InfoUpdate(someVar)
+	if (!i){
+		xhrHandler({
+			url:"/goals/" + slug + "/refresh_graph",
+			name:"Refresh ",
+			SuccessFunction : function (response){
+				if (response === "true"){
+					InfoUpdate ("Waiting for Graph to refresh");
+					RefreshTimeout = setTimeout(function (){DataRefresh (1)},10000)
+				} else if (response !== "true") {
+					InfoUpdate ("Beeminder Sever Says no");
+				} //If refresh true / !true
+			}
+		})
+	}
+	else if (i) {xhrHandler({
+		url:"/goals/" + slug,
+		name:"Refresh - Goal Update",
+		SuccessFunction:function(response){
+			InfoUpdate("iteration " + i)
+			response = JSON.parse(response)
+			if (response.updated_at === someVar.updated_at){// TODO Deal with someVar
+				var time = 10000 * Math.pow(2,(i-1))
+				if (i<=6) {
+					RefreshTimeout = setTimeout(function (){DataRefresh (i+1)}, time);
+					InfoUpdate("No Updated difference, giving it another swing,"
+					/**/											+ i + " " + time)
+				} else {
+					InfoUpdate("The goal seems not to have updated, aborting refresh")
+				}
+			} else {
+				someVar.updated_at = response.updated_at
+				document.getElementById("graph-img").src=
+				/**/	BeeURL + "/" + UName + "/" + slug +
+				/**/	"/graph?" + new Date().getTime();
+				InfoUpdate ("Graph Refreshed " + i + " " + someVar.updated_at);
+			}
+		} // SuccessFunction
+	})} // xhrHandler
 }
-function RefreshCurrentGraph(){
-	xhrHandler({
-		url:"/goals/" + Slug + "/refresh_graph",
+function DRClosure (){DataRefresh()}
 function HandleDownload(){
 	xhrHandler({ // Goals Get
 		url : "/goals",
 		SuccessFunction : function (response){
-			if (response === "true"){
-				InfoUpdate ("Waiting for Graph to refresh")
-				setTimeout(function (){
-					document.getElementById("graph-img").src=
-						BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
-					InfoUpdate ("Graph Refreshed, but a page refresh needs to happen for new data");
-					// TODO SetOutput with new data from a new xhr
-				}, 5000);
-			} else if (response !== "true") {
-				InfoUpdate ("Beeminder Sever Says no");
-			} //If refresh true / !true
 			GoalsJSON = JSON.parse(response);
 			for (i = 0; i < GoalsJSON.length; i++){
 				PictureArray[i] = new Image()
