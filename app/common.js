@@ -11,6 +11,7 @@ var DefaultSettings = {
 	datapoints	: [],
 	updated_at	: ""
 }
+var PictureArray = []
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
@@ -88,16 +89,7 @@ function PUinit(){ //
 					a, document.getElementById(SeverStatus)
 				)
 			} else {
-				( function(){
-					xhrHandler({ // Goals Get
-						url : "/goals",
-						SuccessFunction : function (response){
-							GoalsJSON = JSON.parse(response);
-							InfoUpdate ("Data has been downloaded")
-							HandleDownload()
-						}
-					})
-				} )( /**/ );
+				( function(){HandleDownload()} )();
 			} //If Data is blank
 		} // function Sync Get
 	);
@@ -122,6 +114,9 @@ function DataRefresh(i){
 function RefreshCurrentGraph(){
 	xhrHandler({
 		url:"/goals/" + Slug + "/refresh_graph",
+function HandleDownload(){
+	xhrHandler({ // Goals Get
+		url : "/goals",
 		SuccessFunction : function (response){
 			if (response === "true"){
 				InfoUpdate ("Waiting for Graph to refresh")
@@ -134,28 +129,36 @@ function RefreshCurrentGraph(){
 			} else if (response !== "true") {
 				InfoUpdate ("Beeminder Sever Says no");
 			} //If refresh true / !true
+			GoalsJSON = JSON.parse(response);
+			for (i = 0; i < GoalsJSON.length; i++){
+				PictureArray[i] = new Image()
+				PictureArray[i].src = GoalsJSON[i].graph_url
+				console.log(PictureArray[i])
+				console.log(GoalsJSON[i].graph_url)
+			}
+			InfoUpdate ("Data has been downloaded")
+
+			if (DefaultGoal > GoalsJSON.length){DefaultGoal=0};
+			SetOutput(DefaultGoal);
+			setInterval(
+				function(){
+					document.getElementById("dlout").innerHTML=countdown(Deadline).toString();
+				},100
+			);
+			if (GoalsJSON.length > 1) {		for (i = 0; i < GoalsJSON.length; i++){
+				var a = document.createElement('a');
+				a.className = 'GoalIDBtn';
+				a.id = /*UName + '-' +*/ GoalsJSON[i].slug;
+				a.textContent = /*UName + ' / ' +*/ GoalsJSON[i].title;
+				document.getElementById("TheContent").appendChild(a);
+				(function(_i) {
+					a.addEventListener("click", function() {SetOutput(_i);});
+				})(i);// TODO: Add an additonal goto link w/ each Selector
+				document.getElementById("GraphContainer").appendChild(PictureArray[i])
+			}	};
+			document.getElementById("ButtonRefresh").addEventListener("click", DRClosure)
 		}
 	})
-}
-function HandleDownload(){
-	if (DefaultGoal > GoalsJSON.length){DefaultGoal=0};
-	SetOutput(DefaultGoal);
-	setInterval(
-		function(){
-			document.getElementById("dlout").innerHTML=countdown(Deadline).toString();
-		},100
-	);
-	if (GoalsJSON.length > 1) { for (i = 0; i < GoalsJSON.length; i++){
-		var a = document.createElement('a');
-		a.className = 'GoalIDBtn';
-		a.id = /*UName + '-' +*/ GoalsJSON[i].slug;
-		a.textContent = /*UName + ' / ' +*/ GoalsJSON[i].title;
-		document.getElementById("TheContent").appendChild(a);
-		(function(_i) {
-			a.addEventListener("click", function() {SetOutput(_i);});
-		})(i);// TODO: Add an additonal goto link w/ each Selector
-	}};
-	document.getElementById("ButtonRefresh").addEventListener("click", RefreshCurrentGraph)
 }
 function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
 /* --- --- --- ---		Options Functions			--- --- --- --- */
