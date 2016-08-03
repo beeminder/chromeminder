@@ -15,13 +15,14 @@ var DefaultSettings = {
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
 	var xhr = new XMLHttpRequest();
+	if (args.name) {var name = args.name + " ";} else {var name = ""}
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
-			InfoUpdate ("Server 404 error");
+			InfoUpdate (name + "Server 404 error");
 			xhr.abort();
 			if (args.FailFunction){args.FailFunction()}
 		} else {
-			InfoUpdate (
+			InfoUpdate (name +
 				"xhr Handler " + xhr.status +
 						 " / " + xhr.statusText +
 						 " / " + xhr.readyState
