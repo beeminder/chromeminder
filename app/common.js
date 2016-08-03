@@ -1,5 +1,5 @@
 var ServerStatusTimer = "empty";
-var UName, Slug, Deadline, UserJSON, updated_at, GoalsJSON;
+var UName, slug, Deadline, UserJSON, updated_at, GoalsJSON;
 var BeeURL = "https://www.beeminder.com";
 var DefaultGoal = 0;
 var GoalsArray = [];
@@ -95,9 +95,9 @@ function PUinit(){ //
 	);
 }
 function SetOutput(e){
-	Slug = GoalsJSON[e].slug
+	slug = GoalsJSON[e].slug
 	document.getElementById("graph-img").src=
-		BeeURL + "/" + UName + "/" + Slug + "/graph?" + new Date().getTime();
+		BeeURL + "/" + UName + "/" + slug + "/graph?" + new Date().getTime();
 	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ GoalsJSON[e].title;
 	Deadline = GoalsJSON[e].losedate*1000
 	document.getElementById("limsum").innerHTML = GoalsJSON[e].limsum;
@@ -160,7 +160,7 @@ function HandleDownload(){
 		}
 	})
 }
-function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+Slug+"/"+y;}
+function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+slug+"/"+y;}
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
 	chrome.storage.sync.get(
