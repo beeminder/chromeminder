@@ -54,6 +54,18 @@ function InfoUpdate (text, time){
 		time
 	);
 }
+function IfSet(input, bef, aft){ // TODO Implement
+	var string
+
+	if (input)		{
+						string = 		input
+		if (bef) 	{	string =  bef +	string			}
+		if (aft) 	{	string =		string + aft	}
+	}
+	else 			{	string = ""						}
+
+	return string
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
 	chrome.storage.sync.get(
