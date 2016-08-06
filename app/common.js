@@ -95,6 +95,10 @@ function PUinit(){ //
 			} //If Data is blank
 		} // function Sync Get
 	);
+	document.getElementById("ButtonRefresh").addEventListener(
+		"click",
+		function(){DataRefresh()}
+	)
 }
 function SetOutput(e){
 	slug = GoalsJSON[e].slug
@@ -162,7 +166,6 @@ function DataRefresh(i){
 		} // SuccessFunction
 	})} // xhrHandler
 }
-function DRClosure (){DataRefresh()}
 function HandleDownload(){
 	xhrHandler({ // Goals Get
 		url : "/goals",
@@ -194,7 +197,6 @@ function HandleDownload(){
 				})(i);// TODO: Add an additonal goto link w/ each Selector
 				document.getElementById("GraphContainer").appendChild(PictureArray[i])
 			}	};
-			document.getElementById("ButtonRefresh").addEventListener("click", DRClosure)
 		}
 	})
 }
