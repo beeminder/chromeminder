@@ -11,9 +11,11 @@ var DefaultSettings = {
 	datapoints	: [],
 	updated_at	: ""
 }
-var someVar = {}
+var someVar = {updated_at:"",ArrayNo:""}
 var RefreshTimeout = "empty"
 var PictureArray = []
+
+var NeuGoalsArray = []
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
@@ -76,12 +78,19 @@ function PUinit(){ //
 			username	: 	"",
 			token		: 	"",
 			DefaultGoal	:	0,
-			GoalArray	:	[]
+			GoalArray	:	[],
+			GoalsData	:	[]
 		},
 		function(items) {
 			UName = items.username;
 			token = items.token;
 			DefaultGoal = items.DefaultGoal;
+
+			if (items.GoalsData.length >= 1){
+				NeuGoalsArray = items.GoalsData
+				//SetOutput(DefaultGoal)
+			}
+
 			if (UName === "" || token === "") {
 				var a = document.createElement('a');
 				a.textContent = "You need to enter your details in the options page ";
@@ -101,17 +110,19 @@ function PUinit(){ //
 	)
 }
 function SetOutput(e){
-	slug = GoalsJSON[e].slug
-	document.getElementById("graph-img").src=
-		BeeURL + "/" + UName + "/" + slug + "/graph?" + new Date().getTime();
-	document.getElementById("GoalLoc").innerHTML = /*UName + " / " +*/ GoalsJSON[e].title;
-	Deadline = GoalsJSON[e].losedate*1000
-	document.getElementById("limsum").innerHTML = GoalsJSON[e].limsum;
+	slug = NeuGoalsArray[e].slug
+	document.getElementById("GraphLink").innerHTML = ""
+	document.getElementById("GraphLink").appendChild(NeuGoalsArray[e].graph_img)
+	//document.getElementById("graph-img") = NeuGoalsArray[e].graph_img
+	//.src = NeuGoalsArray[e].graph_url + "?" + new Date().getTime()
+	document.getElementById("GoalLoc").textContent = NeuGoalsArray[e].title;
+	Deadline = NeuGoalsArray[e].losedate*1000
+	document.getElementById("limsum").innerHTML = NeuGoalsArray[e].limsum;
 	LinkBM(	"ButtonGoal",		""				);
 	LinkBM(	"GraphLink",		""				);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
-	someVar.updated_at = GoalsJSON[e].updated_at;
+	someVar.updated_at = NeuGoalsArray[e].updated_at;
 	someVar.ArrayNo = e
 	clearTimeout(RefreshTimeout)
 	InfoUpdate ("Output Set : " + e)
@@ -157,10 +168,14 @@ function DataRefresh(i){
 					InfoUpdate("The goal seems not to have updated, aborting refresh")
 				}
 			} else {
+				NeuGoalsArray[someVar.ArrayNo] = ReturnGoalElement(response)
+				SetOutput(someVar.ArrayNo)
 				someVar.updated_at = response.updated_at
-				document.getElementById("graph-img").src=
-				/**/	BeeURL + "/" + UName + "/" + slug +
-				/**/	"/graph?" + new Date().getTime();
+				console.log(NeuGoalsArray[someVar.ArrayNo])
+				chrome.storage.sync.set(
+					{GoalsData:NeuGoalsArray},
+					function() {InfoUpdate("New goal data has been saved")}
+				)
 				InfoUpdate ("Graph Refreshed " + i + " " + someVar.updated_at);
 			}
 		} // SuccessFunction
@@ -171,7 +186,17 @@ function HandleDownload(){
 		url : "/goals",
 		SuccessFunction : function (response){
 			GoalsJSON = JSON.parse(response);
-			for (i = 0; i < GoalsJSON.length; i++){
+			var WorkingResponse = GoalsJSON
+
+			for (i = 0; i < WorkingResponse.length; i++){
+				NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i])
+			}
+			chrome.storage.sync.set(
+				{GoalsData:NeuGoalsArray},
+				function() {InfoUpdate("Goal data has been saved")}
+			)
+
+			for (i = 0; i < GoalsJSON.length; i++){ // Image Handling
 				PictureArray[i] = new Image()
 				PictureArray[i].src = GoalsJSON[i].graph_url
 				console.log(PictureArray[i])
@@ -433,6 +458,29 @@ function ReturnDataPoints (neu, old) {
 		ask user to look over
 	}
 */
+function ReturnGoalElement (object) {
+	var imgGraph = new Image()
+	imgGraph.src = object.graph_url + "?" + new Date().getTime()
+	var imgThumb = new Image()
+	imgThumb.src = object.thumb_url + "?" + new Date().getTime()
+	return {
+		"slug"			: object.slug,
+		"title"			: object.title,
+		"description"	: object.description,
+		"id"			: object.id,
+		"graph_url"		: object.graph_url,
+		"losedate"		: object.losedate,
+		"limsum"		: object.limsum,
+		"DataPoints"	: [],
+		"updated_at"	: object.updated_at,
+		"graph_url"		: object.graph_url,
+		"graph_img"		: imgGraph,
+		"thumb_url"		: object.thumb_url,
+		"thumb"			: imgThumb,
+		"Notify"		: true,
+		"Show"			: true
+	};
+}
 /* --- --- --- ---		Depreciated Functions		--- --- --- --- */
 function GoalsGET(){
 	xhrHandler({
