@@ -1,6 +1,5 @@
 var ServerStatusTimer = "empty";
 var UName, slug, Deadline, UserJSON, updated_at, GoalsJSON;
-var BeeURL = "https://www.beeminder.com";
 var DefaultGoal = 0;
 var GoalsArray = [];
 var ElementsList = []
@@ -119,8 +118,8 @@ function SetOutput(e){
 	document.getElementById("GoalLoc").textContent = NeuGoalsArray[e].title;
 	Deadline = NeuGoalsArray[e].losedate*1000
 	document.getElementById("limsum").innerHTML = NeuGoalsArray[e].limsum;
-	LinkBM(	"ButtonGoal",		""				);
-	LinkBM(	"GraphLink",		""				);
+	LinkBM(	"ButtonGoal" 						);
+	LinkBM(	"GraphLink"							);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
 	someVar.updated_at = NeuGoalsArray[e].updated_at;
@@ -226,7 +225,12 @@ function HandleDownload(){
 		}
 	})
 }
-function LinkBM(x,y) {document.getElementById(x).href=BeeURL+"/"+UName+"/"+slug+"/"+y;}
+function LinkBM(x,y,z) {
+	if (!y) {var y = ""};
+	if (z) {var slug = z}
+	document.getElementById(x).href=
+	"https://www.beeminder.com" + "/" + UName + "/" + slug + "/" + y;
+}
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
 	chrome.storage.sync.get(
@@ -324,7 +328,7 @@ function drawList(){
 		ElementsList[i].defa.textContent = "-";
 		ElementsList[i].hide.textContent = "Hi";
 		ElementsList[i].notify.textContent = "Hi";
-		ElementsList[i].title.href = BeeURL + "/" + UName + "/" + UserJSON.goals[i] + "/"
+			LinkBM(ElementsList[_i].title.id,undefined,UserJSON.goals[i])
 		TheList.appendChild( ElementsList[i].item);
 		   ElementsList[i].item.appendChild(ElementsList[i].title);
 		   ElementsList[i].item.appendChild(ElementsList[i].defa);
