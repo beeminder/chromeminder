@@ -74,7 +74,7 @@ function IfSet(input, bef, aft){ // TODO Implement
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
 	chrome.storage.sync.get(
-		{
+		{ // Data to retrieve
 			username	: 	"",
 			token		: 	"",
 			DefaultGoal	:	0,
@@ -99,7 +99,8 @@ function PUinit(){ //
 				document.getElementById("SeverStatus").insertBefore(
 					a, document.getElementById(SeverStatus)
 				)
-			} else {
+
+			} else { // TODO else if (!last API req was too soon)
 				( function(){HandleDownload()} )();
 			} //If Data is blank
 		} // function Sync Get
@@ -185,7 +186,7 @@ function HandleDownload(){
 	xhrHandler({ // Goals Get
 		url : "/goals",
 		SuccessFunction : function (response){
-			GoalsJSON = JSON.parse(response);
+			GoalsJSON = JSON.parse(response); // TODO Depreciate Variable
 			var WorkingResponse = GoalsJSON
 
 			for (i = 0; i < WorkingResponse.length; i++){
@@ -199,29 +200,29 @@ function HandleDownload(){
 			for (i = 0; i < GoalsJSON.length; i++){ // Image Handling
 				PictureArray[i] = new Image()
 				PictureArray[i].src = GoalsJSON[i].graph_url
-				console.log(PictureArray[i])
-				console.log(GoalsJSON[i].graph_url)
 			}
 			InfoUpdate ("Data has been downloaded")
 
 			if (DefaultGoal > GoalsJSON.length){DefaultGoal=0};
 			SetOutput(DefaultGoal);
-			setInterval(
+			setInterval( // Sets Deadline Counter
 				function(){
 					document.getElementById("dlout").innerHTML=countdown(Deadline).toString();
 				},100
 			);
-			if (GoalsJSON.length > 1) {		for (i = 0; i < GoalsJSON.length; i++){
-				var a = document.createElement('a');
-				a.className = 'GoalIDBtn';
-				a.id = /*UName + '-' +*/ GoalsJSON[i].slug;
-				a.textContent = /*UName + ' / ' +*/ GoalsJSON[i].title;
-				document.getElementById("TheContent").appendChild(a);
-				(function(_i) {
-					a.addEventListener("click", function() {SetOutput(_i);});
-				})(i);// TODO: Add an additonal goto link w/ each Selector
-				document.getElementById("GraphContainer").appendChild(PictureArray[i])
-			}	};
+			if (GoalsJSON.length > 1) { // Goal Selector
+				for (i = 0; i < GoalsJSON.length; i++){
+					var a = document.createElement('a');
+					a.className = 'GoalIDBtn';
+					a.id			= GoalsJSON[i].slug;
+					a.textContent	= GoalsJSON[i].title;
+					document.getElementById("TheContent").appendChild(a);
+					(function(_i) {a.addEventListener(
+							"click",
+							function() {SetOutput(_i);}
+					)})(i);// TODO: Add an additonal goto link w/ each Selector
+				}
+			};
 		}
 	})
 }
