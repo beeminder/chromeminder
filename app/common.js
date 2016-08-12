@@ -334,6 +334,7 @@ function drawList(){
 		   ElementsList[i].item.appendChild(ElementsList[i].hide);
 		   ElementsList[i].item.appendChild(ElementsList[i].notify);
 		(function(_i) {
+			LinkBM(ElementsList[_i].title.id,undefined,UserJSON.goals[i])
 			ElementsList[_i].defa.addEventListener( "click", function() {DefaultHandle(_i);});
 			ElementsList[_i].hide.addEventListener( "click", MakeGoalsArray );
 			// notify.addEventListener( "click", functions(){ NotifyHandle(i) } );
