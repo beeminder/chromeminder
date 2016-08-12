@@ -328,7 +328,6 @@ function drawList(){
 		ElementsList[i].defa.textContent = "-";
 		ElementsList[i].hide.textContent = "Hi";
 		ElementsList[i].notify.textContent = "Hi";
-			LinkBM(ElementsList[_i].title.id,undefined,UserJSON.goals[i])
 		TheList.appendChild( ElementsList[i].item);
 		   ElementsList[i].item.appendChild(ElementsList[i].title);
 		   ElementsList[i].item.appendChild(ElementsList[i].defa);
