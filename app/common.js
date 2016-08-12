@@ -229,7 +229,7 @@ function LinkBM(x,y,z) {
 	if (!y) {var y = ""};
 	if (z) {var slug = z}
 	document.getElementById(x).href=
-	"https://www.beeminder.com" + "/" + UName + "/" + slug + "/" + y;
+	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
