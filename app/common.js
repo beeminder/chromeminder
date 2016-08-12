@@ -227,7 +227,7 @@ function HandleDownload(){
 }
 function LinkBM(x,y,z) {
 	if (!y) {var y = ""};
-	if (z) {var slug = z}
+	if (!z){z = slug;}
 	document.getElementById(x).href=
 	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
