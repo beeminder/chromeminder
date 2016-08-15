@@ -486,6 +486,26 @@ function ReturnGoalElement (object) {
 		"Show"			: true
 	};
 }
+function ImageHandler (SomeArgs,MoreArgs){
+	var ImageObject = document.getElementById("DisplayedGraph")
+	function HasItLoaded(){
+		if (!ImageObject.complete) {
+			return false;
+		}
+		if (typeof ImageObject.naturalWidth !== "undefined" && ImageObject.naturalWidth === 0) {
+			return false;
+		}
+		return true
+	}
+	var TestVal = HasItLoaded()
+	if (TestVal){
+		alert(TestVal)
+		console.log(TestVal)
+		// some code to executre- given true
+	} else {
+		alert("yippeie")
+	}
+}
 /* --- --- --- ---		Depreciated Functions		--- --- --- --- */
 function GoalsGET(){
 	xhrHandler({
