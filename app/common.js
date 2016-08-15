@@ -145,7 +145,7 @@ function DataRefresh(i){
 			SuccessFunction : function (response){
 				if (response === "true"){
 					InfoUpdate ("Waiting for Graph to refresh");
-					RefreshTimeout = setTimeout(function (){DataRefresh (1)},10000)
+					RefreshTimeout = setTimeout(function (){DataRefresh (1)},2500)
 				} else if (response !== "true") {
 					InfoUpdate ("Beeminder Sever Says no");
 				} //If refresh true / !true
@@ -159,7 +159,7 @@ function DataRefresh(i){
 			InfoUpdate("iteration " + i)
 			response = JSON.parse(response)
 			if (response.updated_at === someVar.updated_at){// TODO Deal with someVar
-				var time = 10000 * Math.pow(2,(i-1))
+				var time = 2500 * Math.pow(2,(i-1))
 				if (i<=6) {
 					RefreshTimeout = setTimeout(function (){DataRefresh (i+1)}, time);
 					InfoUpdate("No Updated difference, giving it another swing,"
