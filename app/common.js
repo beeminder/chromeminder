@@ -112,7 +112,9 @@ function PUinit(){ //
 function SetOutput(e){
 	slug = NeuGoalsArray[e].slug
 	document.getElementById("GraphLink").innerHTML = ""
-	document.getElementById("GraphLink").appendChild(NeuGoalsArray[e].graph_img)
+	var GraphImageToLoad = NeuGoalsArray[e].graph_img
+	GraphImageToLoad.id = "DisplayedGraph"
+	document.getElementById("GraphLink").appendChild(GraphImageToLoad);
 	//document.getElementById("graph-img") = NeuGoalsArray[e].graph_img
 	//.src = NeuGoalsArray[e].graph_url + "?" + new Date().getTime()
 	document.getElementById("GoalLoc").textContent = NeuGoalsArray[e].title;
