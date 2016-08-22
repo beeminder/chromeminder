@@ -1,6 +1,5 @@
 var ServerStatusTimer = "empty";
 var UName, slug, Deadline, UserJSON, updated_at, GoalsJSON;
-var DefaultGoal = 0;
 var GoalsArray = [];
 var ElementsList = []
 var DefaultSettings = {
@@ -11,6 +10,7 @@ var DefaultSettings = {
 	updated_at	: ""
 }
 var someVar = {updated_at:"",ArrayNo:""}
+var DefGoal = {Loc:undefined, Name:""}
 var RefreshTimeout = "empty"
 var PictureArray = []
 
@@ -76,14 +76,14 @@ function PUinit(){ //
 		{ // Data to retrieve
 			username	: 	"",
 			token		: 	"",
-			DefaultGoal	:	0,
 			GoalArray	:	[],
-			GoalsData	:	[]
+			GoalsData	:	[],
+			DefaultName :	""
 		},
 		function(items) {
 			UName = items.username;
 			token = items.token;
-			DefaultGoal = items.DefaultGoal;
+			DefGoal.Name = items.DefaultName
 
 			if (items.GoalsData.length >= 1){
 				NeuGoalsArray = items.GoalsData
@@ -191,6 +191,7 @@ function HandleDownload(){
 			var WorkingResponse = GoalsJSON
 
 			for (i = 0; i < WorkingResponse.length; i++){
+				if (DefGoal.Name == WorkingResponse[i].slug){DefGoal.Loc = i}
 				NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i])
 			}
 			chrome.storage.sync.set(
@@ -204,8 +205,8 @@ function HandleDownload(){
 			}
 			InfoUpdate ("Data has been downloaded")
 
-			if (DefaultGoal > GoalsJSON.length){DefaultGoal=0};
-			SetOutput(DefaultGoal);
+			if (!Number.isInteger(DefGoal.Loc)) {DefGoal.Loc = 0}
+			SetOutput(DefGoal.Loc);
 			setInterval( // Sets Deadline Counter
 				function(){
 					document.getElementById("dlout").innerHTML=countdown(Deadline).toString();
@@ -240,8 +241,8 @@ function OPTinit(){
 			username	: 	"",
 			token		: 	"",
 			updated_at	:	"",
-			DefaultGoal	:	0,
-			GoalArray	:	{}
+			GoalArray	:	{},
+			DefaultName :	""
 		},
 		function(items) {
 			console.log(items.GoalArray.length);
@@ -250,7 +251,7 @@ function OPTinit(){
 			updated_at = items.updated_at;
 			UName = items.username;
 			token = items.token;
-			DefaultGoal = parseInt(items.DefaultGoal);
+			DefGoal.Name = items.DefaultName
 			if (items.username === "" || items.token === "") {
 				// TODO Goto options page
 				InfoUpdate ("There be no data")
@@ -280,7 +281,7 @@ function save_options() {
 			chrome.storage.sync.set({
 				username	:	UName,
 				token		:	token,
-				DefaultGoal	:	DefaultGoal//,
+				DefaultName	:	DefGoal.Name//,
 				//GoalArray	:	UserJSON.goals
 			},
 			function() {
@@ -302,9 +303,10 @@ function save_options() {
 	xhrHandler(xhrFunctions)
 }
 function DefaultHandle (i) {
-	ElementsList[DefaultGoal].defa.textContent="-";
-	DefaultGoal =i;
-	ElementsList[DefaultGoal].defa.textContent="Default";
+	ElementsList[DefGoal.Loc].defa.textContent="-";
+	DefGoal.Loc = i;
+	DefGoal.Name = UserJSON.goals[i];
+	ElementsList[DefGoal.Loc].defa.textContent="Default";
 }
 function drawList(){
 	var TheList = document.getElementById("TheList");
@@ -341,8 +343,13 @@ function drawList(){
 			ElementsList[_i].hide.addEventListener( "click", MakeGoalsArray );
 			// notify.addEventListener( "click", functions(){ NotifyHandle(i) } );
 		})(i);
+		if (UserJSON.goals[i] === DefGoal.Name) {DefGoal.Loc = i;}
 	}
-	ElementsList[DefaultGoal].defa.innerHTML = "Default";
+	if (Number.isInteger(DefGoal.Loc)) {
+		ElementsList[DefGoal.Loc].defa.innerHTML = "Default";
+	} else {
+		// TODO No Default Present
+	}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
 function UserGET(){
