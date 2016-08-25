@@ -110,24 +110,24 @@ function PUinit(){ //
 	)
 }
 function SetOutput(e){
-	slug = NeuGoalsArray[e].slug
+	slug = NeuGoalsArray[e].slug;
 	document.getElementById("GraphLink").innerHTML = ""
-	var GraphImageToLoad = NeuGoalsArray[e].graph_img
-	GraphImageToLoad.id = "DisplayedGraph"
+	var GraphImageToLoad = NeuGoalsArray[e].graph_img;
+	GraphImageToLoad.id = "DisplayedGraph";
 	document.getElementById("GraphLink").appendChild(GraphImageToLoad);
 	//document.getElementById("graph-img") = NeuGoalsArray[e].graph_img
 	//.src = NeuGoalsArray[e].graph_url + "?" + new Date().getTime()
 	document.getElementById("GoalLoc").textContent = NeuGoalsArray[e].title;
-	Deadline = NeuGoalsArray[e].losedate*1000
+	Deadline = NeuGoalsArray[e].losedate*1000;
 	document.getElementById("limsum").innerHTML = NeuGoalsArray[e].limsum;
 	LinkBM(	"ButtonGoal" 						);
 	LinkBM(	"GraphLink"							);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
 	someVar.updated_at = NeuGoalsArray[e].updated_at;
-	someVar.ArrayNo = e
-	clearTimeout(RefreshTimeout)
-	InfoUpdate ("Output Set : " + e)
+	someVar.ArrayNo = e;
+	clearTimeout(RefreshTimeout);
+	InfoUpdate ("Output Set : " + e);
 }
 function DataRefresh(i){
 	/*
