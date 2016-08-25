@@ -128,6 +128,20 @@ function SetOutput(e){
 	someVar.ArrayNo = e;
 	clearTimeout(RefreshTimeout);
 	InfoUpdate ("Output Set : " + e);
+
+	(function () {
+		var myElement = document.querySelector(".CountdownDisplay");
+		var deadline = new countdown(NeuGoalsArray[e].losedate * 1000)
+		console.log(deadline.days)
+		var TheVar
+		if 		(deadline.days > 7) {TheVar = "black";}
+		else if (deadline.days = 3) {TheVar = "green";}
+		else if (deadline.days = 2) {TheVar = "orange";}
+		else if (deadline.days = 1) {TheVar = "red";}
+		else 						{TheVar = "black";}
+		console.log(TheVar)
+		myElement.style.backgroundColor = TheVar
+	})()
 }
 function DataRefresh(i){
 	/*
