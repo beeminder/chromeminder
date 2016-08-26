@@ -133,18 +133,14 @@ function SetOutput(e){
 	clearTimeout(RefreshTimeout);
 	InfoUpdate ("Output Set : " + e);
 
-	(function () {
-		var myElement = document.querySelector(".CountdownDisplay");
-		var deadline = new countdown(NeuGoalsArray[e].losedate * 1000)
-		console.log(deadline.days)
-		var TheVar
-		if 		(deadline.days > 7) {TheVar = "black";}
-		else if (deadline.days = 3) {TheVar = "green";}
-		else if (deadline.days = 2) {TheVar = "orange";}
-		else if (deadline.days = 1) {TheVar = "red";}
-		else 						{TheVar = "black";}
-		console.log(TheVar)
-		myElement.style.backgroundColor = TheVar
+	document.querySelector(".CountdownDisplay").style.backgroundColor = (function(){
+		var daysleft = new countdown(CurDat().losedate * 1000).days;
+		if	   	(daysleft  >  2)	{return "#39b44a";}
+		else if (daysleft === 2)	{return "#325fac";}
+		else if (daysleft === 1)	{return "#f7941d";}
+		else if (daysleft === 0)	{return "#c92026";}
+		else if (daysleft  <  0)	{return "#c92026";}
+		return "purple";
 	})()
 }
 function DataRefresh(i){
