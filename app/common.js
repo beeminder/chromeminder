@@ -1,5 +1,5 @@
 var ServerStatusTimer = "empty";
-var UName, slug, Deadline, UserJSON, updated_at, GoalsJSON;
+var UName, slug, UserJSON, updated_at, GoalsJSON;
 var GoalsArray = [];
 var ElementsList = []
 var DefaultSettings = {
@@ -113,8 +113,7 @@ function PUinit(){ //
 	)
 }
 function SetOutput(e){
-	slug = NeuGoalsArray[e].slug;
-	Deadline = NeuGoalsArray[e].losedate*1000;
+	someVar.ArrayNo = e;
 	ByID("GraphLink").innerHTML = "";
 	ByID("GraphLink").appendChild((function (){
 		var GraphImageToLoad = NeuGoalsArray[e].graph_img;
@@ -128,7 +127,6 @@ function SetOutput(e){
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
 	someVar.updated_at = NeuGoalsArray[e].updated_at;
-	someVar.ArrayNo = e;
 	clearTimeout(RefreshTimeout);
 	InfoUpdate ("Output Set : " + e);
 
@@ -226,7 +224,9 @@ function HandleDownload(){
 			SetOutput(DefGoal.Loc);
 			setInterval( // Sets Deadline Counter
 				function(){
-					document.getElementById("dlout").innerHTML=countdown(Deadline).toString();
+					document.getElementById("dlout").innerHTML=countdown(
+						NeuGoalsArray[someVar.ArrayNo].losedate*1000
+					).toString();
 				},100
 			);
 			if (GoalsJSON.length > 1) { // Goal Selector
