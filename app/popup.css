@@ -35,7 +35,7 @@ body {
 	margin-top: 3px;
 }
 #Header #Menu {background:grey;}
-#Header #Countdown {background:darkred;color:white;}
+#Header #Countdown {background:purple;color:white;}
 #Header #BareMin {background:lightblue;}
 img {
 	border-radius: 5px 5px 5px 5px;

@@ -156,7 +156,7 @@ function DataRefresh(i){
 	InfoUpdate(someVar)
 	if (!i){
 		xhrHandler({
-			url:"/goals/" + slug + "/refresh_graph",
+			url:"/goals/" + NeuGoalsArray[someVar.ArrayNo].slug + "/refresh_graph",
 			name:"Refresh ",
 			SuccessFunction : function (response){
 				if (response === "true"){
@@ -169,7 +169,7 @@ function DataRefresh(i){
 		})
 	}
 	else if (i) {xhrHandler({
-		url:"/goals/" + slug,
+		url:"/goals/" + NeuGoalsArray[someVar.ArrayNo].slug,
 		name:"Refresh - Goal Update",
 		SuccessFunction:function(response){
 			InfoUpdate("iteration " + i)
@@ -244,7 +244,7 @@ function HandleDownload(){
 }
 function LinkBM(x,y,z) {
 	if (!y) {var y = ""};
-	if (!z){z = slug;}
+	if (!z){z = NeuGoalsArray[someVar.ArrayNo].slug;}
 	document.getElementById(x).href=
 	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
