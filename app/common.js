@@ -70,6 +70,9 @@ function IfSet(input, bef, aft){ // TODO Implement
 
 	return string
 }
+function ByID (item){
+	return document.getElementById(item)
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
 	chrome.storage.sync.get(
@@ -111,15 +114,15 @@ function PUinit(){ //
 }
 function SetOutput(e){
 	slug = NeuGoalsArray[e].slug;
-	document.getElementById("GoalLoc").textContent = NeuGoalsArray[e].title;
 	Deadline = NeuGoalsArray[e].losedate*1000;
-	document.getElementById("limsum").innerHTML = NeuGoalsArray[e].limsum;
 	ByID("GraphLink").innerHTML = "";
 	ByID("GraphLink").appendChild((function (){
 		var GraphImageToLoad = NeuGoalsArray[e].graph_img;
 		GraphImageToLoad.id = "DisplayedGraph";
 		return GraphImageToLoad
 	})());
+	ByID("GoalLoc").textContent = NeuGoalsArray[e].title;
+	ByID("limsum").innerHTML = NeuGoalsArray[e].limsum;
 	LinkBM(	"ButtonGoal" 						);
 	LinkBM(	"GraphLink"							);
 	LinkBM(	"ButtonData",		"datapoints"	);
