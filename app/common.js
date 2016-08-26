@@ -73,6 +73,9 @@ function IfSet(input, bef, aft){ // TODO Implement
 function ByID (item){
 	return document.getElementById(item)
 }
+function CurDat(){
+	return NeuGoalsArray[someVar.ArrayNo]
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
 	chrome.storage.sync.get(
@@ -116,17 +119,17 @@ function SetOutput(e){
 	someVar.ArrayNo = e;
 	ByID("GraphLink").innerHTML = "";
 	ByID("GraphLink").appendChild((function (){
-		var GraphImageToLoad = NeuGoalsArray[e].graph_img;
+		var GraphImageToLoad = CurDat().graph_img;
 		GraphImageToLoad.id = "DisplayedGraph";
 		return GraphImageToLoad
 	})());
-	ByID("GoalLoc").textContent = NeuGoalsArray[e].title;
-	ByID("limsum").innerHTML = NeuGoalsArray[e].limsum;
+	ByID("GoalLoc").textContent = CurDat().title;
+	ByID("limsum").innerHTML = CurDat().limsum;
 	LinkBM(	"ButtonGoal" 						);
 	LinkBM(	"GraphLink"							);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
-	someVar.updated_at = NeuGoalsArray[e].updated_at;
+	someVar.updated_at = CurDat().updated_at;
 	clearTimeout(RefreshTimeout);
 	InfoUpdate ("Output Set : " + e);
 
