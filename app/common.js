@@ -73,8 +73,9 @@ function IfSet(input, bef, aft){ // TODO Implement
 function ByID (item){
 	return document.getElementById(item)
 }
-function CurDat(){
-	return NeuGoalsArray[someVar.ArrayNo]
+function CurDat(NeuObj){
+	if (NeuObj) {NeuGoalsArray[someVar.ArrayNo] = NeuObj}
+	else		{return NeuGoalsArray[someVar.ArrayNo]}
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
@@ -156,7 +157,7 @@ function DataRefresh(i){
 	InfoUpdate(someVar)
 	if (!i){
 		xhrHandler({
-			url:"/goals/" + NeuGoalsArray[someVar.ArrayNo].slug + "/refresh_graph",
+			url:"/goals/" + CurDat().slug + "/refresh_graph",
 			name:"Refresh ",
 			SuccessFunction : function (response){
 				if (response === "true"){
@@ -169,7 +170,7 @@ function DataRefresh(i){
 		})
 	}
 	else if (i) {xhrHandler({
-		url:"/goals/" + NeuGoalsArray[someVar.ArrayNo].slug,
+		url:"/goals/" + CurDat().slug,
 		name:"Refresh - Goal Update",
 		SuccessFunction:function(response){
 			InfoUpdate("iteration " + i)
@@ -184,10 +185,10 @@ function DataRefresh(i){
 					InfoUpdate("The goal seems not to have updated, aborting refresh")
 				}
 			} else {
-				NeuGoalsArray[someVar.ArrayNo] = ReturnGoalElement(response)
+				CurDat(ReturnGoalElement(response))
 				SetOutput(someVar.ArrayNo)
 				someVar.updated_at = response.updated_at
-				console.log(NeuGoalsArray[someVar.ArrayNo])
+				console.log(CurDat())
 				chrome.storage.sync.set(
 					{GoalsData:NeuGoalsArray},
 					function() {InfoUpdate("New goal data has been saved")}
@@ -224,7 +225,7 @@ function HandleDownload(){
 			setInterval( // Sets Deadline Counter
 				function(){
 					document.getElementById("dlout").innerHTML=countdown(
-						NeuGoalsArray[someVar.ArrayNo].losedate*1000
+						CurDat().losedate*1000
 					).toString();
 				},100
 			);
@@ -246,7 +247,7 @@ function HandleDownload(){
 }
 function LinkBM(x,y,z) {
 	if (!y) {var y = ""};
-	if (!z){z = NeuGoalsArray[someVar.ArrayNo].slug;}
+	if (!z){z = CurDat().slug;}
 	document.getElementById(x).href=
 	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
