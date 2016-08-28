@@ -209,29 +209,33 @@ function HandleDownload(){
 			InfoUpdate ("Data has been downloaded")
 
 			if (!Number.isInteger(DefGoal.Loc)) {DefGoal.Loc = 0}
-			SetOutput(DefGoal.Loc);
-			setInterval( // Sets Deadline Counter
-				function(){
-					document.getElementById("dlout").innerHTML=countdown(
-						CurDat().losedate*1000
-					).toString();
-				},100
-			);
-			if (GoalsJSON.length > 1) { // Goal Selector
-				for (i = 0; i < GoalsJSON.length; i++){
-					var a = document.createElement('a');
-					a.className = 'GoalIDBtn';
-					a.id			= GoalsJSON[i].slug;
-					a.textContent	= GoalsJSON[i].title;
-					document.getElementById("TheContent").appendChild(a);
-					(function(_i) {a.addEventListener(
-							"click",
-							function() {SetOutput(_i);}
-					)})(i);// TODO: Add an additonal goto link w/ each Selector
-				}
-			};
+
+			IniDisplay()
 		}
 	})
+}
+function IniDisplay(){
+	SetOutput(DefGoal.Loc);
+	setInterval( // Sets Deadline Counter
+		function(){
+			document.getElementById("dlout").innerHTML=countdown(
+				CurDat().losedate*1000
+			).toString();
+		},100
+	);
+	if (NeuGoalsArray.length > 1) { // Goal Selector
+		for (i = 0; i < NeuGoalsArray.length; i++){
+			var a = document.createElement('a');
+			a.className = 'GoalIDBtn';
+			a.id			= NeuGoalsArray[i].slug;
+			a.textContent	= NeuGoalsArray[i].title;
+			document.getElementById("TheContent").appendChild(a);
+			(function(_i) {a.addEventListener(
+					"click",
+					function() {SetOutput(_i);}
+			)})(i);// TODO: Add an additonal goto link w/ each Selector
+		}
+	};
 }
 function LinkBM(x,y,z) {
 	if (!y) {var y = ""};
