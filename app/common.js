@@ -58,18 +58,6 @@ function InfoUpdate (text, time){
 		time
 	);
 }
-function IfSet(input, bef, aft){ // TODO Implement
-	var string
-
-	if (input)		{
-						string = 		input
-		if (bef) 	{	string =  bef +	string			}
-		if (aft) 	{	string =		string + aft	}
-	}
-	else 			{	string = ""						}
-
-	return string
-}
 function ByID (item){
 	return document.getElementById(item)
 }
@@ -274,7 +262,21 @@ function OPTinit(){
 				InfoUpdate ("There be no data")
 			} else {
 				( function(){
-					UserGET();
+					xhrHandler({
+						SuccessFunction : function(response) {
+							UserJSON = JSON.parse(response);
+							drawList()
+							if (updated_at === UserJSON.updated_at){
+								// TODO No need to update > write output
+								document.getElementById("UpdateDifference").innerHTML 	=
+								/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
+							} else {
+								// TODO There needs to be an update
+								document.getElementById("UpdateDifference").innerHTML 	=
+								/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
+							} // If differnece detection
+						}
+					});
 					xhrHandler({ // Goals Get
 						url : "/goals",
 						SuccessFunction : function (response){
@@ -369,23 +371,6 @@ function drawList(){
 	}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
-function UserGET(){
-	xhrHandler({
-		SuccessFunction : function(response) {
-			UserJSON = JSON.parse(response);
-			drawList()
-			if (updated_at === UserJSON.updated_at){
-				// TODO No need to update > write output
-				document.getElementById("UpdateDifference").innerHTML 	=
-				/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
-			} else {
-				// TODO There needs to be an update
-				document.getElementById("UpdateDifference").innerHTML 	=
-				/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
-			} // If differnece detection
-		}
-	})
-}///////////////////////////////////////////////////////////_pop
 function MakeGoalsArray () {
 	console.log("run " + GoalsJSON.length)
 		// This is the first time and wipe slate clean function
@@ -512,26 +497,6 @@ function ReturnGoalElement (object) {
 		"Show"			: true
 	};
 }
-function ImageHandler (SomeArgs,MoreArgs){
-	var ImageObject = document.getElementById("DisplayedGraph")
-	function HasItLoaded(){
-		if (!ImageObject.complete) {
-			return false;
-		}
-		if (typeof ImageObject.naturalWidth !== "undefined" && ImageObject.naturalWidth === 0) {
-			return false;
-		}
-		return true
-	}
-	var TestVal = HasItLoaded()
-	if (TestVal){
-		alert(TestVal)
-		console.log(TestVal)
-		// some code to executre- given true
-	} else {
-		alert("yippeie")
-	}
-}
 /* --- --- --- ---		Depreciated Functions		--- --- --- --- */
 function GoalsGET(){
 	xhrHandler({
@@ -562,4 +527,53 @@ function UNIXtoReadable(i){
 	var sec = a.getSeconds();
 	var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
 	return time;
+}
+function ImageHandler (SomeArgs,MoreArgs){
+	var ImageObject = document.getElementById("DisplayedGraph")
+	function HasItLoaded(){
+		if (!ImageObject.complete) {
+			return false;
+		}
+		if (typeof ImageObject.naturalWidth !== "undefined" && ImageObject.naturalWidth === 0) {
+			return false;
+		}
+		return true
+	}
+	var TestVal = HasItLoaded()
+	if (TestVal){
+		alert(TestVal)
+		console.log(TestVal)
+		// some code to executre- given true
+	} else {
+		alert("yippeie")
+	}
+}
+function UserGET(){
+	xhrHandler({
+		SuccessFunction : function(response) {
+			UserJSON = JSON.parse(response);
+			drawList()
+			if (updated_at === UserJSON.updated_at){
+				// TODO No need to update > write output
+				document.getElementById("UpdateDifference").innerHTML 	=
+				/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
+			} else {
+				// TODO There needs to be an update
+				document.getElementById("UpdateDifference").innerHTML 	=
+				/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
+			} // If differnece detection
+		}
+	})
+}
+function IfSet(input, bef, aft){
+	var string
+
+	if (input)		{
+						string = 		input
+		if (bef) 	{	string =  bef +	string			}
+		if (aft) 	{	string =		string + aft	}
+	}
+	else 			{	string = ""						}
+
+	return string
 }
