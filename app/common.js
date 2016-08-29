@@ -109,12 +109,7 @@ function PUinit(){ //
 }
 function SetOutput(e){
 	someVar.ArrayNo = e;
-	ByID("GraphLink").innerHTML = "";
-	ByID("GraphLink").appendChild((function (){
-		var GraphImageToLoad = CurDat().graph_img;
-		GraphImageToLoad.id = "DisplayedGraph";
-		return GraphImageToLoad
-	})());
+	ImageLoader(CurDat().graph_url)
 	ByID("GoalLoc").textContent = CurDat().title;
 	ByID("limsum").innerHTML = CurDat().limsum;
 	LinkBM(	"ButtonGoal" 						);
@@ -244,6 +239,25 @@ function LinkBM(x,y,z) {
 	if (!z){z = CurDat().slug;}
 	document.getElementById(x).href=
 	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
+}
+function ImageLoader(FooURL){
+	if (!FooURL){
+		var FooURL = "http://brain.beeminder.com/nonce/oiyouyeahyou+writing+57436fce128d1c1d8c000201.png"
+	}
+	var imgxhr = new XMLHttpRequest();
+		imgxhr.open("GET",FooURL  + "?" + new Date().getTime());
+		imgxhr.responseType = "blob";
+		imgxhr.onload = function (){
+			reader.readAsDataURL(imgxhr.response)
+		};
+	var reader = new FileReader();
+		reader.onloadend = function () {
+			ByID("graph-img").src = reader.result
+		}
+	imgxhr.send();
+}
+function DisplayDeadline(){
+	document.getElementById("dlout").innerHTML=new countdown(CurDat().losedate).toString();
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
