@@ -18,8 +18,13 @@ var NeuGoalsArray = []
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
-	var xhr = new XMLHttpRequest();
-	if (args.name) {var name = args.name + " ";} else {var name = ""}
+	var xhr, urlSalt, xhrLocation, name
+	name		= IfSet(args.name,undefined," ")
+	urlSalt		= IfSet(args.url)
+	xhrLocation	= "https://www.beeminder.com/api/v1/users/" +
+	/**/			UName + urlSalt + ".json?auth_token=" +	token
+
+	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
 			InfoUpdate (name + "Server 404 error");
@@ -36,15 +41,7 @@ function xhrHandler(args){
 			} //If Ready to access data
 		} // If Access denied / allowed
 	} // func xhr readyState
-
-	var neurl
-	if	(args.url)	{ neurl = args.url	}
-	else			{ neurl = ""		}
-
-	var nurl =	"https://www.beeminder.com/api/v1/users/" +
-	/**/		UName + neurl + ".json?auth_token=" +	token
-
-	xhr.open("GET", nurl);
+	xhr.open("GET", xhrLocation);
 	xhr.send();
 }
 function InfoUpdate (text, time){
@@ -82,7 +79,13 @@ function PUinit(){ //
 
 			if (items.GoalsData.length >= 1){
 				NeuGoalsArray = items.GoalsData
-				//SetOutput(DefaultGoal)
+				for (i = 0; i < items.GoalsData.length; i++){
+					/* Searches for Default, This doesn't really need to happen
+						when this data has already been handled,
+						TODO put this into a more optimal location*/
+					if (DefGoal.Name == items.GoalsData[i].slug){DefGoal.Loc = i}
+				}
+				IniDisplay()
 			}
 
 			if (UName === "" || token === "") {
@@ -123,7 +126,7 @@ function SetOutput(e){
 	InfoUpdate ("Output Set : " + e);
 
 	document.querySelector(".CountdownDisplay").style.backgroundColor = (function(){
-		var daysleft = new countdown(CurDat().losedate * 1000).days;
+		var daysleft = new countdown(CurDat().losedate).days;
 		if	   	(daysleft  >  2)	{return "#39b44a";}
 		else if (daysleft === 2)	{return "#325fac";}
 		else if (daysleft === 1)	{return "#f7941d";}
@@ -133,8 +136,7 @@ function SetOutput(e){
 	})()
 }
 function DataRefresh(i){
-	/*
-		TODO
+	/*	TODO
 		[#]		xhr singular goal
 		[#]		if updated at values are differetn {
 		[ ]			merge neu and old goal
@@ -190,46 +192,46 @@ function HandleDownload(){
 	xhrHandler({ // Goals Get
 		url : "/goals",
 		SuccessFunction : function (response){
-			GoalsJSON = JSON.parse(response); // TODO Depreciate Variable
-			var WorkingResponse = GoalsJSON
+			var WorkingResponse = JSON.parse(response);
+			var DefHolding;
+
+			NeuGoalsArray = [] // Clearing Array TODO Implement a merging script
 
 			for (i = 0; i < WorkingResponse.length; i++){
-				if (DefGoal.Name == WorkingResponse[i].slug){DefGoal.Loc = i}
-				NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i])
+				if (DefGoal.Name == WorkingResponse[i].slug){DefHolding = i};
+				NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
 			}
+
+			if (!DefHolding){DefHolding = 0};
+			DefGoal.Loc = DefHolding;
+
 			chrome.storage.sync.set(
 				{GoalsData:NeuGoalsArray},
 				function() {InfoUpdate("Goal data has been saved")}
 			)
 
-			for (i = 0; i < GoalsJSON.length; i++){ // Image Handling
-				PictureArray[i] = new Image()
-				PictureArray[i].src = GoalsJSON[i].graph_url
-			}
-			InfoUpdate ("Data has been downloaded")
-
-			if (!Number.isInteger(DefGoal.Loc)) {DefGoal.Loc = 0}
-
-			IniDisplay()
+			// for (i = 0; i < GoalsJSON.length; i++){ // Image Handling
+			// 	PictureArray[i] = new Image()
+			// 	PictureArray[i].src = GoalsJSON[i].graph_url
+			// }
+			InfoUpdate ("Data has been downloaded");
+			IniDisplay();
+			GoalsJSON = WorkingResponse // TODO Depreciate Variable
 		}
 	})
 }
 function IniDisplay(){
 	SetOutput(DefGoal.Loc);
-	setInterval( // Sets Deadline Counter
-		function(){
-			document.getElementById("dlout").innerHTML=countdown(
-				CurDat().losedate*1000
-			).toString();
-		},100
-	);
+	setInterval(DisplayDeadline,100);// Sets Deadline Counter
 	if (NeuGoalsArray.length > 1) { // Goal Selector
+		var TheContentArea = document.getElementById("TheContent")
+		TheContentArea.innerHTML = ""
 		for (i = 0; i < NeuGoalsArray.length; i++){
 			var a = document.createElement('a');
 			a.className = 'GoalIDBtn';
 			a.id			= NeuGoalsArray[i].slug;
 			a.textContent	= NeuGoalsArray[i].title;
-			document.getElementById("TheContent").appendChild(a);
+			TheContentArea.appendChild(a);
 			(function(_i) {a.addEventListener(
 					"click",
 					function() {SetOutput(_i);}
@@ -376,8 +378,6 @@ function drawList(){
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
 function MakeGoalsArray () {
-	console.log("run " + GoalsJSON.length)
-		// This is the first time and wipe slate clean function
 	for (i = 0; i < GoalsJSON.length; i++){
 		GoalsArray[i] = {
 			"slug"			: GoalsJSON[i].slug,
@@ -395,18 +395,10 @@ function MakeGoalsArray () {
 	}
 	console.log(GoalsArray)
 	GoalsArray.sort(function (a,b) { // Sort Array by ID
-		console.log(a["id"] + ", " + b["id"]);
 		if		( a["id"] > b["id"] ){	return  1; }
 		else if	( a["id"] < b["id"] ){	return -1; }
 										return  0;
 	})
-	/*
-		TODO:
-			Assess if the two data structures sre different
-			How to handle new graphs
-			How to handle deleted graphs
-			Default New Goal Behaviour
-	*/
 }
 function AsessGoalsArray(){
 	var ResponseArray = GoalsJSON;
@@ -463,21 +455,6 @@ function ReturnGoalData (neu, old){
 			"Show"			: old.show
 	}}
 }
-function ReturnDataPoints (neu, old) {
-	var object = [];
-	object.concat(neu.datapoints,old.datapoints);
-	return object
-}
-/*
-	on array diffrece detection {
-		contrast IDs of each array
-		asses if there has been a deletion
-		asses if there is a new goal
-		forget deleted goal data
-		set new goal data as default
-		ask user to look over
-	}
-*/
 function ReturnGoalElement (object) {
 	var imgGraph = new Image()
 	imgGraph.src = object.graph_url + "?" + new Date().getTime()
@@ -489,10 +466,10 @@ function ReturnGoalElement (object) {
 		"description"	: object.description,
 		"id"			: object.id,
 		"graph_url"		: object.graph_url,
-		"losedate"		: object.losedate,
+		"losedate"		: object.losedate*1000,		// Date
 		"limsum"		: object.limsum,
 		"DataPoints"	: [],
-		"updated_at"	: object.updated_at,
+		"updated_at"	: object.updated_at*1000,	// Date
 		"graph_url"		: object.graph_url,
 		"graph_img"		: imgGraph,
 		"thumb_url"		: object.thumb_url,
