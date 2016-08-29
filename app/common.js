@@ -470,10 +470,6 @@ function ReturnGoalData (neu, old){
 	}}
 }
 function ReturnGoalElement (object) {
-	var imgGraph = new Image()
-	imgGraph.src = object.graph_url + "?" + new Date().getTime()
-	var imgThumb = new Image()
-	imgThumb.src = object.thumb_url + "?" + new Date().getTime()
 	return {
 		"slug"			: object.slug,
 		"title"			: object.title,
@@ -485,9 +481,9 @@ function ReturnGoalElement (object) {
 		"DataPoints"	: [],
 		"updated_at"	: object.updated_at*1000,	// Date
 		"graph_url"		: object.graph_url,
-		"graph_img"		: imgGraph,
+		// "graph_img"		: imgGraph,
 		"thumb_url"		: object.thumb_url,
-		"thumb"			: imgThumb,
+		// "thumb"			: imgThumb,
 		"Notify"		: true,
 		"Show"			: true
 	};
