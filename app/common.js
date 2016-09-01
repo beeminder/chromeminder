@@ -9,7 +9,7 @@ var DefaultSettings = {
 	datapoints	: [],
 	updated_at	: ""
 }
-var someVar = {updated_at:"",ArrayNo:""}
+var someVar = {updated_at:"",ArrayNo:""}// TODO Deal with someVar
 var DefGoal = {Loc:undefined, Name:""}
 var RefreshTimeout = "empty"
 var PictureArray = []
@@ -85,6 +85,7 @@ function PUinit(){ //
 						TODO put this into a more optimal location*/
 					if (DefGoal.Name == items.GoalsData[i].slug){DefGoal.Loc = i}
 				}
+				someVar.ArrayNo = DefGoal.Loc
 				IniDisplay()
 			}
 
@@ -108,7 +109,8 @@ function PUinit(){ //
 	)
 }
 function SetOutput(e){
-	someVar.ArrayNo = e;
+	if (!e){var e = someVar.ArrayNo}
+	else {someVar.ArrayNo = e;}
 	ImageLoader(CurDat().graph_url)
 	ByID("GoalLoc").textContent = CurDat().title;
 	ByID("limsum").innerHTML = CurDat().limsum;
@@ -116,7 +118,6 @@ function SetOutput(e){
 	LinkBM(	"GraphLink"							);
 	LinkBM(	"ButtonData",		"datapoints"	);
 	LinkBM(	"ButtonSettings",	"settings"		);
-	someVar.updated_at = CurDat().updated_at;
 	clearTimeout(RefreshTimeout);
 	InfoUpdate ("Output Set : " + e);
 
@@ -158,7 +159,6 @@ function DataRefresh(i){
 		[ ]			sync new data with chrome
 				}
 	*/
-	InfoUpdate(someVar)
 	if (!i){
 		xhrHandler({
 			url:"/goals/" + CurDat().slug + "/refresh_graph",
@@ -179,25 +179,22 @@ function DataRefresh(i){
 		SuccessFunction:function(response){
 			InfoUpdate("iteration " + i)
 			response = JSON.parse(response)
-			if (response.updated_at === someVar.updated_at){// TODO Deal with someVar
-				var time = 2500 * Math.pow(2,(i-1))
+			if (response.updated_at === CurDat().updated_at){
 				if (i<=6) {
-					RefreshTimeout = setTimeout(function (){DataRefresh (i+1)}, time);
+					RefreshTimeout = setTimeout(function (){DataRefresh (i+1)}, GrowingDelay(i));
 					InfoUpdate("No Updated difference, giving it another swing,"
-					/**/											+ i + " " + time)
+					/**/											+ i + " " + GrowingDelay(i))
 				} else {
 					InfoUpdate("The goal seems not to have updated, aborting refresh")
 				}
 			} else {
 				CurDat(ReturnGoalElement(response))
-				SetOutput(someVar.ArrayNo)
-				someVar.updated_at = response.updated_at
-				console.log(CurDat())
+				SetOutput()
 				chrome.storage.sync.set(
 					{GoalsData:NeuGoalsArray},
 					function() {InfoUpdate("New goal data has been saved")}
 				)
-				InfoUpdate ("Graph Refreshed " + i + " " + someVar.updated_at);
+				InfoUpdate ("Graph Refreshed " + i + " " + CurDat().updated_at);
 			}
 		} // SuccessFunction
 	})} // xhrHandler
@@ -236,7 +233,7 @@ function HandleDownload(){
 }
 function IniDisplay(){
 	SetOutput(DefGoal.Loc);
-	setInterval(DisplayDeadline,100);// Sets Deadline Counter
+	setInterval(DisplayDeadline,1000);// Sets Deadline Counter
 	if (NeuGoalsArray.length > 1) { // Goal Selector
 		var TheContentArea = document.getElementById("TheContent")
 		TheContentArea.innerHTML = ""
@@ -276,8 +273,13 @@ function ImageLoader(FooURL){
 	imgxhr.send();
 }
 function DisplayDeadline(){
-	document.getElementById("dlout").innerHTML=new countdown(CurDat().losedate).toString();
+	var string = new countdown(CurDat().losedate).toString();
+	if (new Date() > CurDat().losedate){
+		string = "Past Deadline!</br>" + string
+	}
+	ByID("dlout").innerHTML = string
 }
+function GrowingDelay(i){return 2500 * Math.pow(2,(i-1))}
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
 	chrome.storage.sync.get(
@@ -499,10 +501,14 @@ function ReturnGoalElement (object) {
 		"limsum"		: object.limsum,
 		"DataPoints"	: [],
 		"updated_at"	: object.updated_at*1000,	// Date
+		"initday"		: object.initday*1000,		// Date
+		"initval"		: object.initval,
+		"curday"		: object.curday*1000,		// Date
+		"curval"		: object.curval,
+		"lastday"		: object.lastday*1000,		// Date
+		"fullroad"		: object.fullroad,
 		"graph_url"		: object.graph_url,
-		// "graph_img"		: imgGraph,
 		"thumb_url"		: object.thumb_url,
-		// "thumb"			: imgThumb,
 		"Notify"		: true,
 		"Show"			: true
 	};
