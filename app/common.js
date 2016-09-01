@@ -129,6 +129,25 @@ function SetOutput(e){
 		else if (daysleft  <  0)	{return "#c92026";}
 		return "purple";
 	})()
+
+	function PrettyText(PreText, spcs, LeDate, Amount){
+		var nbs = ""
+		if (!Number.isInteger(spcs)){var spcs = 1;}
+		for (i = 0; i < spcs; i++) {nbs+="&#160;"}
+
+		return string =	PreText +	nbs +
+			new Date(LeDate).toISOString().substring(0, 10) +
+			"&#160;" +	Amount +	"</br>";
+	}
+
+	var roadVar = CurDat().fullroad
+	var something = roadVar[roadVar.length-1][0]*1000
+
+	var updatedstring	= "Last update " + new countdown(CurDat().updated_at).toString() + " ago</br>"
+	var initstring 		= PrettyText("Start",	2,CurDat().initday, 0)
+	var curstring 		= PrettyText("Now",		4,CurDat().curday, 0)
+	var laststring 		= PrettyText("Target",	1,something, 0)
+	ByID("meta-data").innerHTML = updatedstring + initstring + curstring + laststring
 }
 function DataRefresh(i){
 	/*	TODO
