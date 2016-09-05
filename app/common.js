@@ -200,35 +200,31 @@ function DataRefresh(i){
 	})} // xhrHandler
 }
 function HandleDownload(){
+	function HandleResponse(response){
+		var WorkingResponse = JSON.parse(response);
+		var DefHolding;
+
+		NeuGoalsArray = [] // Clear Array TODO Implement merging script
+
+		for (i = 0; i < WorkingResponse.length; i++){
+			if (DefGoal.Name == WorkingResponse[i].slug){DefHolding = i};
+			NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
+		}
+
+		if (!DefHolding){DefHolding = 0};
+		DefGoal.Loc = DefHolding;
+
+		chrome.storage.sync.set(
+			{GoalsData:NeuGoalsArray},
+			function() {InfoUpdate("Goal data has been saved")}
+		)
+
+		InfoUpdate ("Data has been downloaded");
+		IniDisplay();
+	}
 	xhrHandler({ // Goals Get
 		url : "/goals",
-		SuccessFunction : function (response){
-			var WorkingResponse = JSON.parse(response);
-			var DefHolding;
-
-			NeuGoalsArray = [] // Clearing Array TODO Implement a merging script
-
-			for (i = 0; i < WorkingResponse.length; i++){
-				if (DefGoal.Name == WorkingResponse[i].slug){DefHolding = i};
-				NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
-			}
-
-			if (!DefHolding){DefHolding = 0};
-			DefGoal.Loc = DefHolding;
-
-			chrome.storage.sync.set(
-				{GoalsData:NeuGoalsArray},
-				function() {InfoUpdate("Goal data has been saved")}
-			)
-
-			// for (i = 0; i < GoalsJSON.length; i++){ // Image Handling
-			// 	PictureArray[i] = new Image()
-			// 	PictureArray[i].src = GoalsJSON[i].graph_url
-			// }
-			InfoUpdate ("Data has been downloaded");
-			IniDisplay();
-			GoalsJSON = WorkingResponse // TODO Depreciate Variable
-		}
+		SuccessFunction : function (response){HandleResponse(response)}
 	})
 }
 function IniDisplay(){
