@@ -1,5 +1,6 @@
 var ServerStatusTimer = "empty";
-var UName, slug, UserJSON, updated_at, GoalsJSON;
+var UName, slug, UserJSON, updated_at;
+var GoalsJSON;// TODO Depreciate Variable
 var GoalsArray = [];
 var ElementsList = []
 var DefaultSettings = {
@@ -9,7 +10,7 @@ var DefaultSettings = {
 	datapoints	: [],
 	updated_at	: ""
 }
-var someVar = {updated_at:"",ArrayNo:""}// TODO Deal with someVar
+var someVar = {updated_at:"",ArrayNo:""}// TODO Depreciate someVar
 var DefGoal = {Loc:undefined, Name:""}
 var RefreshTimeout = "empty"
 var PictureArray = []
@@ -109,7 +110,7 @@ function PUinit(){ //
 	)
 }
 function SetOutput(e){
-	if (!e){var e = someVar.ArrayNo}
+	if (!Number.isInteger(e)){ e = someVar.ArrayNo;}
 	else {someVar.ArrayNo = e;}
 	ImageLoader(CurDat().graph_url)
 	ByID("GoalLoc").textContent = CurDat().title;
@@ -136,19 +137,19 @@ function SetOutput(e){
 		if (!Number.isInteger(spcs)){var spcs = 1;}
 		for (i = 0; i < spcs; i++) {nbs+="&#160;"}
 
-		return string =	PreText +	nbs +
+		return string =	PreText +	nbs + "<b>" +
 			new Date(LeDate).toISOString().substring(0, 10) +
-			"&#160;" +	Amount +	"</br>";
+			"&#160;" +	Amount +	"</b></br>";
 	}
 
-	var roadVar = CurDat().fullroad
-	var something = roadVar[roadVar.length-1][0]*1000
+	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1]
 
-	var updatedstring	= "Last update " + new countdown(CurDat().updated_at).toString() + " ago</br>"
-	var initstring 		= PrettyText("Start",	2,CurDat().initday, 0)
-	var curstring 		= PrettyText("Now",		4,CurDat().curday, 0)
-	var laststring 		= PrettyText("Target",	1,something, 0)
-	ByID("meta-data").innerHTML = updatedstring + initstring + curstring + laststring
+	ByID("meta-data").innerHTML	=
+		"Last update " + new countdown(CurDat().updated_at).toString() + " ago</br>" +
+		PrettyText("Start",	2,	CurDat().initday,	CurDat().initval) +
+		PrettyText("Now",	4,	CurDat().curday,	CurDat().curval	) +
+		PrettyText("Target",1,	LastRoad[0]*1000,	LastRoad[1]		) +
+		countdown(LastRoad[0]*1000).toString();
 }
 function DataRefresh(i){
 	/*	TODO
@@ -188,6 +189,7 @@ function DataRefresh(i){
 					InfoUpdate("The goal seems not to have updated, aborting refresh")
 				}
 			} else {
+				CurDat(null)
 				CurDat(ReturnGoalElement(response))
 				SetOutput()
 				chrome.storage.sync.set(
@@ -228,22 +230,23 @@ function HandleDownload(){
 	})
 }
 function IniDisplay(){
+	var frag;
 	SetOutput(DefGoal.Loc);
 	setInterval(DisplayDeadline,1000);// Sets Deadline Counter
 	if (NeuGoalsArray.length > 1) { // Goal Selector
-		var TheContentArea = document.getElementById("TheContent")
-		TheContentArea.innerHTML = ""
+		frag = document.createDocumentFragment();
 		for (i = 0; i < NeuGoalsArray.length; i++){
-			var a = document.createElement('a');
+			var a = frag.appendChild(document.createElement('a'));
 			a.className = 'GoalIDBtn';
 			a.id			= NeuGoalsArray[i].slug;
 			a.textContent	= NeuGoalsArray[i].title;
-			TheContentArea.appendChild(a);
 			(function(_i) {a.addEventListener(
 					"click",
 					function() {SetOutput(_i);}
 			)})(i);// TODO: Add an additonal goto link w/ each Selector
 		}
+		ByID("TheContent").innerHTML = "";
+		ByID("TheContent").appendChild(frag);
 	};
 }
 function LinkBM(x,y,z) {
@@ -252,15 +255,18 @@ function LinkBM(x,y,z) {
 	document.getElementById(x).href=
 	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
-function ImageLoader(FooURL){
-	if (!FooURL){
-		var FooURL = "http://brain.beeminder.com/nonce/oiyouyeahyou+writing+57436fce128d1c1d8c000201.png"
-	}
+function ImageLoader(url){
+	if (!url){return false}
 	var imgxhr = new XMLHttpRequest();
-		imgxhr.open("GET",FooURL  + "?" + new Date().getTime());
+		imgxhr.open("GET",url  + "?" + new Date().getTime());
 		imgxhr.responseType = "blob";
 		imgxhr.onload = function (){
-			reader.readAsDataURL(imgxhr.response)
+			if (imgxhr.status===200){
+				reader.readAsDataURL(imgxhr.response)
+			}
+			else if (imgxhr.status===404){
+				console.log("404 above is expected and normal ... silly chrome")
+			}
 		};
 	var reader = new FileReader();
 		reader.onloadend = function () {
