@@ -68,38 +68,47 @@ function PUinit(){ //
 		{ // Data to retrieve
 			username	: 	"",
 			token		: 	"",
-			GoalArray	:	[],
 			GoalsData	:	[],
-			DefaultName :	""
+			DefGoal		:	{Loc:0}
 		},
 		function(items) {
-			UName = items.username;
-			token = items.token;
-			DefGoal.Name = items.DefaultName;
-
-			if (items.GoalsData.length >= 1){
-				NeuGoalsArray = items.GoalsData;
-				for (var i = 0; i < items.GoalsData.length; i++){
-					/* Searches for Default, This doesn't really need to happen
-						when this data has already been handled,
-						TODO put this into a more optimal location*/
-					if (DefGoal.Name == items.GoalsData[i].slug){DefGoal.Loc = i;}
-				}
-				someVar.ArrayNo = DefGoal.Loc;
-				IniDisplay();
-			}
+			UName	= items.username;
+			token	= items.token;
+			DefGoal	= items.DefGoal;
+			console.log(DefGoal)
 
 			if (UName === "" || token === "") {
 				var a = document.createElement('a');
 				a.textContent = "You need to enter your details in the options page ";
 				a.href = "/options.html";
 				a.target = "_blank";
-				document.getElementById("SeverStatus").insertBefore(
-					a, document.getElementById("SeverStatus")
-				);
-
+				// document.getElementById("SeverStatus").insertBefore(
+				// 	a, null
+				// );
+				document.body.innerHTML = ""
+				document.body.appendChild(a)
 			} else { // TODO else if (!last API req was too soon)
-				( function(){HandleDownload()} )();
+				if (items.GoalsData.length >= 1){
+					NeuGoalsArray = items.GoalsData;
+					someVar.ArrayNo = DefGoal.Loc
+					// IniDisplay();
+				}
+
+				var smallest = new Date();
+				var index;
+				for (var i = 0; i < NeuGoalsArray.length; i++){
+					var hello = NeuGoalsArray[i].updated_at;
+					if (smallest > hello){
+						smallest = hello;
+						index = i;
+					}
+				}
+
+				var interogant = new countdown(smallest);
+				console.log(interogant.toString());
+
+
+				( function(){HandleDownload()} )( /**/ );
 			} //If Data is blank
 		} // function Sync Get
 	);
@@ -129,7 +138,7 @@ function SetOutput(e){
 		else if (daysleft === 0)	{return "#c92026";}
 		else if (daysleft  <  0)	{return "#c92026";}
 		return "purple";
-	})();
+	})( /**/ );
 
 	function PrettyText(PreText, spcs, LeDate, Amount){
 		var nbs = "";
@@ -137,8 +146,8 @@ function SetOutput(e){
 		for (var i = 0; i < spcs; i++) {nbs+="&#160;";}
 
 		return PreText +	nbs + "<b>" +
-      new Date(LeDate).toISOString().substring(0, 10) +
-      "&#160;" +	Amount +	"</b></br>";
+			new Date(LeDate).toISOString().substring(0, 10) +
+			"&#160;" +	Amount +	"</b></br>";
 	}
 
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
@@ -213,20 +222,20 @@ function HandleDownload(){
 		}
 
 		if (!DefHolding){DefHolding = 0;}
-		DefGoal.Loc = DefHolding;
+		someVar.ArrayNo = DefGoal.Loc = DefHolding;
 
 		chrome.storage.sync.set(
-			{GoalsData:NeuGoalsArray},
+			{
+				GoalsData	: NeuGoalsArray,
+				DefGoal		: DefGoal
+			},
 			function() {InfoUpdate("Goal data has been saved");}
 		);
 
 		InfoUpdate ("Data has been downloaded");
 		IniDisplay();
 	}
-	xhrHandler({ // Goals Get
-		url : "/goals",
-		SuccessFunction : function (response){HandleResponse(response);}
-	});
+	xhrHandler({url:"/goals", SuccessFunction:HandleResponse});
 }
 function IniDisplay(){
 	var frag;
@@ -288,11 +297,9 @@ function OPTinit(){
 			username	: 	"",
 			token		: 	"",
 			updated_at	:	"",
-			GoalArray	:	{},
 			DefaultName :	""
 		},
 		function(items) {
-			console.log(items.GoalArray.length);
 			document.getElementById( 'username'	).value = items.username;
 			document.getElementById( 'token'	).value = items.token;
 			updated_at = items.updated_at;
@@ -319,13 +326,6 @@ function OPTinit(){
 							} // If differnece detection
 						}
 					});
-					xhrHandler({ // Goals Get
-						url : "/goals",
-						SuccessFunction : function (response){
-							GoalsJSON = JSON.parse(response);
-							InfoUpdate ("Data has been downloaded");
-						}
-					});
 				} )( /**/ );
 				// TODO get User data
 			} //If Data is blank
@@ -336,13 +336,13 @@ function OPTinit(){
 function save_options() {
 	UName = document.getElementById( 'username'	).value;
 	token = document.getElementById( 'token'	).value;
+	if (!DefGoal) {DefGoal = {Loc:0}}
 	var xhrFunctions = {
 		SuccessFunction : function (response){
 			chrome.storage.sync.set({
 				username	:	UName,
 				token		:	token,
-				DefaultName	:	DefGoal.Name//,
-				//GoalArray	:	UserJSON.goals
+				DefGoal		:	DefGoal
 			},
 			function() {
 				document.getElementById('status').textContent = 'Options saved.';
@@ -408,7 +408,8 @@ function drawList(){
 	if (Number.isInteger(DefGoal.Loc)) {
 		ElementsList[DefGoal.Loc].defa.innerHTML = "Default";
 	} else {
-		// TODO No Default Present
+		DefGoal.Loc = 0
+		ElementsList[0].defa.innerHTML = "Default";
 	}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */

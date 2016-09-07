@@ -58,4 +58,9 @@ li#HeaderRow a:hover {
 }
 .FormObject {
 	display: inline-block;
+    border-radius: 5px 5px 5px 5px;
+    background-color: orange;
+	padding: 10px;
+	text-align: center;
+	width: 200px;
 }
