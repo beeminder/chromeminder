@@ -18,6 +18,8 @@ var NeuGoalsArray = [];
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
+	if (!args) { return false; }
+
 	var xhr, urlSalt, xhrLocation, name;
 	name		= IfSet(args.name,undefined," ");
 	urlSalt		= IfSet(args.url);
@@ -41,26 +43,46 @@ function xhrHandler(args){
 			} //If Ready to access data
 		} // If Access denied / allowed
 	}; // func xhr readyState
+
 	xhr.open("GET", xhrLocation);
 	xhr.send();
 }
+function IfSet(input, bef, aft){
+	var string;
+
+	if (input)		{
+						string = 		input;
+		if (bef) 	{	string =  bef +	string			;}
+		if (aft) 	{	string =		string + aft	;}
+	}
+	else 			{	string = ""						;}
+
+	return string;
+}
 function InfoUpdate (text, time){
 	var SeverStatus = document.getElementById("SeverStatus");
-	if (!time){time = 5000;}
-	if (ServerStatusTimer !== "empty"){clearTimeout(ServerStatusTimer);}
-	SeverStatus.innerHTML = text;
+
+	if (!text) { return false; }
+	if (!time) { time = 5000; }
+	if (ServerStatusTimer !== "empty"){ clearTimeout(ServerStatusTimer); }
+
+	SeverStatus.textContent = text;
 	console.log(text);
 	ServerStatusTimer = setTimeout(
-		function() {SeverStatus.textContent = '';ServerStatusTimer="empty";},
+		function() {
+			SeverStatus.textContent = '';
+			ServerStatusTimer="empty";
+		},
 		time
 	);
 }
-function ByID (item){
-	return document.getElementById(item);
-}
-function CurDat(NeuObj){
-	if (NeuObj) {NeuGoalsArray[someVar.ArrayNo] = NeuObj;}
-	else		{return NeuGoalsArray[someVar.ArrayNo];}
+function ByID (item){return document.getElementById(item);}
+function LinkBM(x,y,z) {
+	if (!x) { return false; }
+	if (!y) {y = "";}
+	if (!z) {z = CurDat().slug;}
+	document.getElementById(x).href=
+	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
@@ -71,51 +93,39 @@ function PUinit(){ //
 			GoalsData	:	[],
 			DefGoal		:	{Loc:0}
 		},
-		function(items) {
-			UName	= items.username;
-			token	= items.token;
-			DefGoal	= items.DefGoal;
-			console.log(DefGoal)
-
-			if (UName === "" || token === "") {
-				var a = document.createElement('a');
-				a.textContent = "You need to enter your details in the options page ";
-				a.href = "/options.html";
-				a.target = "_blank";
-				// document.getElementById("SeverStatus").insertBefore(
-				// 	a, null
-				// );
-				document.body.innerHTML = ""
-				document.body.appendChild(a)
-			} else { // TODO else if (!last API req was too soon)
-				if (items.GoalsData.length >= 1){
-					NeuGoalsArray = items.GoalsData;
-					someVar.ArrayNo = DefGoal.Loc
-					// IniDisplay();
-				}
-
-				var smallest = new Date();
-				var index;
-				for (var i = 0; i < NeuGoalsArray.length; i++){
-					var hello = NeuGoalsArray[i].updated_at;
-					if (smallest > hello){
-						smallest = hello;
-						index = i;
-					}
-				}
-
-				var interogant = new countdown(smallest);
-				console.log(interogant.toString());
-
-
-				( function(){HandleDownload()} )( /**/ );
-			} //If Data is blank
-		} // function Sync Get
+		Retrieval
 	);
 	document.getElementById("ButtonRefresh").addEventListener(
-		"click",
-		function(){DataRefresh();}
+		"click", function(){DataRefresh();}
 	);
+}
+function Retrieval (items){
+	if (!items) { return false; }
+
+	UName	= items.username;
+	token	= items.token;
+	DefGoal	= items.DefGoal;
+	console.log(DefGoal)
+
+	if (UName === "" || token === "") {
+		var a = document.createElement('a');
+		a.textContent = "You need to enter your details in the options page ";
+		a.href = "/options.html";
+		a.target = "_blank";
+		// document.getElementById("SeverStatus").insertBefore(
+		// 	a, null
+		// );
+		document.body.innerHTML = ""
+		document.body.appendChild(a)
+	} else { // TODO else if (!last API req was too soon)
+		if (items.GoalsData.length >= 1){
+			NeuGoalsArray = items.GoalsData;
+			someVar.ArrayNo = DefGoal.Loc
+			// IniDisplay();
+		}
+
+		( function(){HandleDownload()} )( /**/ );
+	} //If Data is blank
 }
 function SetOutput(e){
 	if (!Number.isInteger(e)){ e = someVar.ArrayNo;}
@@ -159,57 +169,54 @@ function SetOutput(e){
 		PrettyText("Target",1,	LastRoad[0]*1000,	LastRoad[1]		) +
 		countdown(LastRoad[0]*1000).toString();
 }
+function CurDat(NeuObj){
+	if (NeuObj) {NeuGoalsArray[someVar.ArrayNo] = NeuObj;}
+	else		{return NeuGoalsArray[someVar.ArrayNo];}
+}
 function DataRefresh(i){
-	/*	TODO
-		[#]		xhr singular goal
-		[#]		if updated at values are differetn {
-		[ ]			merge neu and old goal
-		[#]			setoutpt
-		[ ]			sync new data with chrome
-				}
-	*/
-	if (!i){
-		xhrHandler({
-			url:"/goals/" + CurDat().slug + "/refresh_graph",
-			name:"Refresh ",
-			SuccessFunction : function (response){
-				if (response === "true"){
-					InfoUpdate ("Waiting for Graph to refresh");
-					RefreshTimeout = setTimeout(function (){DataRefresh (1);},2500);
-				} else if (response !== "true") {
-					InfoUpdate ("Beeminder Sever Says no");
-				} //If refresh true / !true
-			}
-		});
-	}
+	if (!i){xhrHandler({
+		url:"/goals/" + CurDat().slug + "/refresh_graph",
+		name:"Refresh ",
+		SuccessFunction : RefreshCall
+	});}
 	else if (i) {xhrHandler({
 		url:"/goals/" + CurDat().slug,
 		name:"Refresh - Goal Update",
-		SuccessFunction:function(response){
-			InfoUpdate("iteration " + i);
-			response = JSON.parse(response);
-			if (response.updated_at === CurDat().updated_at){
-				if (i<=6) {
-					RefreshTimeout = setTimeout(function (){DataRefresh (i+1);}, GrowingDelay(i));
-					InfoUpdate("No Updated difference, giving it another swing," +
-					/**/											i + " " + GrowingDelay(i));
-				} else {
-					InfoUpdate("The goal seems not to have updated, aborting refresh");
-				}
+		SuccessFunction: GoalGet
+	});}
+	function RefreshCall (response) {
+		if (response === "true"){
+			InfoUpdate ("Waiting for Graph to refresh");
+			RefreshTimeout = setTimeout(function (){DataRefresh (1);},2500);
+		} else if (response !== "true") {
+			InfoUpdate ("Beeminder Sever Says no");
+		} //If refresh true / !true
+	}
+	function GoalGet (response){
+		InfoUpdate("iteration " + i);
+		response = JSON.parse(response);
+		if (response.updated_at === CurDat().updated_at){
+			if (i<=6) {
+				RefreshTimeout = setTimeout(function (){DataRefresh (i+1);}, GrowingDelay(i));
+				InfoUpdate("No Updated difference, giving it another swing," +
+				/**/											i + " " + GrowingDelay(i));
 			} else {
-				CurDat(null);
-				CurDat(ReturnGoalElement(response));
-				SetOutput();
-				chrome.storage.sync.set(
-					{GoalsData:NeuGoalsArray},
-					function() {InfoUpdate("New goal data has been saved");}
-				);
-				InfoUpdate ("Graph Refreshed " + i + " " + CurDat().updated_at);
+				InfoUpdate("The goal seems not to have updated, aborting refresh");
 			}
-		} // SuccessFunction
-	});} // xhrHandler
+		} else {
+			CurDat(null);
+			CurDat(ReturnGoalElement(response));
+			SetOutput();
+			chrome.storage.sync.set(
+				{GoalsData:NeuGoalsArray},
+				function() {InfoUpdate("New goal data has been saved");}
+			);
+			InfoUpdate ("Graph Refreshed " + i + " " + CurDat().updated_at);
+		}
+	}
 }
 function HandleDownload(){
+	xhrHandler({url:"/goals", SuccessFunction:HandleResponse});
 	function HandleResponse(response){
 		var WorkingResponse = JSON.parse(response);
 		var DefHolding;
@@ -235,7 +242,6 @@ function HandleDownload(){
 		InfoUpdate ("Data has been downloaded");
 		IniDisplay();
 	}
-	xhrHandler({url:"/goals", SuccessFunction:HandleResponse});
 }
 function IniDisplay(){
 	var frag;
@@ -256,12 +262,6 @@ function IniDisplay(){
 		ByID("TheContent").innerHTML = "";
 		ByID("TheContent").appendChild(frag);
 	}
-}
-function LinkBM(x,y,z) {
-	if (!y) {y = "";}
-	if (!z) {z = CurDat().slug;}
-	document.getElementById(x).href=
-	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
 function ImageLoader(url){
 	if (!url){return false;}
@@ -289,7 +289,10 @@ function DisplayDeadline(){
 	}
 	ByID("dlout").innerHTML = string;
 }
-function GrowingDelay(i){return 2500 * Math.pow(2,(i-1));}
+function GrowingDelay(i){
+	if (!i) { return false; }
+	return 2500 * Math.pow(2,(i-1));
+}
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
 	chrome.storage.sync.get(
@@ -580,16 +583,4 @@ function UserGET(){
 			} // If differnece detection
 		}
 	});
-}
-function IfSet(input, bef, aft){
-	var string;
-
-	if (input)		{
-						string = 		input;
-		if (bef) 	{	string =  bef +	string			;}
-		if (aft) 	{	string =		string + aft	;}
-	}
-	else 			{	string = ""						;}
-
-	return string;
 }
