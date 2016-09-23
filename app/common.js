@@ -516,6 +516,17 @@ function ReturnGoalElement (object) {
 		"Show"			: true
 	};
 }
+function DownloadDatapoints (slug){
+	if ( !slug ){ slug = CurDat().slug; }
+	xhrHandler({
+		url : "/goals/" + slug + "/datapoints",
+		SuccessFunction : HandleDatapoints
+	});
+	function HandleDatapoints(response){
+		ByID("data-points").textContent = response;
+		response = JSON.parse(response);
+	}
+}
 /* --- --- --- ---		Depreciated Functions		--- --- --- --- */
 function GoalsGET(){
 	xhrHandler({
