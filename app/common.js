@@ -523,15 +523,47 @@ function ReturnGoalElement (object) {
 		"Show"			: true
 	};
 }
-function DownloadDatapoints (slug){
-	if ( !slug ){ slug = CurDat().slug; }
-	xhrHandler({
-		url : "/goals/" + slug + "/datapoints",
-		SuccessFunction : HandleDatapoints
-	});
-	function HandleDatapoints(response){
-		ByID("data-points").textContent = response;
-		response = JSON.parse(response);
+function DownloadDatapoints (){
+	ByID("data-points").innerHTML = "";
+	for (var Loc = 0; Loc < NeuGoalsArray.length; Loc++) {
+		xhrHandler({
+			url : "/goals/" + NeuGoalsArray[Loc].slug + "/datapoints",
+			SuccessFunction : HandleDatapoints,
+			SuccessExtraVar : { ArrayLoc : Loc },
+			FailFunction : GracefulFail
+		});
+	}
+	return true;
+	function HandleDatapoints ( response, QInfo ) {
+		if ( !response || !QInfo ) { return false; }
+		var frag = document.createDocumentFragment();
+		var iCap = 10;
+		NeuGoalsArray[QInfo.ArrayLoc].datapoints = response = JSON.parse(response);
+		frag.appendChild(document.createTextNode(NeuGoalsArray[QInfo.ArrayLoc].title));
+		frag.appendChild(document.createElement("BR"));
+		frag.appendChild(document.createTextNode("Array length : " + response.length));
+		frag.appendChild(document.createElement("BR"));
+		if ( response.length <= 10 ) {
+			iCap = response.length;
+		}
+		for (var i = 0; i < iCap; i++) {
+			var span = frag.appendChild(document.createElement("span"));
+				span.textContent = response[i].canonical;
+			frag.appendChild(document.createElement("BR"));
+		}
+		ByID("data-points").appendChild(frag);
+		console.log(response);
+	}
+	function GracefulFail () {
+		var frag = document.createDocumentFragment();
+		var FailBtn = frag.appendChild(document.createElement("DIV"));
+			FailBtn.className = "Button";
+			FailBtn.appendChild(document.createTextNode("The Download has failed!"));
+			FailBtn.appendChild(document.createElement("BR"));
+			FailBtn.appendChild(document.createTextNode("Click here to try again!"));
+			FailBtn.addEventListener("click", function(){ DownloadDatapoints() });
+		ByID("data-points").innerHTML = "";
+		ByID("data-points").appendChild(frag);
 	}
 }
 /* --- --- --- ---		Depreciated Functions		--- --- --- --- */
