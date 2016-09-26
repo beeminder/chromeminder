@@ -18,7 +18,7 @@ var NeuGoalsArray = [];
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
-	if (!args) { return false; }
+	if ( !args || !args.SuccessFunction ) { return false; }
 
 	var xhr, urlSalt, xhrLocation, name;
 	name		= IfSet(args.name,undefined," ");
@@ -39,7 +39,14 @@ function xhrHandler(args){
 						 " / " + xhr.readyState
 			);
 			if (xhr.status === 200 && xhr.readyState === 4){
-				args.SuccessFunction(xhr.response);
+				if (!args.SuccessExtraVar){
+					args.SuccessFunction(xhr.response);
+				 } else {
+ 					args.SuccessFunction(
+						xhr.response,
+						args.SuccessExtraVar
+					);
+				}
 			} //If Ready to access data
 		} // If Access denied / allowed
 	}; // func xhr readyState
