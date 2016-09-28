@@ -315,37 +315,34 @@ function OPTinit(){
 			updated_at = items.updated_at;
 			UName = items.username;
 			token = items.token;
-			DefGoal.Name = items.DefaultName;
+			DefGoal = items.DefGoal;
 			if (items.username === "" || items.token === "") {
 				InfoUpdate ("There be no data"); // TODO String Localisation
 			} else {
-				( function(){
-					xhrHandler({
-						SuccessFunction : function(response) {
-							UserJSON = JSON.parse(response);
-							drawList();
-							if (updated_at === UserJSON.updated_at){
-								// TODO No need to update > write output
-								document.getElementById("UpdateDifference").innerHTML 	=
-								/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
-							} else {
-								// TODO There needs to be an update
-								document.getElementById("UpdateDifference").innerHTML 	=
-								/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
-							} // If differnece detection
-						}
-					});
-				} )( /**/ );
+				xhrHandler({SuccessFunction : Something});
 				// TODO get User data
 			} //If Data is blank
 		} // function Sync Get
 	);
 	document.getElementById('save').addEventListener('click', save_options);
+	function Something(response) {
+		UserJSON = JSON.parse(response);
+		drawList();
+		if (updated_at === UserJSON.updated_at){
+			// TODO No need to update > write output
+			document.getElementById("UpdateDifference").innerHTML 	= // TODO String Localisation
+			/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
+		} else {
+			// TODO There needs to be an update
+			document.getElementById("UpdateDifference").innerHTML 	= // TODO String Localisation
+			/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
+		} // If differnece detection
+	}
 }
 function save_options() {
 	UName = document.getElementById( 'username'	).value;
 	token = document.getElementById( 'token'	).value;
-	if (!DefGoal) {DefGoal = {Loc:0}}
+	if (!DefGoal) {DefGoal = {Loc:0};}
 	var xhrFunctions = {
 		SuccessFunction : function (response){
 			chrome.storage.sync.set({
