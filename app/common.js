@@ -29,12 +29,12 @@ function xhrHandler(args){
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
-			InfoUpdate (name + "Server 404 error");
+			InfoUpdate (name + "Server 404 error"); // TODO String Localisation
 			xhr.abort();
 			if (args.FailFunction){args.FailFunction();}
 		} else {
 			InfoUpdate (name +
-				"xhr Handler " + xhr.status +
+				"xhr Handler " + xhr.status + // TODO String Localisation
 						 " / " + xhr.statusText +
 						 " / " + xhr.readyState
 			);
@@ -116,7 +116,7 @@ function Retrieval (items){
 
 	if (UName === "" || token === "") {
 		var a = document.createElement('a');
-		a.textContent = "You need to enter your details in the options page ";
+		a.textContent = "You need to enter your details in the options page "; // TODO String Localisation
 		a.href = "/options.html";
 		a.target = "_blank";
 		// document.getElementById("SeverStatus").insertBefore(
@@ -140,12 +140,12 @@ function SetOutput(e){
 	ImageLoader(CurDat().graph_url);
 	ByID("GoalLoc").textContent = CurDat().title;
 	ByID("limsum").innerHTML = CurDat().limsum;
-	LinkBM(	"ButtonGoal" 						);
-	LinkBM(	"GraphLink"							);
-	LinkBM(	"ButtonData",		"datapoints"	);
-	LinkBM(	"ButtonSettings",	"settings"		);
+	LinkBM(	"ButtonGoal" 						); // TODO String Localisation
+	LinkBM(	"GraphLink"							); // TODO String Localisation
+	LinkBM(	"ButtonData",		"datapoints"	); // TODO String Localisation
+	LinkBM(	"ButtonSettings",	"settings"		); // TODO String Localisation
 	clearTimeout(RefreshTimeout);
-	InfoUpdate ("Output Set : " + e);
+	InfoUpdate ("Output Set : " + e); // TODO String Localisation
 
 	document.querySelector(".CountdownDisplay").style.backgroundColor = (function(){
 		var daysleft = new countdown(CurDat().losedate).days;
@@ -169,7 +169,7 @@ function SetOutput(e){
 
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
 
-	ByID("meta-data").innerHTML	=
+	ByID("meta-data").innerHTML	=  // TODO String Localisation
 		"Last update " + new countdown(CurDat().updated_at).toString() + " ago</br>" +
 		PrettyText("Start",	2,	CurDat().initday,	CurDat().initval) +
 		PrettyText("Now",	4,	CurDat().curday,	CurDat().curval	) +
@@ -188,15 +188,15 @@ function DataRefresh(i){
 	});}
 	else if (i) {xhrHandler({
 		url:"/goals/" + CurDat().slug,
-		name:"Refresh - Goal Update",
+		name:"Refresh - Goal Update", // TODO String Localisation
 		SuccessFunction: GoalGet
 	});}
 	function RefreshCall (response) {
 		if (response === "true"){
-			InfoUpdate ("Waiting for Graph to refresh");
+			InfoUpdate ("Waiting for Graph to refresh"); // TODO String Localisation
 			RefreshTimeout = setTimeout(function (){DataRefresh (1);},2500);
 		} else if (response !== "true") {
-			InfoUpdate ("Beeminder Sever Says no");
+			InfoUpdate ("Beeminder Sever Says no"); // TODO String Localisation
 		} //If refresh true / !true
 	}
 	function GoalGet (response){
@@ -206,9 +206,9 @@ function DataRefresh(i){
 			if (i<=6) {
 				RefreshTimeout = setTimeout(function (){DataRefresh (i+1);}, GrowingDelay(i));
 				InfoUpdate("No Updated difference, giving it another swing," +
-				/**/											i + " " + GrowingDelay(i));
+				/**/											i + " " + GrowingDelay(i)); // TODO String Localisation
 			} else {
-				InfoUpdate("The goal seems not to have updated, aborting refresh");
+				InfoUpdate("The goal seems not to have updated, aborting refresh"); // TODO String Localisation
 			}
 		} else {
 			CurDat(null);
@@ -216,9 +216,9 @@ function DataRefresh(i){
 			SetOutput();
 			chrome.storage.sync.set(
 				{GoalsData:NeuGoalsArray},
-				function() {InfoUpdate("New goal data has been saved");}
+				function() {InfoUpdate("New goal data has been saved");} // TODO String Localisation
 			);
-			InfoUpdate ("Graph Refreshed " + i + " " + CurDat().updated_at);
+			InfoUpdate ("Graph Refreshed " + i + " " + CurDat().updated_at); // TODO String Localisation
 		}
 	}
 }
@@ -243,10 +243,10 @@ function HandleDownload(){
 				GoalsData	: NeuGoalsArray,
 				DefGoal		: DefGoal
 			},
-			function() {InfoUpdate("Goal data has been saved");}
+			function() {InfoUpdate("Goal data has been saved");} // TODO String Localisation
 		);
 
-		InfoUpdate ("Data has been downloaded");
+		InfoUpdate ("Data has been downloaded"); // TODO String Localisation
 		IniDisplay();
 	}
 }
@@ -280,7 +280,7 @@ function ImageLoader(url){
 				reader.readAsDataURL(imgxhr.response);
 			}
 			else if (imgxhr.status===404){
-				console.log("404 above is expected and normal ... silly chrome");
+				console.log("404 above is expected and normal ... silly chrome"); // TODO String Localisation
 			}
 		};
 	var reader = new FileReader();
@@ -292,7 +292,7 @@ function ImageLoader(url){
 function DisplayDeadline(){
 	var string = new countdown(CurDat().losedate).toString();
 	if (new Date() > CurDat().losedate){
-		string = "Past Deadline!</br>" + string;
+		string = "Past Deadline!</br>" + string; // TODO String Localisation
 	}
 	ByID("dlout").innerHTML = string;
 }
@@ -307,7 +307,7 @@ function OPTinit(){
 			username	: 	"",
 			token		: 	"",
 			updated_at	:	"",
-			DefaultName :	""
+			DefGoal :	""
 		},
 		function(items) {
 			document.getElementById( 'username'	).value = items.username;
@@ -317,8 +317,7 @@ function OPTinit(){
 			token = items.token;
 			DefGoal.Name = items.DefaultName;
 			if (items.username === "" || items.token === "") {
-				// TODO Goto options page
-				InfoUpdate ("There be no data");
+				InfoUpdate ("There be no data"); // TODO String Localisation
 			} else {
 				( function(){
 					xhrHandler({
@@ -355,12 +354,12 @@ function save_options() {
 				DefGoal		:	DefGoal
 			},
 			function() {
-				document.getElementById('status').textContent = 'Options saved.';
+				document.getElementById('status').textContent = 'Options saved.'; // TODO String Localisation
 				setTimeout(function() {status.textContent = '';},2000);
 			});
 		},
 		FailFunction : function (){
-			InfoUpdate (
+			InfoUpdate ( // TODO String Localisation
 				"404: \n" +
 				"There has been an error with the provided information.\n" +
 				"The details have not been saved.\n" +
@@ -481,7 +480,7 @@ function AsessGoalsArray(){
 	GoalsArray = OfflineArray;
 	chrome.storage.sync.set(
 		{GoalArray : OfflineArray},
-		function() {InfoUpdate("Refresh data has been synced");}
+		function() {InfoUpdate("Refresh data has been synced");} // TODO String Localisation
 	);
 }
 function ReturnGoalData (neu, old){
@@ -541,7 +540,7 @@ function DownloadDatapoints (){
 		NeuGoalsArray[QInfo.ArrayLoc].datapoints = response = JSON.parse(response);
 		frag.appendChild(document.createTextNode(NeuGoalsArray[QInfo.ArrayLoc].title));
 		frag.appendChild(document.createElement("BR"));
-		frag.appendChild(document.createTextNode("Array length : " + response.length));
+		frag.appendChild(document.createTextNode("Array length : " + response.length)); // TODO String Localisation
 		frag.appendChild(document.createElement("BR"));
 		if ( response.length <= 10 ) {
 			iCap = response.length;
@@ -558,9 +557,9 @@ function DownloadDatapoints (){
 		var frag = document.createDocumentFragment();
 		var FailBtn = frag.appendChild(document.createElement("DIV"));
 			FailBtn.className = "Button";
-			FailBtn.appendChild(document.createTextNode("The Download has failed!"));
+			FailBtn.appendChild(document.createTextNode("The Download has failed!")); // TODO String Localisation
 			FailBtn.appendChild(document.createElement("BR"));
-			FailBtn.appendChild(document.createTextNode("Click here to try again!"));
+			FailBtn.appendChild(document.createTextNode("Click here to try again!")); // TODO String Localisation
 			FailBtn.addEventListener("click", function(){ DownloadDatapoints() });
 		ByID("data-points").innerHTML = "";
 		ByID("data-points").appendChild(frag);
@@ -572,7 +571,7 @@ function GoalsGET(){
 		url : "/goals",
 		SuccessFunction : function (response){
 			GoalsJSON = JSON.parse(response);
-			InfoUpdate ("Data has been downloaded");
+			InfoUpdate ("Data has been downloaded"); // TO-DO String Localisation
 			//if (pg==="popup") {HandleDownload();}
 		}
 	});
@@ -623,13 +622,13 @@ function UserGET(){
 			UserJSON = JSON.parse(response);
 			drawList();
 			if (updated_at === UserJSON.updated_at){
-				// TODO No need to update > write output
+				// TO-DO No need to update > write output
 				document.getElementById("UpdateDifference").innerHTML 	=
-				/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
+				/**/"No Difference " + updated_at + " - " + UserJSON.updated_at; // TO-DO String Localisation
 			} else {
-				// TODO There needs to be an update
+				// TO-DO There needs to be an update
 				document.getElementById("UpdateDifference").innerHTML 	=
-				/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
+				/**/"Difference " + updated_at + " - " + UserJSON.updated_at; // TO-DO String Localisation
 			} // If differnece detection
 		}
 	});
