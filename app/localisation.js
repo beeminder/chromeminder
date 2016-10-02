@@ -1,0 +1,43 @@
+var LocalLang = {
+	en : { // English
+		xhr : {
+			Status404 : "Server 404 error",
+			StateChangeInfo : "xhr Handler "
+		},
+		Popup : {
+			NavToOptions : "You need to enter your details in the options page ",
+			ButtonGoal :"",
+			GraphLink:"",
+			ButtonData:"",
+			ButtonSetting:"",
+			OutputSet: "Output Set : ",
+			InfoDisplay : {
+				LastUpdate	:"Last update ",
+				Ago			:" ago</br>",
+				Start		:"Start",
+				Now			:"Now",
+				Target		:"Target"
+			},
+			Refresh : {
+				RefreshCall : {
+					Name : "Refresh ",
+					UpdateSuccessful : "Waiting for Graph to refresh",
+					UpdateNo : "Beeminder Sever Says no"
+				}
+				GoalGet : {
+					Name : "Refresh - Goal Update",
+					NoUpdate : "No Updated difference, giving it another swing,",
+					TooManyTries : "The goal seems not to have updated, aborting refresh",
+					NewDataSaved : "New goal data has been saved",
+					GoalRefreshed : "Graph Refreshed "
+				}
+			},
+			HandleDownload : {
+				DataSaved : "Goal data has been saved",
+				DataDownloaded : "Data has been downloaded"
+			}
+		}
+	},
+	fr : {}, // French
+	cy : {} // Welsh - Cymraeg
+}
