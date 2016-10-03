@@ -223,7 +223,11 @@ function DataRefresh(i){
 	}
 }
 function HandleDownload(){
-	xhrHandler({url:"/goals", SuccessFunction:HandleResponse});
+	xhrHandler({
+		url:"/goals",
+		SuccessFunction	: HandleResponse,
+		FailFunction	: ItHasFailed
+	});
 	function HandleResponse(response){
 		var WorkingResponse = JSON.parse(response);
 		var DefHolding;
@@ -248,6 +252,33 @@ function HandleDownload(){
 
 		InfoUpdate ("Data has been downloaded"); // TODO String Localisation
 		IniDisplay();
+	}
+	function ItHasFailed() {
+		InfoUpdate("Download has failed, initalising from offline data")
+		chrome.storage.sync.get(
+			{ GoalsData	:	[] },
+			function (items) {
+				if (items.GoalsData.length >= 1){
+					NeuGoalsArray = items.GoalsData;
+					someVar.ArrayNo = DefGoal.Loc
+					IniDisplay();
+				}
+
+				var smallest = new Date();
+				var index;
+				for (var i = 0; i < NeuGoalsArray.length; i++){
+					var hello = NeuGoalsArray[i].updated_at;
+					if (smallest > hello){
+						smallest = hello;
+						index = i;
+					}
+				}
+
+				var interogant = new countdown(smallest);
+				console.log(interogant.toString());
+			}
+		);
+		IniDisplay()
 	}
 }
 function IniDisplay(){
