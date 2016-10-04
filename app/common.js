@@ -20,6 +20,12 @@ var NeuGoalsArray = [];
 function xhrHandler(args){
 	if ( !args || !args.SuccessFunction ) { return false; }
 
+	if (!navigator.onLine) {
+		if ( args.OfflineFunction ) { args.OfflineFunction(); }
+		else { InfoUpdate("Currently Offline"); }
+		return false
+	}
+
 	var xhr, urlSalt, xhrLocation, name;
 	name		= IfSet(args.name,undefined," ");
 	urlSalt		= IfSet(args.url);
@@ -226,8 +232,10 @@ function HandleDownload(){
 	xhrHandler({
 		url:"/goals",
 		SuccessFunction	: HandleResponse,
-		FailFunction	: ItHasFailed
+		FailFunction	: ItHasFailed,
+		OfflineFunction	: ItHasFailed
 	});
+
 	function HandleResponse(response){
 		var WorkingResponse = JSON.parse(response);
 		var DefHolding;
