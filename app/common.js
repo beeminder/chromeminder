@@ -35,12 +35,12 @@ function xhrHandler(args){
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
-			InfoUpdate (name + "Server 404 error"); // TODO String Localisation
+			InfoUpdate (name + LocalLang.en.xhr.Status404);
 			xhr.abort();
 			if (args.FailFunction){args.FailFunction();}
 		} else {
 			InfoUpdate (name +
-				"xhr Handler " + xhr.status + // TODO String Localisation
+				LocalLang.en.xhr.StateChangeInfo + xhr.status +
 						 " / " + xhr.statusText +
 						 " / " + xhr.readyState
 			);
@@ -122,7 +122,7 @@ function Retrieval (items){
 
 	if (UName === "" || token === "") {
 		var a = document.createElement('a');
-		a.textContent = "You need to enter your details in the options page "; // TODO String Localisation
+		a.textContent = LocalLang.en.Popup.NavToOptions;
 		a.href = "/options.html";
 		a.target = "_blank";
 		// document.getElementById("SeverStatus").insertBefore(
@@ -151,7 +151,7 @@ function SetOutput(e){
 	LinkBM(	"ButtonData",		"datapoints"	); // TODO String Localisation
 	LinkBM(	"ButtonSettings",	"settings"		); // TODO String Localisation
 	clearTimeout(RefreshTimeout);
-	InfoUpdate ("Output Set : " + e); // TODO String Localisation
+	InfoUpdate (LocalLang.en.Popup.OutputSet + e);
 
 	document.querySelector(".CountdownDisplay").style.backgroundColor = (function(){
 		var daysleft = new countdown(CurDat().losedate).days;
@@ -175,11 +175,11 @@ function SetOutput(e){
 
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
 
-	ByID("meta-data").innerHTML	=  // TODO String Localisation
-		"Last update " + new countdown(CurDat().updated_at).toString() + " ago</br>" +
-		PrettyText("Start",	2,	CurDat().initday,	CurDat().initval) +
-		PrettyText("Now",	4,	CurDat().curday,	CurDat().curval	) +
-		PrettyText("Target",1,	LastRoad[0]*1000,	LastRoad[1]		) +
+	ByID("meta-data").innerHTML	=
+		LocalLang.en.Popup.InfoDisplay.LastUpdate + new countdown(CurDat().updated_at).toString() + LocalLang.en.Popup.InfoDisplay.Ago +
+		PrettyText(LocalLang.en.Popup.InfoDisplay.Start,	2,	CurDat().initday,	CurDat().initval) +
+		PrettyText(LocalLang.en.Popup.InfoDisplay.Now,	4,	CurDat().curday,	CurDat().curval	) +
+		PrettyText(LocalLang.en.Popup.InfoDisplay.Target,1,	LastRoad[0]*1000,	LastRoad[1]		) +
 		countdown(LastRoad[0]*1000).toString();
 }
 function CurDat(NeuObj){
@@ -189,7 +189,7 @@ function CurDat(NeuObj){
 function DataRefresh(i){
 	if (!i){xhrHandler({
 		url:"/goals/" + CurDat().slug + "/refresh_graph",
-		name:"Refresh ",
+		name:LocalLang.en.Popup.Refresh.RefreshCall.Name,
 		SuccessFunction : RefreshCall
 	});}
 	else if (i) {xhrHandler({
@@ -199,10 +199,10 @@ function DataRefresh(i){
 	});}
 	function RefreshCall (response) {
 		if (response === "true"){
-			InfoUpdate ("Waiting for Graph to refresh"); // TODO String Localisation
+			InfoUpdate (LocalLang.en.Popup.Refresh.RefreshCall.UpdateSuccessful);
 			RefreshTimeout = setTimeout(function (){DataRefresh (1);},2500);
 		} else if (response !== "true") {
-			InfoUpdate ("Beeminder Sever Says no"); // TODO String Localisation
+			InfoUpdate (LocalLang.en.Popup.Refresh.RefreshCall.UpdateNo);
 		} //If refresh true / !true
 	}
 	function GoalGet (response){
@@ -211,10 +211,10 @@ function DataRefresh(i){
 		if (response.updated_at === CurDat().updated_at){
 			if (i<=6) {
 				RefreshTimeout = setTimeout(function (){DataRefresh (i+1);}, GrowingDelay(i));
-				InfoUpdate("No Updated difference, giving it another swing," +
-				/**/											i + " " + GrowingDelay(i)); // TODO String Localisation
+				InfoUpdate(LocalLang.en.Popup.Refresh.GoalGet.NoUpdate +
+				/**/											i + " " + GrowingDelay(i));
 			} else {
-				InfoUpdate("The goal seems not to have updated, aborting refresh"); // TODO String Localisation
+				InfoUpdate(LocalLang.en.Popup.Refresh.GoalGet.TooManyTries);
 			}
 		} else {
 			CurDat(null);
@@ -222,9 +222,9 @@ function DataRefresh(i){
 			SetOutput();
 			chrome.storage.sync.set(
 				{GoalsData:NeuGoalsArray},
-				function() {InfoUpdate("New goal data has been saved");} // TODO String Localisation
+				function() {InfoUpdate(LocalLang.en.Popup.Refresh.GoalGet.NewDataSaved);}
 			);
-			InfoUpdate ("Graph Refreshed " + i + " " + CurDat().updated_at); // TODO String Localisation
+			InfoUpdate (LocalLang.en.Popup.Refresh.GoalGet.GoalRefreshed + i + " " + CurDat().updated_at);
 		}
 	}
 }
@@ -255,10 +255,10 @@ function HandleDownload(){
 				GoalsData	: NeuGoalsArray,
 				DefGoal		: DefGoal
 			},
-			function() {InfoUpdate("Goal data has been saved");} // TODO String Localisation
+			function() {InfoUpdate(LocalLang.en.Popup.HandleDownload.DataSaved);}
 		);
 
-		InfoUpdate ("Data has been downloaded"); // TODO String Localisation
+		InfoUpdate (LocalLang.en.Popup.HandleDownload.DataDownloaded);
 		IniDisplay();
 	}
 	function ItHasFailed() {
@@ -319,7 +319,7 @@ function ImageLoader(url){
 				reader.readAsDataURL(imgxhr.response);
 			}
 			else if (imgxhr.status===404){
-				console.log("404 above is expected and normal ... silly chrome"); // TODO String Localisation
+				console.log(LocalLang.en.Popup.ImageHandler.NotAnError404);
 			}
 		};
 	var reader = new FileReader();

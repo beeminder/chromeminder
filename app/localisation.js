@@ -23,7 +23,7 @@ var LocalLang = {
 					Name : "Refresh ",
 					UpdateSuccessful : "Waiting for Graph to refresh",
 					UpdateNo : "Beeminder Sever Says no"
-				}
+				},
 				GoalGet : {
 					Name : "Refresh - Goal Update",
 					NoUpdate : "No Updated difference, giving it another swing,",
@@ -35,7 +35,14 @@ var LocalLang = {
 			HandleDownload : {
 				DataSaved : "Goal data has been saved",
 				DataDownloaded : "Data has been downloaded"
-			}
+			},
+			ImageHandler : {
+					NotAnError404 : "404 above is expected and normal ... silly chrome",
+			},
+			DisplayDeadline : { PastDeadline : "Past Deadline!</br>"}
+		},
+		Options : {
+
 		}
 	},
 	fr : {}, // French
