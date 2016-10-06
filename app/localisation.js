@@ -1,5 +1,5 @@
 var LocalLang = {
-	en : { // English
+	"en" : { // English
 		xhr : {
 			Status404 : "Server 404 error",
 			StateChangeInfo : "xhr Handler "
@@ -45,6 +45,11 @@ var LocalLang = {
 
 		}
 	},
-	fr : {}, // French
-	cy : {} // Welsh - Cymraeg
+	"en-gb" : {},
+	"en-us" : {},
+	"fr" : {}, // French
+	"cy" : {} // Welsh - Cymraeg
 }
+LocalLang["en-us"] = LocalLang["en-gb"] = LocalLang.en
+LocalLang["fr"] = LocalLang.en
+LocalLang["cy"] = LocalLang.en
