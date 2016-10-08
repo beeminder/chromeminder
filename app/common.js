@@ -3,13 +3,6 @@ var UName, UserJSON, updated_at, token, PrefLangArray;
 var GoalsJSON;// TODO Depreciate Variable
 var GoalsArray = [];
 var ElementsList = [];
-var DefaultSettings = {
-	id			: "default",
-	notify		: true,
-	show		: true,
-	datapoints	: [],
-	updated_at	: ""
-};
 var someVar = {updated_at:"",ArrayNo:""};// TODO Depreciate someVar
 var DefGoal = {Loc:undefined, Name:""};
 var RefreshTimeout = "empty";
@@ -98,18 +91,17 @@ function LinkBM(x,y,z) {
 	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
 function LangObj() {
-	var select;
-	var LangList = ["cy", "en-GB", "en", "fr"];// keys(LocalLang);
-	for (var i = 0; i < navigator.languages.length; i++){
-		for (var x = 0; x < LangList.length; x++){
-			if (PrefLangArray[i] === LangList[x]) {
-				select = LangList[x].toLowerCase();
-				break;
-			}
-		}
-		if (select) { break; }
-	}
-
+	var select = "en";
+	// var LangList = ["cy", "en-GB", "en", "fr"];// keys(LocalLang);
+	// for (var i = 0; i < navigator.languages.length; i++){
+	// 	for (var x = 0; x < LangList.length; x++){
+	// 		if (PrefLangArray[i] === LangList[x]) {
+	// 			select = LangList[x].toLowerCase();
+	// 			break;
+	// 		}
+	// 	}
+	// 	if (select) { break; }
+	// }
 	return LocalLang[select];
 }
 function InString(obj) {
@@ -137,25 +129,15 @@ function Retrieval (items){
 	token			= items.token;
 	DefGoal			= items.DefGoal;
 	PrefLangArray	= items.Lang;
-	console.log(DefGoal)
 
 	if (UName === "" || token === "") {
 		var a = document.createElement('a');
 		a.textContent = LangObj().Popup.NavToOptions;
 		a.href = "/options.html";
 		a.target = "_blank";
-		// document.getElementById("SeverStatus").insertBefore(
-		// 	a, null
-		// );
-		document.body.innerHTML = ""
-		document.body.appendChild(a)
+		document.body.innerHTML = "";
+		document.body.appendChild(a);
 	} else { // TODO else if (!last API req was too soon)
-		if (items.GoalsData.length >= 1){
-			NeuGoalsArray = items.GoalsData;
-			someVar.ArrayNo = DefGoal.Loc
-			// IniDisplay();
-		}
-
 		( function(){HandleDownload()} )( /**/ );
 	} //If Data is blank
 }
@@ -250,6 +232,7 @@ function DataRefresh(i){
 }
 function HandleDownload(){
 	xhrHandler({
+		name:"Handle Download",
 		url:"/goals",
 		SuccessFunction	: HandleResponse,
 		FailFunction	: ItHasFailed,
@@ -310,9 +293,10 @@ function HandleDownload(){
 	}
 }
 function IniDisplay(){
-	var frag;
-	setInterval(DisplayDeadline,1000);// Sets Deadline Counter
-	if (NeuGoalsArray.length > 1) { // Goal Selector
+	var frag, BoxCountdown, Span_dlout, BoxBareMin, Span_limsum;
+
+	// Goal Selector
+	if (NeuGoalsArray.length > 1) {
 		frag = document.createDocumentFragment();
 		for (var i = 0; i < NeuGoalsArray.length; i++){
 			var a = frag.appendChild(document.createElement('a'));
@@ -327,30 +311,38 @@ function IniDisplay(){
 		ByID("TheContent").innerHTML = "";
 		ByID("TheContent").appendChild(frag);
 	}
-	ByID("ButtonGoal").textContent 		= LangObj().Popup.ButtonGoal;
-	ByID("ButtonRefresh").textContent 	= LangObj().Popup.ButtonRefresh;
-	ByID("ButtonData").textContent 		= LangObj().Popup.ButtonData;
-	ByID("ButtonSettings").textContent 	= LangObj().Popup.ButtonSettings;
-	ByID("OptLink").textContent 		= LangObj().Popup.OptLink;
 
-	var BoxCountdown = document.createDocumentFragment();
-		BoxCountdown.appendChild(document.createTextNode(LangObj().Popup.Deadline));
-		BoxCountdown.appendChild(document.createElement("br"));
-	var dlout = BoxCountdown.appendChild(document.createElement("span"));
-		dlout.id = "dlout";
+	// Populates text in Menu Box
+	ByID( "ButtonGoal"		).textContent = LangObj().Popup.ButtonGoal;
+	ByID( "ButtonRefresh"	).textContent = LangObj().Popup.ButtonRefresh;
+	ByID( "ButtonData"		).textContent = LangObj().Popup.ButtonData;
+	ByID( "ButtonSettings"	).textContent = LangObj().Popup.ButtonSettings;
+	ByID( "OptLink"			).textContent = LangObj().Popup.OptLink;
+
+	// Populates content is Countdown box
+	BoxCountdown = document.createDocumentFragment();
+	BoxCountdown.appendChild(document.createTextNode(LangObj().Popup.Deadline));
+	BoxCountdown.appendChild(document.createElement("br"));
+	Span_dlout = BoxCountdown.appendChild(document.createElement("span"));
+	Span_dlout.id = "dlout";
 	ByID("Countdown").appendChild(BoxCountdown);
 
-	var BoxBareMin = document.createDocumentFragment();
-		BoxBareMin.appendChild(document.createTextNode(LangObj().Popup.BareMin));
-		BoxBareMin.appendChild(document.createElement("br"));
-	var limsum = BoxBareMin.appendChild(document.createElement("span"));
-		limsum.id = "limsum";
+	// Sets Deadline Counter
+	setInterval(DisplayDeadline,1000);
+
+	// Populates content in BareMin Box
+	BoxBareMin = document.createDocumentFragment();
+	BoxBareMin.appendChild(document.createTextNode(LangObj().Popup.BareMin));
+	BoxBareMin.appendChild(document.createElement("br"));
+	Span_limsum = BoxBareMin.appendChild(document.createElement("span"));
+	Span_limsum.id = "limsum";
 	ByID("BareMin").appendChild(BoxBareMin);
 
 	SetOutput(DefGoal.Loc);
 }
 function ImageLoader(url){
 	if (!url){return false;}
+
 	var imgxhr = new XMLHttpRequest();
 		imgxhr.open("GET",url  + "?" + new Date().getTime());
 		imgxhr.responseType = "blob";
@@ -371,7 +363,7 @@ function ImageLoader(url){
 function DisplayDeadline(){
 	var string = new countdown(CurDat().losedate).toString();
 	if (new Date() > CurDat().losedate){
-		string = "Past Deadline!</br>" + string; // TODO String Localisation
+		string = LangObj().Popup.PastDeadline + string;
 	}
 	ByID("dlout").innerHTML = string;
 }
@@ -396,25 +388,36 @@ function OPTinit(){
 			token = items.token;
 			DefGoal = items.DefGoal;
 			if (items.username === "" || items.token === "") {
-				InfoUpdate ("There be no data"); // TODO String Localisation
+				InfoUpdate (LangObj().Options.NoUserData);
 			} else {
-				xhrHandler({SuccessFunction : Something});
-				// TODO get User data
+				xhrHandler({
+					name:LangObj().Options.xhrName,
+					SuccessFunction : Something
+				});
 			} //If Data is blank
 		} // function Sync Get
 	);
-	document.getElementById('save').addEventListener('click', save_options);
+
+	document.getElementById('save').addEventListener(
+		'click',
+		save_options
+	);
+
 	function Something(response) {
 		UserJSON = JSON.parse(response);
 		drawList();
-		if (updated_at === UserJSON.updated_at){
+		if (updated_at == UserJSON.updated_at){
 			// TODO No need to update > write output
-			document.getElementById("UpdateDifference").innerHTML 	= // TODO String Localisation
-			/**/"No Difference " + updated_at + " - " + UserJSON.updated_at;
+			document.getElementById("UpdateDifference").innerHTML 	=
+			/**/	LangObj().Options.NoDifference +
+			/**/	updated_at + " - " +
+			/**/	UserJSON.updated_at;
 		} else {
 			// TODO There needs to be an update
-			document.getElementById("UpdateDifference").innerHTML 	= // TODO String Localisation
-			/**/"Difference " + updated_at + " - " + UserJSON.updated_at;
+			document.getElementById("UpdateDifference").innerHTML 	=
+			/**/	LangObj().Options.Difference +
+			/**/	updated_at + " - " +
+			/**/	UserJSON.updated_at;
 		} // If differnece detection
 	}
 }
@@ -422,7 +425,8 @@ function save_options() {
 	UName = document.getElementById( 'username'	).value;
 	token = document.getElementById( 'token'	).value;
 	if (!DefGoal) {DefGoal = {Loc:0};}
-	var xhrFunctions = {
+	xhrHandler({
+		name			: LangObj().Options.save_options.xhrName,
 		SuccessFunction : function (response){
 			chrome.storage.sync.set({
 				username	:	UName,
@@ -430,28 +434,25 @@ function save_options() {
 				DefGoal		:	DefGoal
 			},
 			function() {
-				document.getElementById('status').textContent = 'Options saved.'; // TODO String Localisation
+				document.getElementById('status').textContent =
+				/**/	LangObj().Options.save_options.OptionsSaved;
 				setTimeout(function() {status.textContent = '';},2000);
 			});
 		},
 		FailFunction : function (){
-			InfoUpdate ( // TODO String Localisation
-				"404: \n" +
-				"There has been an error with the provided information.\n" +
-				"The details have not been saved.\n" +
-				"Please check of the details and try again.",
+			InfoUpdate (
+				LangObj().Options.save_options.Message404,
 				60000
 			);
 		}
-	};
-
-	xhrHandler(xhrFunctions);
+	});
 }
 function DefaultHandle (i) {
 	ElementsList[DefGoal.Loc].defa.textContent="-";
 	DefGoal.Loc = i;
 	DefGoal.Name = UserJSON.goals[i];
-	ElementsList[DefGoal.Loc].defa.textContent="Default";
+	ElementsList[DefGoal.Loc].defa.textContent =
+	/**/	LangObj().Options.Default;
 }
 function drawList(){
 	var TheList = document.getElementById("TheList");
@@ -491,10 +492,10 @@ function drawList(){
 		if (UserJSON.goals[i] === DefGoal.Name) {DefGoal.Loc = i;}
 	}
 	if (Number.isInteger(DefGoal.Loc)) {
-		ElementsList[DefGoal.Loc].defa.innerHTML = "Default";
+		ElementsList[DefGoal.Loc].defa.innerHTML = LangObj().Options.Default;
 	} else {
 		DefGoal.Loc = 0
-		ElementsList[0].defa.innerHTML = "Default";
+		ElementsList[0].defa.innerHTML = LangObj().Options.Default;
 	}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
@@ -556,7 +557,7 @@ function AsessGoalsArray(){
 	GoalsArray = OfflineArray;
 	chrome.storage.sync.set(
 		{GoalArray : OfflineArray},
-		function() {InfoUpdate("Refresh data has been synced");} // TODO String Localisation
+		function() {InfoUpdate("Refresh data has been synced");} // TO-DO String Localisation []
 	);
 }
 function ReturnGoalData (neu, old){
@@ -602,6 +603,8 @@ function DownloadDatapoints (){
 	ByID("data-points").innerHTML = "";
 	for (var Loc = 0; Loc < NeuGoalsArray.length; Loc++) {
 		xhrHandler({
+			name : "DownloadDatapoints - " + NeuGoalsArray[Loc].slug,
+			// TODO String Localisation []
 			url : "/goals/" + NeuGoalsArray[Loc].slug + "/datapoints",
 			SuccessFunction : HandleDatapoints,
 			SuccessExtraVar : { ArrayLoc : Loc },
@@ -616,7 +619,8 @@ function DownloadDatapoints (){
 		NeuGoalsArray[QInfo.ArrayLoc].datapoints = response = JSON.parse(response);
 		frag.appendChild(document.createTextNode(NeuGoalsArray[QInfo.ArrayLoc].title));
 		frag.appendChild(document.createElement("BR"));
-		frag.appendChild(document.createTextNode("Array length : " + response.length)); // TODO String Localisation
+		frag.appendChild(document.createTextNode("Array length : " + response.length));
+		// TODO String Localisation []
 		frag.appendChild(document.createElement("BR"));
 		if ( response.length <= 10 ) {
 			iCap = response.length;
@@ -633,9 +637,11 @@ function DownloadDatapoints (){
 		var frag = document.createDocumentFragment();
 		var FailBtn = frag.appendChild(document.createElement("DIV"));
 			FailBtn.className = "Button";
-			FailBtn.appendChild(document.createTextNode("The Download has failed!")); // TODO String Localisation
+			FailBtn.appendChild(document.createTextNode("The Download has failed!"));
+			// TODO String Localisation []
 			FailBtn.appendChild(document.createElement("BR"));
-			FailBtn.appendChild(document.createTextNode("Click here to try again!")); // TODO String Localisation
+			FailBtn.appendChild(document.createTextNode("Click here to try again!"));
+			// TODO String Localisation []
 			FailBtn.addEventListener("click", function(){ DownloadDatapoints() });
 		ByID("data-points").innerHTML = "";
 		ByID("data-points").appendChild(frag);

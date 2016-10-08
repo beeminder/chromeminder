@@ -42,10 +42,22 @@ var LocalLang = {
 			ImageHandler : {
 					NotAnError404 : "404 above is expected and normal ... silly chrome",
 			},
-			DisplayDeadline : { PastDeadline : "Past Deadline!</br>"}
+			PastDeadline : "Past Deadline!</br>"
 		},
 		Options : {
-
+			OPTinit : {
+				NoUserData : "There be no data",
+				xhrName : "OPTinit",
+				NoDifference : "No Difference ",
+				Difference : "Difference "
+			},
+			save_options : {
+				xhrName : "Credential Check",
+				OptionsSaved : "Options saved.",
+				Message404 :
+				"404: \nThere has been an error with the provided information. \nThe details have not been saved. \nPlease check of the details and try again."
+			},
+			Default : "Default"
 		}
 	},
 	"en-gb" : {},
