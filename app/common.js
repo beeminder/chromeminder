@@ -1,5 +1,5 @@
 var ServerStatusTimer = "empty";
-var UName, UserJSON, updated_at, token;
+var UName, UserJSON, updated_at, token, PrefLangArray;
 var GoalsJSON;// TODO Depreciate Variable
 var GoalsArray = [];
 var ElementsList = [];
@@ -35,12 +35,12 @@ function xhrHandler(args){
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
-			InfoUpdate (name + LocalLang.en.xhr.Status404);
+			InfoUpdate (name + LangObj().xhr.Status404);
 			xhr.abort();
 			if (args.FailFunction){args.FailFunction();}
 		} else {
 			InfoUpdate (name +
-				LocalLang.en.xhr.StateChangeInfo + xhr.status +
+				LangObj().xhr.StateChangeInfo + xhr.status +
 						 " / " + xhr.statusText +
 						 " / " + xhr.readyState
 			);
@@ -97,14 +97,32 @@ function LinkBM(x,y,z) {
 	document.getElementById(x).href=
 	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
 }
+function LangObj() {
+	var select;
+	var LangList = ["cy", "en-GB", "en", "fr"];// keys(LocalLang);
+	for (var i = 0; i < navigator.languages.length; i++){
+		for (var x = 0; x < LangList.length; x++){
+			if (PrefLangArray[i] === LangList[x]) {
+				select = LangList[x].toLowerCase();
+				break;
+			}
+		}
+		if (select) { break; }
+	}
+
+	return LocalLang[select];
+}
+function InString(obj) {
+	ByID(obj).textContent = LangObj().Popup.ButtonGoal
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
 	chrome.storage.sync.get(
 		{ // Data to retrieve
 			username	: 	"",
 			token		: 	"",
-			GoalsData	:	[],
-			DefGoal		:	{Loc:0}
+			DefGoal		:	{Loc:0},
+			Lang		:	navigator.languages
 		},
 		Retrieval
 	);
@@ -115,14 +133,15 @@ function PUinit(){ //
 function Retrieval (items){
 	if (!items) { return false; }
 
-	UName	= items.username;
-	token	= items.token;
-	DefGoal	= items.DefGoal;
+	UName			= items.username;
+	token			= items.token;
+	DefGoal			= items.DefGoal;
+	PrefLangArray	= items.Lang;
 	console.log(DefGoal)
 
 	if (UName === "" || token === "") {
 		var a = document.createElement('a');
-		a.textContent = LocalLang.en.Popup.NavToOptions;
+		a.textContent = LangObj().Popup.NavToOptions;
 		a.href = "/options.html";
 		a.target = "_blank";
 		// document.getElementById("SeverStatus").insertBefore(
@@ -143,15 +162,16 @@ function Retrieval (items){
 function SetOutput(e){
 	if (!Number.isInteger(e)){ e = someVar.ArrayNo;}
 	else {someVar.ArrayNo = e;}
+
 	ImageLoader(CurDat().graph_url);
 	ByID("GoalLoc").textContent = CurDat().title;
 	ByID("limsum").innerHTML = CurDat().limsum;
-	LinkBM(	"ButtonGoal" 						); // TODO String Localisation
-	LinkBM(	"GraphLink"							); // TODO String Localisation
-	LinkBM(	"ButtonData",		"datapoints"	); // TODO String Localisation
-	LinkBM(	"ButtonSettings",	"settings"		); // TODO String Localisation
+	LinkBM(	"ButtonGoal" 						);
+	LinkBM(	"GraphLink"							);
+	LinkBM(	"ButtonData",		"datapoints"	);
+	LinkBM(	"ButtonSettings",	"settings"		);
 	clearTimeout(RefreshTimeout);
-	InfoUpdate (LocalLang.en.Popup.OutputSet + e);
+	InfoUpdate (LangObj().Popup.OutputSet + e);
 
 	document.querySelector(".CountdownDisplay").style.backgroundColor = (function(){
 		var daysleft = new countdown(CurDat().losedate).days;
@@ -176,10 +196,10 @@ function SetOutput(e){
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
 
 	ByID("meta-data").innerHTML	=
-		LocalLang.en.Popup.InfoDisplay.LastUpdate + new countdown(CurDat().updated_at).toString() + LocalLang.en.Popup.InfoDisplay.Ago +
-		PrettyText(LocalLang.en.Popup.InfoDisplay.Start,	2,	CurDat().initday,	CurDat().initval) +
-		PrettyText(LocalLang.en.Popup.InfoDisplay.Now,	4,	CurDat().curday,	CurDat().curval	) +
-		PrettyText(LocalLang.en.Popup.InfoDisplay.Target,1,	LastRoad[0]*1000,	LastRoad[1]		) +
+		LangObj().Popup.InfoDisplay.LastUpdate + new countdown(CurDat().updated_at).toString() + LangObj().Popup.InfoDisplay.Ago +
+		PrettyText(LangObj().Popup.InfoDisplay.Start,	2,	CurDat().initday,	CurDat().initval) +
+		PrettyText(LangObj().Popup.InfoDisplay.Now,	4,	CurDat().curday,	CurDat().curval	) +
+		PrettyText(LangObj().Popup.InfoDisplay.Target,1,	LastRoad[0]*1000,	LastRoad[1]		) +
 		countdown(LastRoad[0]*1000).toString();
 }
 function CurDat(NeuObj){
@@ -189,20 +209,20 @@ function CurDat(NeuObj){
 function DataRefresh(i){
 	if (!i){xhrHandler({
 		url:"/goals/" + CurDat().slug + "/refresh_graph",
-		name:LocalLang.en.Popup.Refresh.RefreshCall.Name,
+		name:LangObj().Popup.Refresh.RefreshCall.Name,
 		SuccessFunction : RefreshCall
 	});}
 	else if (i) {xhrHandler({
 		url:"/goals/" + CurDat().slug,
-		name:"Refresh - Goal Update", // TODO String Localisation
+		name:"Refresh - Goal Update", // TODO String Localisation []
 		SuccessFunction: GoalGet
 	});}
 	function RefreshCall (response) {
 		if (response === "true"){
-			InfoUpdate (LocalLang.en.Popup.Refresh.RefreshCall.UpdateSuccessful);
+			InfoUpdate (LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful);
 			RefreshTimeout = setTimeout(function (){DataRefresh (1);},2500);
 		} else if (response !== "true") {
-			InfoUpdate (LocalLang.en.Popup.Refresh.RefreshCall.UpdateNo);
+			InfoUpdate (LangObj().Popup.Refresh.RefreshCall.UpdateNo);
 		} //If refresh true / !true
 	}
 	function GoalGet (response){
@@ -211,10 +231,10 @@ function DataRefresh(i){
 		if (response.updated_at === CurDat().updated_at){
 			if (i<=6) {
 				RefreshTimeout = setTimeout(function (){DataRefresh (i+1);}, GrowingDelay(i));
-				InfoUpdate(LocalLang.en.Popup.Refresh.GoalGet.NoUpdate +
+				InfoUpdate(LangObj().Popup.Refresh.GoalGet.NoUpdate +
 				/**/											i + " " + GrowingDelay(i));
 			} else {
-				InfoUpdate(LocalLang.en.Popup.Refresh.GoalGet.TooManyTries);
+				InfoUpdate(LangObj().Popup.Refresh.GoalGet.TooManyTries);
 			}
 		} else {
 			CurDat(null);
@@ -222,9 +242,9 @@ function DataRefresh(i){
 			SetOutput();
 			chrome.storage.sync.set(
 				{GoalsData:NeuGoalsArray},
-				function() {InfoUpdate(LocalLang.en.Popup.Refresh.GoalGet.NewDataSaved);}
+				function() {InfoUpdate(LangObj().Popup.Refresh.GoalGet.NewDataSaved);}
 			);
-			InfoUpdate (LocalLang.en.Popup.Refresh.GoalGet.GoalRefreshed + i + " " + CurDat().updated_at);
+			InfoUpdate (LangObj().Popup.Refresh.GoalGet.GoalRefreshed + i + " " + CurDat().updated_at);
 		}
 	}
 }
@@ -255,10 +275,10 @@ function HandleDownload(){
 				GoalsData	: NeuGoalsArray,
 				DefGoal		: DefGoal
 			},
-			function() {InfoUpdate(LocalLang.en.Popup.HandleDownload.DataSaved);}
+			function() {InfoUpdate(LangObj().Popup.HandleDownload.DataSaved);}
 		);
 
-		InfoUpdate (LocalLang.en.Popup.HandleDownload.DataDownloaded);
+		InfoUpdate (LangObj().Popup.HandleDownload.DataDownloaded);
 		IniDisplay();
 	}
 	function ItHasFailed() {
@@ -291,7 +311,6 @@ function HandleDownload(){
 }
 function IniDisplay(){
 	var frag;
-	SetOutput(DefGoal.Loc);
 	setInterval(DisplayDeadline,1000);// Sets Deadline Counter
 	if (NeuGoalsArray.length > 1) { // Goal Selector
 		frag = document.createDocumentFragment();
@@ -308,6 +327,27 @@ function IniDisplay(){
 		ByID("TheContent").innerHTML = "";
 		ByID("TheContent").appendChild(frag);
 	}
+	ByID("ButtonGoal").textContent 		= LangObj().Popup.ButtonGoal;
+	ByID("ButtonRefresh").textContent 	= LangObj().Popup.ButtonRefresh;
+	ByID("ButtonData").textContent 		= LangObj().Popup.ButtonData;
+	ByID("ButtonSettings").textContent 	= LangObj().Popup.ButtonSettings;
+	ByID("OptLink").textContent 		= LangObj().Popup.OptLink;
+
+	var BoxCountdown = document.createDocumentFragment();
+		BoxCountdown.appendChild(document.createTextNode(LangObj().Popup.Deadline));
+		BoxCountdown.appendChild(document.createElement("br"));
+	var dlout = BoxCountdown.appendChild(document.createElement("span"));
+		dlout.id = "dlout";
+	ByID("Countdown").appendChild(BoxCountdown);
+
+	var BoxBareMin = document.createDocumentFragment();
+		BoxBareMin.appendChild(document.createTextNode(LangObj().Popup.BareMin));
+		BoxBareMin.appendChild(document.createElement("br"));
+	var limsum = BoxBareMin.appendChild(document.createElement("span"));
+		limsum.id = "limsum";
+	ByID("BareMin").appendChild(BoxBareMin);
+
+	SetOutput(DefGoal.Loc);
 }
 function ImageLoader(url){
 	if (!url){return false;}
@@ -319,7 +359,7 @@ function ImageLoader(url){
 				reader.readAsDataURL(imgxhr.response);
 			}
 			else if (imgxhr.status===404){
-				console.log(LocalLang.en.Popup.ImageHandler.NotAnError404);
+				console.log(LangObj().Popup.ImageHandler.NotAnError404);
 			}
 		};
 	var reader = new FileReader();

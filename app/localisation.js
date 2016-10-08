@@ -6,12 +6,15 @@ var LocalLang = {
 		},
 		Popup : {
 			NavToOptions : "You need to enter your details in the options page ",
-			ButtonGoal :"",
-			GraphLink:"",
-			ButtonData:"",
-			ButtonSetting:"",
-			OutputSet: "Output Set : ",
-			InfoDisplay : {
+			ButtonGoal		: "GOTO",
+			ButtonRefresh	: "Refresh",
+			ButtonData		: "Data",
+			ButtonSettings	: "Settings",
+			OptLink			: "Options",
+			Deadline		: "Deadline",
+			BareMin			: "BareMin",
+			OutputSet		: "Output Set : ",
+			InfoDisplay	: {
 				LastUpdate	:"Last update ",
 				Ago			:" ago</br>",
 				Start		:"Start",
