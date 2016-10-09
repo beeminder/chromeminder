@@ -104,8 +104,11 @@ function LangObj() {
 	// }
 	return LocalLang[select];
 }
-function InString(obj) {
-	ByID(obj).textContent = LangObj().Popup.ButtonGoal
+function ISODate(x) {
+	return new Date(x).toISOString().substring(0, 10);
+}
+function InsStr(element,string){
+	ByID(element).textContent = string;
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){ //
@@ -146,8 +149,8 @@ function SetOutput(e){
 	else {someVar.ArrayNo = e;}
 
 	ImageLoader(CurDat().graph_url);
-	ByID("GoalLoc").textContent = CurDat().title;
-	ByID("limsum").innerHTML = CurDat().limsum;
+	InsStr("GoalLoc", CurDat().title);
+	InsStr("limsum", CurDat().limsum);
 	LinkBM(	"ButtonGoal" 						);
 	LinkBM(	"GraphLink"							);
 	LinkBM(	"ButtonData",		"datapoints"	);
@@ -165,24 +168,14 @@ function SetOutput(e){
 		return "purple";
 	})( /**/ );
 
-	function PrettyText(PreText, spcs, LeDate, Amount){
-		var nbs = "";
-		if (!Number.isInteger(spcs)){spcs = 1;}
-		for (var i = 0; i < spcs; i++) {nbs+="&#160;";}
-
-		return PreText +	nbs + "<b>" +
-			new Date(LeDate).toISOString().substring(0, 10) +
-			"&#160;" +	Amount +	"</b></br>";
-	}
-
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
-
-	ByID("meta-data").innerHTML	=
-		LangObj().Popup.InfoDisplay.LastUpdate + new countdown(CurDat().updated_at).toString() + LangObj().Popup.InfoDisplay.Ago +
-		PrettyText(LangObj().Popup.InfoDisplay.Start,	2,	CurDat().initday,	CurDat().initval) +
-		PrettyText(LangObj().Popup.InfoDisplay.Now,	4,	CurDat().curday,	CurDat().curval	) +
-		PrettyText(LangObj().Popup.InfoDisplay.Target,1,	LastRoad[0]*1000,	LastRoad[1]		) +
-		countdown(LastRoad[0]*1000).toString();
+	InsStr("LastUpdateDate", LangObj().Popup.InfoDisplay.LastUpdate(
+			new countdown(CurDat().updated_at,null,null,1).toString()
+	));
+	InsStr("Info_Start", ISODate(CurDat().initday)	+" - "+ CurDat().initval);
+	InsStr("Info_Now", ISODate(CurDat().curday)	+" - "+ CurDat().curval);
+	InsStr("Info_Target", ISODate(LastRoad[0]*1000)	+" - "+ LastRoad[1]);
+	InsStr("Info_Countdown", countdown(LastRoad[0]*1000,null,null,2).toString());
 }
 function CurDat(NeuObj){
 	if (NeuObj) {NeuGoalsArray[someVar.ArrayNo] = NeuObj;}
@@ -199,6 +192,7 @@ function DataRefresh(i){
 		name:"Refresh - Goal Update", // TODO String Localisation []
 		SuccessFunction: GoalGet
 	});}
+
 	function RefreshCall (response) {
 		if (response === "true"){
 			InfoUpdate (LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful);
@@ -313,11 +307,11 @@ function IniDisplay(){
 	}
 
 	// Populates text in Menu Box
-	ByID( "ButtonGoal"		).textContent = LangObj().Popup.ButtonGoal;
-	ByID( "ButtonRefresh"	).textContent = LangObj().Popup.ButtonRefresh;
-	ByID( "ButtonData"		).textContent = LangObj().Popup.ButtonData;
-	ByID( "ButtonSettings"	).textContent = LangObj().Popup.ButtonSettings;
-	ByID( "OptLink"			).textContent = LangObj().Popup.OptLink;
+	InsStr( "ButtonGoal", LangObj().Popup.ButtonGoal);
+	InsStr( "ButtonRefresh", LangObj().Popup.ButtonRefresh);
+	InsStr( "ButtonData", LangObj().Popup.ButtonData);
+	InsStr( "ButtonSettings", LangObj().Popup.ButtonSettings);
+	InsStr( "OptLink", LangObj().Popup.OptLink);
 
 	// Populates content is Countdown box
 	BoxCountdown = document.createDocumentFragment();
@@ -337,6 +331,10 @@ function IniDisplay(){
 	Span_limsum = BoxBareMin.appendChild(document.createElement("span"));
 	Span_limsum.id = "limsum";
 	ByID("BareMin").appendChild(BoxBareMin);
+
+	InsStr( "Label_Start", LangObj().Popup.InfoDisplay.Start);
+	InsStr( "Label_Now", LangObj().Popup.InfoDisplay.Now);
+	InsStr( "Label_Target", LangObj().Popup.InfoDisplay.Target)
 
 	SetOutput(DefGoal.Loc);
 }
@@ -434,8 +432,8 @@ function save_options() {
 				DefGoal		:	DefGoal
 			},
 			function() {
-				document.getElementById('status').textContent =
-				/**/	LangObj().Options.save_options.OptionsSaved;
+				var status = ByID("status")
+				status.textContent = LangObj().Options.save_options.OptionsSaved;
 				setTimeout(function() {status.textContent = '';},2000);
 			});
 		},

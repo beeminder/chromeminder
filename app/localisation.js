@@ -15,8 +15,8 @@ var LocalLang = {
 			BareMin			: "BareMin",
 			OutputSet		: "Output Set : ",
 			InfoDisplay	: {
-				LastUpdate	:"Last update ",
-				Ago			:" ago</br>",
+				LastUpdate	:
+					function(string){return "Last update " + string + " ago"},
 				Start		:"Start",
 				Now			:"Now",
 				Target		:"Target"
