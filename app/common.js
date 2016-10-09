@@ -124,25 +124,87 @@ function PUinit(){ //
 	document.getElementById("ButtonRefresh").addEventListener(
 		"click", function(){DataRefresh();}
 	);
-}
-function Retrieval (items){
-	if (!items) { return false; }
+	function Retrieval (items){
+		if (!items) { return false; }
 
-	UName			= items.username;
-	token			= items.token;
-	DefGoal			= items.DefGoal;
-	PrefLangArray	= items.Lang;
+		UName			= items.username;
+		token			= items.token;
+		DefGoal			= items.DefGoal;
+		PrefLangArray	= items.Lang;
 
-	if (UName === "" || token === "") {
-		var a = document.createElement('a');
-		a.textContent = LangObj().Popup.NavToOptions;
-		a.href = "/options.html";
-		a.target = "_blank";
-		document.body.innerHTML = "";
-		document.body.appendChild(a);
-	} else { // TODO else if (!last API req was too soon)
-		( function(){HandleDownload()} )( /**/ );
-	} //If Data is blank
+		if (UName === "" || token === "") {
+			var a = document.createElement('a');
+			a.textContent = LangObj().Popup.NavToOptions;
+			a.href = "/options.html";
+			a.target = "_blank";
+			document.body.innerHTML = "";
+			document.body.appendChild(a);
+		} else { // TODO else if (!last API req was too soon)
+			( function(){HandleDownload()} )( /**/ );
+		} //If Data is blank
+	}
+	function HandleDownload(){
+		xhrHandler({
+			name:"Handle Download",
+			url:"/goals",
+			SuccessFunction	: HandleResponse,
+			FailFunction	: ItHasFailed,
+			OfflineFunction	: ItHasFailed
+		});
+
+		function HandleResponse(response){
+			var WorkingResponse = JSON.parse(response);
+			var DefHolding;
+
+			NeuGoalsArray = []; // Clear Array TODO Implement merging script
+
+			for (var i = 0; i < WorkingResponse.length; i++){
+				if (DefGoal.Name == WorkingResponse[i].slug){DefHolding = i;}
+				NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
+			}
+
+			if (!DefHolding){DefHolding = 0;}
+			someVar.ArrayNo = DefGoal.Loc = DefHolding;
+
+			chrome.storage.sync.set(
+				{
+					GoalsData	: NeuGoalsArray,
+					DefGoal		: DefGoal
+				},
+				function() {InfoUpdate(LangObj().Popup.HandleDownload.DataSaved);}
+			);
+
+			InfoUpdate (LangObj().Popup.HandleDownload.DataDownloaded);
+			IniDisplay();
+		}
+		function ItHasFailed() {
+			InfoUpdate("Download has failed, initalising from offline data")
+			chrome.storage.sync.get(
+				{ GoalsData	:	[] },
+				function (items) {
+					if (items.GoalsData.length >= 1){
+						NeuGoalsArray = items.GoalsData;
+						someVar.ArrayNo = DefGoal.Loc
+						IniDisplay();
+					}
+
+					var smallest = new Date();
+					var index;
+					for (var i = 0; i < NeuGoalsArray.length; i++){
+						var hello = NeuGoalsArray[i].updated_at;
+						if (smallest > hello){
+							smallest = hello;
+							index = i;
+						}
+					}
+
+					var interogant = new countdown(smallest);
+					console.log(interogant.toString());
+				}
+			);
+			IniDisplay()
+		}
+	}
 }
 function SetOutput(e){
 	if (!Number.isInteger(e)){ e = someVar.ArrayNo;}
@@ -223,67 +285,6 @@ function DataRefresh(i){
 			InfoUpdate (LangObj().Popup.Refresh.GoalGet.GoalRefreshed + i + " " + CurDat().updated_at);
 		}
 	}
-}
-function HandleDownload(){
-	xhrHandler({
-		name:"Handle Download",
-		url:"/goals",
-		SuccessFunction	: HandleResponse,
-		FailFunction	: ItHasFailed,
-		OfflineFunction	: ItHasFailed
-	});
-
-	function HandleResponse(response){
-		var WorkingResponse = JSON.parse(response);
-		var DefHolding;
-
-		NeuGoalsArray = []; // Clear Array TODO Implement merging script
-
-		for (var i = 0; i < WorkingResponse.length; i++){
-			if (DefGoal.Name == WorkingResponse[i].slug){DefHolding = i;}
-			NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
-		}
-
-		if (!DefHolding){DefHolding = 0;}
-		someVar.ArrayNo = DefGoal.Loc = DefHolding;
-
-		chrome.storage.sync.set(
-			{
-				GoalsData	: NeuGoalsArray,
-				DefGoal		: DefGoal
-			},
-			function() {InfoUpdate(LangObj().Popup.HandleDownload.DataSaved);}
-		);
-
-		InfoUpdate (LangObj().Popup.HandleDownload.DataDownloaded);
-		IniDisplay();
-	}
-	function ItHasFailed() {
-		InfoUpdate("Download has failed, initalising from offline data")
-		chrome.storage.sync.get(
-			{ GoalsData	:	[] },
-			function (items) {
-				if (items.GoalsData.length >= 1){
-					NeuGoalsArray = items.GoalsData;
-					someVar.ArrayNo = DefGoal.Loc
-					IniDisplay();
-				}
-
-				var smallest = new Date();
-				var index;
-				for (var i = 0; i < NeuGoalsArray.length; i++){
-					var hello = NeuGoalsArray[i].updated_at;
-					if (smallest > hello){
-						smallest = hello;
-						index = i;
-					}
-				}
-
-				var interogant = new countdown(smallest);
-				console.log(interogant.toString());
-			}
-		);
-		IniDisplay()
 	}
 }
 function IniDisplay(){
