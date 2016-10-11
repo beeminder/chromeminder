@@ -285,6 +285,9 @@ function DataRefresh(i){
 			InfoUpdate (LangObj().Popup.Refresh.GoalGet.GoalRefreshed + i + " " + CurDat().updated_at);
 		}
 	}
+	function GrowingDelay(i){
+		if (!i) { return false; }
+		return 2500 * Math.pow(2,(i-1));
 	}
 }
 function IniDisplay(){
@@ -338,6 +341,14 @@ function IniDisplay(){
 	InsStr( "Label_Target", LangObj().Popup.InfoDisplay.Target)
 
 	SetOutput(DefGoal.Loc);
+
+	function DisplayDeadline(){
+		var string = new countdown(CurDat().losedate).toString();
+		if (new Date() > CurDat().losedate){
+			string = LangObj().Popup.PastDeadline + string;
+		}
+		InsStr("dlout", string);
+	}
 }
 function ImageLoader(url){
 	if (!url){return false;}
@@ -359,39 +370,29 @@ function ImageLoader(url){
 		};
 	imgxhr.send();
 }
-function DisplayDeadline(){
-	var string = new countdown(CurDat().losedate).toString();
-	if (new Date() > CurDat().losedate){
-		string = LangObj().Popup.PastDeadline + string;
-	}
-	ByID("dlout").innerHTML = string;
-}
-function GrowingDelay(i){
-	if (!i) { return false; }
-	return 2500 * Math.pow(2,(i-1));
-}
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
+	// TODO Load Goals data from chrom sync instead of using xhr data
 	chrome.storage.sync.get(
 		{
 			username	: 	"",
 			token		: 	"",
 			updated_at	:	"",
-			DefGoal :	""
+			DefGoal 	:	""
 		},
 		function(items) {
 			document.getElementById( 'username'	).value = items.username;
 			document.getElementById( 'token'	).value = items.token;
-			updated_at = items.updated_at;
-			UName = items.username;
-			token = items.token;
-			DefGoal = items.DefGoal;
+			updated_at	= items.updated_at;
+			UName		= items.username;
+			token		= items.token;
+			DefGoal		= items.DefGoal;
 			if (items.username === "" || items.token === "") {
 				InfoUpdate (LangObj().Options.NoUserData);
 			} else {
 				xhrHandler({
-					name:LangObj().Options.xhrName,
-					SuccessFunction : Something
+					name			: LangObj().Options.xhrName,
+					SuccessFunction	: OptionsHandler
 				});
 			} //If Data is blank
 		} // function Sync Get
@@ -402,21 +403,17 @@ function OPTinit(){
 		save_options
 	);
 
-	function Something(response) {
+	function OptionsHandler(response) {
 		UserJSON = JSON.parse(response);
 		drawList();
 		if (updated_at == UserJSON.updated_at){
 			// TODO No need to update > write output
-			document.getElementById("UpdateDifference").innerHTML 	=
-			/**/	LangObj().Options.NoDifference +
-			/**/	updated_at + " - " +
-			/**/	UserJSON.updated_at;
+			InsStr("UpdateDifference",LangObj().Options.NoDifference +
+			/**/	updated_at + " - " + UserJSON.updated_at);
 		} else {
 			// TODO There needs to be an update
-			document.getElementById("UpdateDifference").innerHTML 	=
-			/**/	LangObj().Options.Difference +
-			/**/	updated_at + " - " +
-			/**/	UserJSON.updated_at;
+			InsStr("UpdateDifference",LangObj().Options.Difference +
+			/**/	updated_at + " - " + UserJSON.updated_at);
 		} // If differnece detection
 	}
 }
@@ -426,32 +423,29 @@ function save_options() {
 	if (!DefGoal) {DefGoal = {Loc:0};}
 	xhrHandler({
 		name			: LangObj().Options.save_options.xhrName,
-		SuccessFunction : function (response){
-			chrome.storage.sync.set({
-				username	:	UName,
-				token		:	token,
-				DefGoal		:	DefGoal
-			},
-			function() {
-				var status = ByID("status")
-				status.textContent = LangObj().Options.save_options.OptionsSaved;
-				setTimeout(function() {status.textContent = '';},2000);
-			});
-		},
-		FailFunction : function (){
-			InfoUpdate (
-				LangObj().Options.save_options.Message404,
-				60000
-			);
-		}
+		SuccessFunction : AuthYes,
+		FailFunction 	: AuthNo
 	});
+	function AuthYes (response){
+		chrome.storage.sync.set({
+			username	:	UName,
+			token		:	token,
+			DefGoal		:	DefGoal
+		},AuthYesNotify);
+	}
+	function AuthYesNotify () {
+		InsStr("status",LangObj().Options.save_options.OptionsSaved);
+		setTimeout(function(){InsStr("status","");},2000);
+	}
+	function AuthNo (){
+		InfoUpdate (LangObj().Options.save_options.Message404,60000);
+	}
 }
 function DefaultHandle (i) {
 	ElementsList[DefGoal.Loc].defa.textContent="-";
 	DefGoal.Loc = i;
 	DefGoal.Name = UserJSON.goals[i];
-	ElementsList[DefGoal.Loc].defa.textContent =
-	/**/	LangObj().Options.Default;
+	ElementsList[DefGoal.Loc].defa.textContent = LangObj().Options.Default;
 }
 function drawList(){
 	var TheList = document.getElementById("TheList");
