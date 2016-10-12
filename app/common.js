@@ -490,67 +490,6 @@ function drawList(){
 	}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
-function MakeGoalsArray () {
-	for (var i = 0; i < GoalsJSON.length; i++){
-		GoalsArray[i] = {
-			"slug"			: GoalsJSON[i].slug,
-			"title"			: GoalsJSON[i].title,
-			"description"	: GoalsJSON[i].description,
-			"id"			: GoalsJSON[i].id,
-			"graph_url"		: GoalsJSON[i].graph_url,
-			"losedate"		: GoalsJSON[i].losedate,
-			"limsum"		: GoalsJSON[i].limsum,
-			"DataPoints"	: [],
-			"updated_at"	: GoalsJSON[i].updated_at,
-			"Notify"		: true,
-			"Show"			: true
-		};
-	}
-	console.log(GoalsArray);
-	GoalsArray.sort(function (a,b) { // Sort Array by ID
-		if		( a["id"] > b["id"] ){	return  1; }
-		else if	( a["id"] < b["id"] ){	return -1; }
-										return  0;
-	});
-}
-function AsessGoalsArray(){
-	var ResponseArray = GoalsJSON;
-	var OfflineArray = GoalsArray;
-	var ReturnArray = [];
-
-	ResponseArray.sort(function (a,b) { // Sort Array by ID
-		console.log(a["id"] + ", " + b["id"]);
-		if		( a["id"] > b["id"] ){	return  1; }
-		else if	( a["id"] < b["id"] ){	return -1; }
-										return  0;
-	});
-	OfflineArray.sort(function (a,b) { // Sort Array by ID
-		console.log(a["id"] + ", " + b["id"]);
-		if		( a["id"] > b["id"] ){	return  1; }
-		else if	( a["id"] < b["id"] ){	return -1; }
-										return  0;
-	});
-
-	for (var i = 0; i < ResponseArray.length; i++){
-		var r = OfflineArray.length;
-		var neu = ResponseArray.pop();
-		var old;
-
-		while (r--) { if ( OfflineArray[r].id === neu.id ){break;}}
-		if ( r === -1 ) { old = DefaultSettings;			}
-		else 			{ old = OfflineArray.splice(r,1);	}
-
-		if (neu.updated_at===old.updated_at)
-				{ReturnArray.push(old);						}
-		else 	{ReturnArray.push(ReturnGoalData(neu,old))	;}
-	}
-	GoalsArray = null;
-	GoalsArray = OfflineArray;
-	chrome.storage.sync.set(
-		{GoalArray : OfflineArray},
-		function() {InfoUpdate("Refresh data has been synced");} // TO-DO String Localisation []
-	);
-}
 function ReturnGoalData (neu, old){
 	var WrkID = old.id;
 	if (WrkID === "default") {WrkID = neu.id;}
@@ -718,4 +657,65 @@ function OptionsHandler(response) {
 		InsStr("UpdateDifference",LangObj().Options.Difference +
 		/**/	updated_at + " - " + UserJSON.updated_at);
 	} // If differnece detection
+}
+function MakeGoalsArray () {
+	for (var i = 0; i < GoalsJSON.length; i++){
+		GoalsArray[i] = {
+			"slug"			: GoalsJSON[i].slug,
+			"title"			: GoalsJSON[i].title,
+			"description"	: GoalsJSON[i].description,
+			"id"			: GoalsJSON[i].id,
+			"graph_url"		: GoalsJSON[i].graph_url,
+			"losedate"		: GoalsJSON[i].losedate,
+			"limsum"		: GoalsJSON[i].limsum,
+			"DataPoints"	: [],
+			"updated_at"	: GoalsJSON[i].updated_at,
+			"Notify"		: true,
+			"Show"			: true
+		};
+	}
+	console.log(GoalsArray);
+	GoalsArray.sort(function (a,b) { // Sort Array by ID
+		if		( a["id"] > b["id"] ){	return  1; }
+		else if	( a["id"] < b["id"] ){	return -1; }
+										return  0;
+	});
+}
+function AsessGoalsArray(){
+	var ResponseArray = GoalsJSON;
+	var OfflineArray = GoalsArray;
+	var ReturnArray = [];
+
+	ResponseArray.sort(function (a,b) { // Sort Array by ID
+		console.log(a["id"] + ", " + b["id"]);
+		if		( a["id"] > b["id"] ){	return  1; }
+		else if	( a["id"] < b["id"] ){	return -1; }
+										return  0;
+	});
+	OfflineArray.sort(function (a,b) { // Sort Array by ID
+		console.log(a["id"] + ", " + b["id"]);
+		if		( a["id"] > b["id"] ){	return  1; }
+		else if	( a["id"] < b["id"] ){	return -1; }
+										return  0;
+	});
+
+	for (var i = 0; i < ResponseArray.length; i++){
+		var r = OfflineArray.length;
+		var neu = ResponseArray.pop();
+		var old;
+
+		while (r--) { if ( OfflineArray[r].id === neu.id ){break;}}
+		if ( r === -1 ) { old = DefaultSettings;			}
+		else 			{ old = OfflineArray.splice(r,1);	}
+
+		if (neu.updated_at===old.updated_at)
+				{ReturnArray.push(old);						}
+		else 	{ReturnArray.push(ReturnGoalData(neu,old))	;}
+	}
+	GoalsArray = null;
+	GoalsArray = OfflineArray;
+	chrome.storage.sync.set(
+		{GoalArray : OfflineArray},
+		function() {InfoUpdate("Refresh data has been synced");} // TO-DO String Localisation []
+	);
 }
