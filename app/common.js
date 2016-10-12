@@ -372,50 +372,36 @@ function ImageLoader(url){
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function OPTinit(){
-	// TODO Load Goals data from chrom sync instead of using xhr data
 	chrome.storage.sync.get(
 		{
 			username	: 	"",
 			token		: 	"",
 			updated_at	:	"",
-			DefGoal 	:	""
+			DefGoal 	:	"",
+			GoalsData	:	[]
 		},
 		function(items) {
 			document.getElementById( 'username'	).value = items.username;
 			document.getElementById( 'token'	).value = items.token;
-			updated_at	= items.updated_at;
-			UName		= items.username;
-			token		= items.token;
-			DefGoal		= items.DefGoal;
+			updated_at		= items.updated_at;
+			UName			= items.username;
+			token			= items.token;
+			DefGoal			= items.DefGoal;
+			NeuGoalsArray	= items.GoalsData
 			if (items.username === "" || items.token === "") {
 				InfoUpdate (LangObj().Options.NoUserData);
+			} else if (NeuGoalsArray.length >= 1) {
+				drawList()
 			} else {
-				xhrHandler({
-					name			: LangObj().Options.xhrName,
-					SuccessFunction	: OptionsHandler
-				});
-			} //If Data is blank
-		} // function Sync Get
+				InfoUpdate (LangObj().Options.NoUserData)
+			}
+		}
 	);
 
 	document.getElementById('save').addEventListener(
 		'click',
 		save_options
 	);
-
-	function OptionsHandler(response) {
-		UserJSON = JSON.parse(response);
-		drawList();
-		if (updated_at == UserJSON.updated_at){
-			// TODO No need to update > write output
-			InsStr("UpdateDifference",LangObj().Options.NoDifference +
-			/**/	updated_at + " - " + UserJSON.updated_at);
-		} else {
-			// TODO There needs to be an update
-			InsStr("UpdateDifference",LangObj().Options.Difference +
-			/**/	updated_at + " - " + UserJSON.updated_at);
-		} // If differnece detection
-	}
 }
 function save_options() {
 	UName = document.getElementById( 'username'	).value;
@@ -432,10 +418,22 @@ function save_options() {
 			token		:	token,
 			DefGoal		:	DefGoal
 		},AuthYesNotify);
+		// if (NeuGoalsArray.length === 0){
+			xhrHandler({
+				name:"Handle Download",
+				url:"/goals",
+				SuccessFunction	: HandleResponse//,
+				// FailFunction	: ItHasFailed,
+				// OfflineFunction	: ItHasFailed
+			});
+		// }
 	}
 	function AuthYesNotify () {
 		InsStr("status",LangObj().Options.save_options.OptionsSaved);
 		setTimeout(function(){InsStr("status","");},2000);
+	}
+	function HandleResponse(response) {
+		console.log(JSON.parse(response));
 	}
 	function AuthNo (){
 		InfoUpdate (LangObj().Options.save_options.Message404,60000);
@@ -444,12 +442,12 @@ function save_options() {
 function DefaultHandle (i) {
 	ElementsList[DefGoal.Loc].defa.textContent="-";
 	DefGoal.Loc = i;
-	DefGoal.Name = UserJSON.goals[i];
+	DefGoal.Name = NeuGoalsArray[i].slug;
 	ElementsList[DefGoal.Loc].defa.textContent = LangObj().Options.Default;
 }
 function drawList(){
 	var TheList = document.getElementById("TheList");
-	for (var i = 0; i < UserJSON.goals.length; i++){
+	for (var i = 0; i < NeuGoalsArray.length; i++){
 		ElementsList[i] = {
 			"item"	: document.createElement('li'),
 			"title"	: document.createElement('a'),
@@ -462,12 +460,12 @@ function drawList(){
 		ElementsList[i].defa.className = "default";
 		ElementsList[i].hide.className = "hide";
 		ElementsList[i].notify.className = "notify";
-		ElementsList[i].item.id  = UserJSON.goals[i] + "-item";
-		ElementsList[i].title.id = UserJSON.goals[i] + "-title";
-		ElementsList[i].defa.id = UserJSON.goals[i] + "-defaultBtn";
-		ElementsList[i].hide.id = UserJSON.goals[i] + "-HideBtn";
-		ElementsList[i].notify.id = UserJSON.goals[i] + "-NotifyBtn";
-		ElementsList[i].title.textContent = UserJSON.goals[i];
+		ElementsList[i].item.id  = NeuGoalsArray[i].slug + "-item";
+		ElementsList[i].title.id = NeuGoalsArray[i].slug + "-title";
+		ElementsList[i].defa.id = NeuGoalsArray[i].slug + "-defaultBtn";
+		ElementsList[i].hide.id = NeuGoalsArray[i].slug + "-HideBtn";
+		ElementsList[i].notify.id = NeuGoalsArray[i].slug + "-NotifyBtn";
+		ElementsList[i].title.textContent = NeuGoalsArray[i].title;
 		ElementsList[i].defa.textContent = "-";
 		ElementsList[i].hide.textContent = "Hi";
 		ElementsList[i].notify.textContent = "Hi";
@@ -477,12 +475,12 @@ function drawList(){
 		   ElementsList[i].item.appendChild(ElementsList[i].hide);
 		   ElementsList[i].item.appendChild(ElementsList[i].notify);
 		(function(_i) {
-			LinkBM(ElementsList[_i].title.id,undefined,UserJSON.goals[i]);
+			LinkBM(ElementsList[_i].title.id,undefined,NeuGoalsArray[i].slug);
 			ElementsList[_i].defa.addEventListener( "click", function() {DefaultHandle(_i);});
 			ElementsList[_i].hide.addEventListener( "click", MakeGoalsArray );
 			// notify.addEventListener( "click", functions(){ NotifyHandle(i) } );
 		})(i);
-		if (UserJSON.goals[i] === DefGoal.Name) {DefGoal.Loc = i;}
+		if (NeuGoalsArray[i].slug === DefGoal.Name) {DefGoal.Loc = i;}
 	}
 	if (Number.isInteger(DefGoal.Loc)) {
 		ElementsList[DefGoal.Loc].defa.innerHTML = LangObj().Options.Default;
@@ -707,4 +705,17 @@ function UserGET(){
 			} // If differnece detection
 		}
 	});
+}
+function OptionsHandler(response) {
+	UserJSON = JSON.parse(response);
+	drawList();
+	if (updated_at == UserJSON.updated_at){
+		// TODO No need to update > write output
+		InsStr("UpdateDifference",LangObj().Options.NoDifference +
+		/**/	updated_at + " - " + UserJSON.updated_at);
+	} else {
+		// TODO There needs to be an update
+		InsStr("UpdateDifference",LangObj().Options.Difference +
+		/**/	updated_at + " - " + UserJSON.updated_at);
+	} // If differnece detection
 }
