@@ -1,6 +1,5 @@
 var ServerStatusTimer = "empty";
 var UName, UserJSON, updated_at, token, PrefLangArray;
-var GoalsJSON;// TODO Depreciate Variable
 var GoalsArray = [];
 var ElementsList = [];
 var someVar = {updated_at:"",ArrayNo:""};// TODO Depreciate someVar
@@ -182,10 +181,18 @@ function PUinit(){ //
 			chrome.storage.sync.get(
 				{ GoalsData	:	[] },
 				function (items) {
+					NeuGoalsArray = items.GoalsData;
+
 					if (items.GoalsData.length >= 1){
-						NeuGoalsArray = items.GoalsData;
 						someVar.ArrayNo = DefGoal.Loc
 						IniDisplay();
+					} else {
+						var a = document.createElement('a');
+						a.textContent = "No Goals Available";// TODO LangObj().Popup.NavToOptions;
+						a.href = "/options.html";
+						a.target = "_blank";
+						document.body.innerHTML = "";
+						document.body.appendChild(a);
 					}
 
 					var smallest = new Date();
@@ -202,7 +209,6 @@ function PUinit(){ //
 					console.log(interogant.toString());
 				}
 			);
-			IniDisplay()
 		}
 	}
 }
@@ -251,7 +257,7 @@ function DataRefresh(i){
 	});}
 	else if (i) {xhrHandler({
 		url:"/goals/" + CurDat().slug,
-		name:"Refresh - Goal Update", // TODO String Localisation []
+		name:LangObj().Popup.Refresh.GoalGet.Name,
 		SuccessFunction: GoalGet
 	});}
 
@@ -297,14 +303,17 @@ function IniDisplay(){
 	if (NeuGoalsArray.length > 1) {
 		frag = document.createDocumentFragment();
 		for (var i = 0; i < NeuGoalsArray.length; i++){
-			var a = frag.appendChild(document.createElement('a'));
-			a.className = 'GoalIDBtn';
-			a.id			= NeuGoalsArray[i].slug;
-			a.textContent	= NeuGoalsArray[i].title;
-			(function(_i) {a.addEventListener(
-					"click",
-					function() {SetOutput(_i);}
-			);})(i);// TODO: Add an additonal goto link w/ each Selector
+			if (NeuGoalsArray[i].Show === true){
+
+				var a = frag.appendChild(document.createElement('a'));
+				a.className = 'GoalIDBtn';
+				a.id			= NeuGoalsArray[i].slug;
+				a.textContent	= NeuGoalsArray[i].title;
+				(function(_i) {a.addEventListener(
+						"click",
+						function() {SetOutput(_i);}
+				);})(i);// TODO: Add an additonal goto link w/ each Selector
+			}
 		}
 		ByID("TheContent").innerHTML = "";
 		ByID("TheContent").appendChild(frag);
@@ -467,8 +476,8 @@ function drawList(){
 		ElementsList[i].notify.id = NeuGoalsArray[i].slug + "-NotifyBtn";
 		ElementsList[i].title.textContent = NeuGoalsArray[i].title;
 		ElementsList[i].defa.textContent = "-";
-		ElementsList[i].hide.textContent = "Hi";
-		ElementsList[i].notify.textContent = "Hi";
+		ElementsList[i].hide.textContent = NeuGoalsArray[i].Notify;
+		ElementsList[i].notify.textContent = NeuGoalsArray[i].Show;
 		TheList.appendChild( ElementsList[i].item);
 		   ElementsList[i].item.appendChild(ElementsList[i].title);
 		   ElementsList[i].item.appendChild(ElementsList[i].defa);
@@ -477,7 +486,7 @@ function drawList(){
 		(function(_i) {
 			LinkBM(ElementsList[_i].title.id,undefined,NeuGoalsArray[i].slug);
 			ElementsList[_i].defa.addEventListener( "click", function() {DefaultHandle(_i);});
-			ElementsList[_i].hide.addEventListener( "click", MakeGoalsArray );
+			// ElementsList[_i].hide.addEventListener( "click", MakeGoalsArray );
 			// notify.addEventListener( "click", functions(){ NotifyHandle(i) } );
 		})(i);
 		if (NeuGoalsArray[i].slug === DefGoal.Name) {DefGoal.Loc = i;}
@@ -578,144 +587,146 @@ function DownloadDatapoints (){
 	}
 }
 /* --- --- --- ---		Depreciated Functions		--- --- --- --- */
-function GoalsGET(){
-	xhrHandler({
-		url : "/goals",
-		SuccessFunction : function (response){
-			GoalsJSON = JSON.parse(response);
-			InfoUpdate ("Data has been downloaded"); // TO-DO String Localisation
-			//if (pg==="popup") {HandleDownload();}
-		}
-	});
-}
-function DM(){
-	var elem = document.getElementById('OiYouYeahYou-writing');
-	elem.parentNode.removeChild(elem);
-	return false;
-}
-function UNIXtoReadable(i){
-	/* Copied from
-		http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
-	*/
-	var a = new Date(i * 1000);
-	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-	var year = a.getFullYear();
-	var month = months[a.getMonth()];
-	var date = a.getDate();
-	var hour = a.getHours();
-	var min = a.getMinutes();
-	var sec = a.getSeconds();
-	var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
-	return time;
-}
-function ImageHandler (SomeArgs,MoreArgs){
-	var ImageObject = document.getElementById("DisplayedGraph");
-	function HasItLoaded(){
-		if (!ImageObject.complete) {
-			return false;
-		}
-		if (typeof ImageObject.naturalWidth !== "undefined" && ImageObject.naturalWidth === 0) {
-			return false;
-		}
-		return true;
+function DepreciatedFunctions() {
+	function GoalsGET(){
+		xhrHandler({
+			url : "/goals",
+			SuccessFunction : function (response){
+				GoalsJSON = JSON.parse(response);
+				InfoUpdate ("Data has been downloaded"); // TO-DO String Localisation
+				//if (pg==="popup") {HandleDownload();}
+			}
+		});
 	}
-	var TestVal = HasItLoaded();
-	if (TestVal){
-		alert(TestVal);
-		console.log(TestVal);
-		// some code to executre- given true
-	} else {
-		alert("yippeie");
+	function DM(){
+		var elem = document.getElementById('OiYouYeahYou-writing');
+		elem.parentNode.removeChild(elem);
+		return false;
 	}
-}
-function UserGET(){
-	xhrHandler({
-		SuccessFunction : function(response) {
-			UserJSON = JSON.parse(response);
-			drawList();
-			if (updated_at === UserJSON.updated_at){
-				// TO-DO No need to update > write output
-				document.getElementById("UpdateDifference").innerHTML 	=
-				/**/"No Difference " + updated_at + " - " + UserJSON.updated_at; // TO-DO String Localisation
-			} else {
-				// TO-DO There needs to be an update
-				document.getElementById("UpdateDifference").innerHTML 	=
-				/**/"Difference " + updated_at + " - " + UserJSON.updated_at; // TO-DO String Localisation
-			} // If differnece detection
+	function UNIXtoReadable(i){
+		/* Copied from
+			http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
+		*/
+		var a = new Date(i * 1000);
+		var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+		var year = a.getFullYear();
+		var month = months[a.getMonth()];
+		var date = a.getDate();
+		var hour = a.getHours();
+		var min = a.getMinutes();
+		var sec = a.getSeconds();
+		var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+		return time;
+	}
+	function ImageHandler (SomeArgs,MoreArgs){
+		var ImageObject = document.getElementById("DisplayedGraph");
+		function HasItLoaded(){
+			if (!ImageObject.complete) {
+				return false;
+			}
+			if (typeof ImageObject.naturalWidth !== "undefined" && ImageObject.naturalWidth === 0) {
+				return false;
+			}
+			return true;
 		}
-	});
-}
-function OptionsHandler(response) {
-	UserJSON = JSON.parse(response);
-	drawList();
-	if (updated_at == UserJSON.updated_at){
-		// TODO No need to update > write output
-		InsStr("UpdateDifference",LangObj().Options.NoDifference +
-		/**/	updated_at + " - " + UserJSON.updated_at);
-	} else {
-		// TODO There needs to be an update
-		InsStr("UpdateDifference",LangObj().Options.Difference +
-		/**/	updated_at + " - " + UserJSON.updated_at);
-	} // If differnece detection
-}
-function MakeGoalsArray () {
-	for (var i = 0; i < GoalsJSON.length; i++){
-		GoalsArray[i] = {
-			"slug"			: GoalsJSON[i].slug,
-			"title"			: GoalsJSON[i].title,
-			"description"	: GoalsJSON[i].description,
-			"id"			: GoalsJSON[i].id,
-			"graph_url"		: GoalsJSON[i].graph_url,
-			"losedate"		: GoalsJSON[i].losedate,
-			"limsum"		: GoalsJSON[i].limsum,
-			"DataPoints"	: [],
-			"updated_at"	: GoalsJSON[i].updated_at,
-			"Notify"		: true,
-			"Show"			: true
-		};
+		var TestVal = HasItLoaded();
+		if (TestVal){
+			alert(TestVal);
+			console.log(TestVal);
+			// some code to executre- given true
+		} else {
+			alert("yippeie");
+		}
 	}
-	console.log(GoalsArray);
-	GoalsArray.sort(function (a,b) { // Sort Array by ID
-		if		( a["id"] > b["id"] ){	return  1; }
-		else if	( a["id"] < b["id"] ){	return -1; }
-										return  0;
-	});
-}
-function AsessGoalsArray(){
-	var ResponseArray = GoalsJSON;
-	var OfflineArray = GoalsArray;
-	var ReturnArray = [];
-
-	ResponseArray.sort(function (a,b) { // Sort Array by ID
-		console.log(a["id"] + ", " + b["id"]);
-		if		( a["id"] > b["id"] ){	return  1; }
-		else if	( a["id"] < b["id"] ){	return -1; }
-										return  0;
-	});
-	OfflineArray.sort(function (a,b) { // Sort Array by ID
-		console.log(a["id"] + ", " + b["id"]);
-		if		( a["id"] > b["id"] ){	return  1; }
-		else if	( a["id"] < b["id"] ){	return -1; }
-										return  0;
-	});
-
-	for (var i = 0; i < ResponseArray.length; i++){
-		var r = OfflineArray.length;
-		var neu = ResponseArray.pop();
-		var old;
-
-		while (r--) { if ( OfflineArray[r].id === neu.id ){break;}}
-		if ( r === -1 ) { old = DefaultSettings;			}
-		else 			{ old = OfflineArray.splice(r,1);	}
-
-		if (neu.updated_at===old.updated_at)
-				{ReturnArray.push(old);						}
-		else 	{ReturnArray.push(ReturnGoalData(neu,old))	;}
+	function UserGET(){
+		xhrHandler({
+			SuccessFunction : function(response) {
+				UserJSON = JSON.parse(response);
+				drawList();
+				if (updated_at === UserJSON.updated_at){
+					// TO-DO No need to update > write output
+					document.getElementById("UpdateDifference").innerHTML 	=
+					/**/"No Difference " + updated_at + " - " + UserJSON.updated_at; // TO-DO String Localisation
+				} else {
+					// TO-DO There needs to be an update
+					document.getElementById("UpdateDifference").innerHTML 	=
+					/**/"Difference " + updated_at + " - " + UserJSON.updated_at; // TO-DO String Localisation
+				} // If differnece detection
+			}
+		});
 	}
-	GoalsArray = null;
-	GoalsArray = OfflineArray;
-	chrome.storage.sync.set(
-		{GoalArray : OfflineArray},
-		function() {InfoUpdate("Refresh data has been synced");} // TO-DO String Localisation []
-	);
+	function OptionsHandler(response) {
+		UserJSON = JSON.parse(response);
+		drawList();
+		if (updated_at == UserJSON.updated_at){
+			// TO-DO No need to update > write output
+			InsStr("UpdateDifference",LangObj().Options.NoDifference +
+			/**/	updated_at + " - " + UserJSON.updated_at);
+		} else {
+			// TO-DO There needs to be an update
+			InsStr("UpdateDifference",LangObj().Options.Difference +
+			/**/	updated_at + " - " + UserJSON.updated_at);
+		} // If differnece detection
+	}
+	function MakeGoalsArray () {
+		for (var i = 0; i < GoalsJSON.length; i++){
+			GoalsArray[i] = {
+				"slug"			: GoalsJSON[i].slug,
+				"title"			: GoalsJSON[i].title,
+				"description"	: GoalsJSON[i].description,
+				"id"			: GoalsJSON[i].id,
+				"graph_url"		: GoalsJSON[i].graph_url,
+				"losedate"		: GoalsJSON[i].losedate,
+				"limsum"		: GoalsJSON[i].limsum,
+				"DataPoints"	: [],
+				"updated_at"	: GoalsJSON[i].updated_at,
+				"Notify"		: true,
+				"Show"			: true
+			};
+		}
+		console.log(GoalsArray);
+		GoalsArray.sort(function (a,b) { // Sort Array by ID
+			if		( a["id"] > b["id"] ){	return  1; }
+			else if	( a["id"] < b["id"] ){	return -1; }
+											return  0;
+		});
+	}
+	function AsessGoalsArray(){
+		var ResponseArray = GoalsJSON;
+		var OfflineArray = GoalsArray;
+		var ReturnArray = [];
+
+		ResponseArray.sort(function (a,b) { // Sort Array by ID
+			console.log(a["id"] + ", " + b["id"]);
+			if		( a["id"] > b["id"] ){	return  1; }
+			else if	( a["id"] < b["id"] ){	return -1; }
+											return  0;
+		});
+		OfflineArray.sort(function (a,b) { // Sort Array by ID
+			console.log(a["id"] + ", " + b["id"]);
+			if		( a["id"] > b["id"] ){	return  1; }
+			else if	( a["id"] < b["id"] ){	return -1; }
+											return  0;
+		});
+
+		for (var i = 0; i < ResponseArray.length; i++){
+			var r = OfflineArray.length;
+			var neu = ResponseArray.pop();
+			var old;
+
+			while (r--) { if ( OfflineArray[r].id === neu.id ){break;}}
+			if ( r === -1 ) { old = DefaultSettings;			}
+			else 			{ old = OfflineArray.splice(r,1);	}
+
+			if (neu.updated_at===old.updated_at)
+					{ReturnArray.push(old);						}
+			else 	{ReturnArray.push(ReturnGoalData(neu,old))	;}
+		}
+		GoalsArray = null;
+		GoalsArray = OfflineArray;
+		chrome.storage.sync.set(
+			{GoalArray : OfflineArray},
+			function() {InfoUpdate("Refresh data has been synced");} // TO-DO String Localisation []
+		);
+	}
 }
