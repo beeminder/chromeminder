@@ -12,44 +12,37 @@ var NeuGoalsArray = [];
 function xhrHandler(args){
 	if ( !args || !args.SuccessFunction ) { return false; }
 
+	var xhr, name;
+	name = IfSet(args.name,undefined," ");
+
 	if (!navigator.onLine) {
-		if ( args.OfflineFunction ) { args.OfflineFunction(); }
-		else { InfoUpdate("Currently Offline"); }
+		if (args.OfflineFunction) {args.OfflineFunction();}
+		else 			{InfoUpdate(name + "Currently Offline");}
 		return false
 	}
-
-	var xhr, urlSalt, xhrLocation, name;
-	name		= IfSet(args.name,undefined," ");
-	urlSalt		= IfSet(args.url);
-	xhrLocation	= "https://www.beeminder.com/api/v1/users/" +
-	/**/			UName + urlSalt + ".json?auth_token=" +	token;
 
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
 			InfoUpdate (name + LangObj().xhr.Status404);
-			xhr.abort();
 			if (args.FailFunction){args.FailFunction();}
+			xhr.abort();
 		} else {
-			InfoUpdate (name +
-				LangObj().xhr.StateChangeInfo + xhr.status +
-						 " / " + xhr.statusText +
-						 " / " + xhr.readyState
+			InfoUpdate (name + LangObj().xhr.StateChangeInfo +
+				xhr.status + " / " + xhr.statusText + " / " + xhr.readyState
 			);
 			if (xhr.status === 200 && xhr.readyState === 4){
-				if (!args.SuccessExtraVar){
-					args.SuccessFunction(xhr.response);
-				 } else {
- 					args.SuccessFunction(
-						xhr.response,
-						args.SuccessExtraVar
-					);
-				}
+				if (!args.SuccessExtraVar){args.SuccessFunction(xhr.response);}
+				else {args.SuccessFunction(xhr.response, args.SuccessExtraVar);}
 			} //If Ready to access data
 		} // If Access denied / allowed
 	}; // func xhr readyState
 
-	xhr.open("GET", xhrLocation);
+	xhr.open(
+		"GET",
+		"https://www.beeminder.com/api/v1/users/" + UName +
+		/**/ IfSet(args.url) + ".json?auth_token=" + token
+	);
 	xhr.send();
 }
 function IfSet(input, bef, aft){
