@@ -13,8 +13,8 @@
 
 	"permissions": [
 		"storage",
-		"https://www.beeminder.com/",
-		"http://brain.beeminder.com/"
+		"https://www.beeminder.com/api/v1/users/",
+		"https://bmndr.s3.amazonaws.com/uploads/"
 	],
 	"browser_action": {
 		"default_icon": "infinibee19x19.png",
