@@ -11,16 +11,26 @@ var NeuGoalsArray = [];
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
 	if ( !args || !args.SuccessFunction ) { return false; }
+	/* Arguments:
+		SuccessFunction
+		OfflineFunction
+		name
+		url
+		FailFunction
+		SuccessExtraVar
+	*/
 
 	var xhr, name;
 	name = IfSet(args.name,undefined," ");
 
+	// Offline detection
 	if (!navigator.onLine) {
 		if (args.OfflineFunction) {args.OfflineFunction();}
 		else 			{InfoUpdate(name + "Currently Offline");}
 		return false
 	}
 
+	// HTTP request
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function (){
 		if (xhr.status === 404) {
@@ -206,19 +216,25 @@ function PUinit(){ //
 	}
 }
 function SetOutput(e){
+	// If e is not satisfied or valid, use the current goal
 	if (!Number.isInteger(e)){ e = someVar.ArrayNo;}
 	else {someVar.ArrayNo = e;}
 
+	// Load Image
 	ImageLoader(CurDat().graph_url);
-	InsStr("GoalLoc", CurDat().title);
-	InsStr("limsum", CurDat().limsum);
-	LinkBM(	"ButtonGoal" 						);
-	LinkBM(	"GraphLink"							);
-	LinkBM(	"ButtonData",		"datapoints"	);
-	LinkBM(	"ButtonSettings",	"settings"		);
-	clearTimeout(RefreshTimeout);
-	InfoUpdate (LangObj().Popup.OutputSet + e);
 
+	// Set content in:
+	InsStr("GoalLoc", CurDat().title);				// Menu
+	LinkBM(	"ButtonGoal" 						);	// Menu
+	LinkBM(	"GraphLink"							);	// Menu
+	LinkBM(	"ButtonData",		"datapoints"	);	// Menu
+	LinkBM(	"ButtonSettings",	"settings"		);	// Menu
+	InsStr("limsum", CurDat().limsum);				// Baremin
+
+	// Stop the refresh recursion if it's set
+	clearTimeout(RefreshTimeout);
+
+	// Set the deadline colour TODO move to DisplayDeadline()
 	document.querySelector(".CountdownDisplay").style.backgroundColor = (function(){
 		var daysleft = new countdown(CurDat().losedate).days;
 		if	   	(daysleft  >  2)	{return "#39b44a";}
@@ -229,20 +245,23 @@ function SetOutput(e){
 		return "purple";
 	})( /**/ );
 
+	// Set content in meta-data
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
 	InsStr("LastUpdateDate", LangObj().Popup.InfoDisplay.LastUpdate(
 			new countdown(CurDat().updated_at,null,null,1).toString()
 	));
-	InsStr("Info_Start", ISODate(CurDat().initday)	+" - "+ CurDat().initval);
-	InsStr("Info_Now", ISODate(CurDat().curday)	+" - "+ CurDat().curval);
-	InsStr("Info_Target", ISODate(LastRoad[0]*1000)	+" - "+ LastRoad[1]);
+	InsStr("Info_Start", ISODate(CurDat().initday) +" - "+ CurDat().initval	);
+	InsStr("Info_Now",	 ISODate(CurDat().curday)  +" - "+ CurDat().curval	);
+	InsStr("Info_Target",ISODate(LastRoad[0]*1000) +" - "+ LastRoad[1]		);
 	InsStr("Info_Countdown", countdown(LastRoad[0]*1000,null,null,2).toString());
+	// Inform user / Log event
+	InfoUpdate (LangObj().Popup.OutputSet + e);
 }
-function CurDat(NeuObj){
+function CurDat(NeuObj){ // Return object for the currently displayed goal or replace it
 	if (NeuObj) {NeuGoalsArray[someVar.ArrayNo] = NeuObj;}
 	else		{return NeuGoalsArray[someVar.ArrayNo];}
 }
-function DataRefresh(i){
+function DataRefresh(i){ // Refresh the current goals data
 	if (!i){xhrHandler({
 		url:"/goals/" + CurDat().slug + "/refresh_graph",
 		name:LangObj().Popup.Refresh.RefreshCall.Name,
@@ -289,7 +308,7 @@ function DataRefresh(i){
 		return 2500 * Math.pow(2,(i-1));
 	}
 }
-function IniDisplay(){
+function IniDisplay(){ // Initialise the display
 	var frag, BoxCountdown, Span_dlout, BoxBareMin, Span_limsum;
 
 	// Goal Selector
@@ -352,7 +371,9 @@ function IniDisplay(){
 		InsStr("dlout", string);
 	}
 }
-function ImageLoader(url){
+function ImageLoader(url){ // Loads the image as string
+	// TODO insert into goal obj and save
+	// TODO: Implement offline detection
 	if (!url){return false;}
 
 	var imgxhr = new XMLHttpRequest();
