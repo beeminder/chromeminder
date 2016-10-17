@@ -1,3 +1,4 @@
+/* jshint sub: true */
 var LocalLang = {
 	"en" : { // English
 		xhr : {
@@ -16,7 +17,7 @@ var LocalLang = {
 			OutputSet		: "Output Set : ",
 			InfoDisplay	: {
 				LastUpdate	:
-					function(string){return "Last update " + string + " ago"},
+					function(string){return "Last update " + string + " ago";},
 				Start		:"Start",
 				Now			:"Now",
 				Target		:"Target"
@@ -64,7 +65,7 @@ var LocalLang = {
 	"en-us" : {},
 	"fr" : {}, // French
 	"cy" : {} // Welsh - Cymraeg
-}
-LocalLang["en-us"] = LocalLang["en-gb"] = LocalLang.en
-LocalLang["fr"] = LocalLang.en
-LocalLang["cy"] = LocalLang.en
+};
+LocalLang["en-us"] = LocalLang["en-gb"] = LocalLang.en;
+LocalLang["fr"] = LocalLang.en;
+LocalLang["cy"] = LocalLang.en;

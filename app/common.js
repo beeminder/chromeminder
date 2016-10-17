@@ -1,3 +1,4 @@
+/* jshint loopfunc: true, sub: true */
 var ServerStatusTimer = "empty";
 var UName, UserJSON, updated_at, token, PrefLangArray;
 var GoalsArray = [];
@@ -28,7 +29,7 @@ function xhrHandler(args){
 	if (!navigator.onLine) {
 		if (args.OfflineFunction) {args.OfflineFunction();}
 		else 			{InfoUpdate(name + "Currently Offline");}
-		return false
+		return false;
 	}
 
 	// HTTP request
@@ -148,7 +149,7 @@ function PUinit(){ // Initialises Popup.html
 			document.body.innerHTML = "";
 			document.body.appendChild(a);
 		} else { // TODO else if (!last API req was too soon)
-			( function(){HandleDownload()} )( /**/ );
+			( function(){HandleDownload();} )( /**/ );
 		} //If Data is blank
 	}
 	function HandleDownload(){
@@ -186,14 +187,14 @@ function PUinit(){ // Initialises Popup.html
 			IniDisplay();
 		}
 		function ItHasFailed() {
-			InfoUpdate("Download has failed, initalising from offline data")
+			InfoUpdate("Download has failed, initalising from offline data");
 			chrome.storage.sync.get(
 				{ GoalsData	:	[] },
 				function (items) {
 					NeuGoalsArray = items.GoalsData;
 
 					if (items.GoalsData.length >= 1){
-						someVar.ArrayNo = DefGoal.Loc
+						someVar.ArrayNo = DefGoal.Loc;
 						IniDisplay();
 					} else {
 						var a = document.createElement('a');
@@ -365,7 +366,7 @@ function IniDisplay(){ // Initialise the display
 
 	InsStr( "Label_Start", LangObj().Popup.InfoDisplay.Start);
 	InsStr( "Label_Now", LangObj().Popup.InfoDisplay.Now);
-	InsStr( "Label_Target", LangObj().Popup.InfoDisplay.Target)
+	InsStr( "Label_Target", LangObj().Popup.InfoDisplay.Target);
 
 	SetOutput(DefGoal.Loc);
 
@@ -416,13 +417,13 @@ function OPTinit(){
 			UName			= items.username;
 			token			= items.token;
 			DefGoal			= items.DefGoal;
-			NeuGoalsArray	= items.GoalsData
+			NeuGoalsArray	= items.GoalsData;
 			if (items.username === "" || items.token === "") {
 				InfoUpdate (LangObj().Options.NoUserData);
 			} else if (NeuGoalsArray.length >= 1) {
-				drawList()
+				drawList();
 			} else {
-				InfoUpdate (LangObj().Options.NoUserData)
+				InfoUpdate (LangObj().Options.NoUserData);
 			}
 		}
 	);
@@ -514,7 +515,7 @@ function drawList(){
 	if (Number.isInteger(DefGoal.Loc)) {
 		ElementsList[DefGoal.Loc].defa.innerHTML = LangObj().Options.Default;
 	} else {
-		DefGoal.Loc = 0
+		DefGoal.Loc = 0;
 		ElementsList[0].defa.innerHTML = LangObj().Options.Default;
 	}
 }
@@ -601,7 +602,7 @@ function DownloadDatapoints (){
 			FailBtn.appendChild(document.createElement("BR"));
 			FailBtn.appendChild(document.createTextNode("Click here to try again!"));
 			// TODO String Localisation []
-			FailBtn.addEventListener("click", function(){ DownloadDatapoints() });
+			FailBtn.addEventListener("click", function(){ DownloadDatapoints(); });
 		ByID("data-points").innerHTML = "";
 		ByID("data-points").appendChild(frag);
 	}
