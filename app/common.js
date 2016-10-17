@@ -12,12 +12,13 @@ var NeuGoalsArray = [];
 function xhrHandler(args){
 	if ( !args || !args.SuccessFunction ) { return false; }
 	/* Arguments:
-		SuccessFunction
-		OfflineFunction
-		name
-		url
-		FailFunction
-		SuccessExtraVar
+	*	SuccessFunction (response) or (response,ExtraVariabl)
+							What to do when successful request has been made
+		OfflineFunction ()	What to do when offline
+		name			= string	to identify xhr
+		url				= string	Salt for specific API calls
+		FailFunction	()	What to do when a 404 has been given
+		SuccessExtraVar = whatever needs to be passed back
 	*/
 
 	var xhr, name;
@@ -55,7 +56,7 @@ function xhrHandler(args){
 	);
 	xhr.send();
 }
-function IfSet(input, bef, aft){
+function IfSet(input, bef, aft){ // returns a string containg input if !null
 	var string;
 
 	if (input)		{
@@ -67,7 +68,7 @@ function IfSet(input, bef, aft){
 
 	return string;
 }
-function InfoUpdate (text, time){
+function InfoUpdate (text, time){ // informs user and logs event
 	var SeverStatus = document.getElementById("SeverStatus");
 
 	if (!text) { return false; }
@@ -84,13 +85,16 @@ function InfoUpdate (text, time){
 		time
 	);
 }
-function ByID (item){return document.getElementById(item);}
-function LinkBM(x,y,z) {
-	if (!x) { return false; }
-	if (!y) {y = "";}
-	if (!z) {z = CurDat().slug;}
-	document.getElementById(x).href=
-	"https://www.beeminder.com" + "/" + UName + "/" + z + "/" + y;
+function ByID (item){ // Abstraction
+	// for document.getElementById(item)
+	return document.getElementById(item);
+}
+function LinkBM(ElementId, URLSalt, Slug) { // Sets the href of a link
+	if (!ElementId)	{ return false;			}
+	if (!URLSalt)	{ URLSalt = "";			}
+	if (!Slug)		{ Slug = CurDat().slug;	}
+	document.getElementById(ElementId).href=
+	"https://www.beeminder.com" + "/" + UName + "/" + Slug + "/" + URLSalt;
 }
 function LangObj() {
 	var select = "en";
@@ -106,14 +110,16 @@ function LangObj() {
 	// }
 	return LocalLang[select];
 }
-function ISODate(x) {
+function ISODate(x) { // Abstraction
+	// for new Date(x).toISOString().substring(0, 10)
 	return new Date(x).toISOString().substring(0, 10);
 }
-function InsStr(element,string){
+function InsStr(element,string){ // Abstraction
+	// for document.getElementById(element).textContent = string
 	ByID(element).textContent = string;
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
-function PUinit(){ //
+function PUinit(){ // Initialises Popup.html
 	chrome.storage.sync.get(
 		{ // Data to retrieve
 			username	: 	"",
@@ -215,7 +221,7 @@ function PUinit(){ //
 		}
 	}
 }
-function SetOutput(e){
+function SetOutput(e){ // Displays Goal specific information
 	// If e is not satisfied or valid, use the current goal
 	if (!Number.isInteger(e)){ e = someVar.ArrayNo;}
 	else {someVar.ArrayNo = e;}
