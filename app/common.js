@@ -1,13 +1,11 @@
 /* jshint loopfunc: true, sub: true */
-var ServerStatusTimer = "empty";
-var UName, UserJSON, updated_at, token, PrefLangArray;
-var GoalsArray = [];
-var ElementsList = [];
+var ServerStatusTimer = "empty", RefreshTimeout = "empty";
+var UName, updated_at, token, PrefLangArray;
+var ElementsList = [], NeuGoalsArray = [];
 var someVar = {updated_at:"",ArrayNo:""};// TODO Depreciate someVar
 var DefGoal = {Loc:undefined, Name:""};
 var RefreshTimeout = "empty";
 
-var NeuGoalsArray = [];
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
@@ -57,7 +55,7 @@ function xhrHandler(args){
 	);
 	xhr.send();
 }
-function IfSet(input, bef, aft){ // returns a string containg input if !null
+function IfSet(input, bef, aft){	// returns a string containg input if !null
 	var string;
 
 	if (input)		{
@@ -69,7 +67,7 @@ function IfSet(input, bef, aft){ // returns a string containg input if !null
 
 	return string;
 }
-function InfoUpdate (text, time){ // informs user and logs event
+function InfoUpdate (text, time){	// informs user and logs event
 	var SeverStatus = document.getElementById("SeverStatus");
 
 	if (!text) { return false; }
@@ -86,7 +84,7 @@ function InfoUpdate (text, time){ // informs user and logs event
 		time
 	);
 }
-function ByID (item){ // Abstraction
+function ByID (item){				// Abstraction
 	// for document.getElementById(item)
 	return document.getElementById(item);
 }
@@ -111,16 +109,16 @@ function LangObj() {
 	// }
 	return LocalLang[select];
 }
-function ISODate(x) { // Abstraction
+function ISODate(x) { 				// Abstraction
 	// for new Date(x).toISOString().substring(0, 10)
 	return new Date(x).toISOString().substring(0, 10);
 }
-function InsStr(element,string){ // Abstraction
+function InsStr(element,string){ 	// Abstraction
 	// for document.getElementById(element).textContent = string
 	ByID(element).textContent = string;
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
-function PUinit(){ // Initialises Popup.html
+function PUinit(){			// Initialises Popup.html
 	chrome.storage.sync.get(
 		{ // Data to retrieve
 			username	: 	"",
@@ -222,7 +220,7 @@ function PUinit(){ // Initialises Popup.html
 		}
 	}
 }
-function SetOutput(e){ // Displays Goal specific information
+function SetOutput(e){		// Displays Goal specific information
 	// If e is not satisfied or valid, use the current goal
 	if (!Number.isInteger(e)){ e = someVar.ArrayNo;}
 	else {someVar.ArrayNo = e;}
@@ -264,11 +262,11 @@ function SetOutput(e){ // Displays Goal specific information
 	// Inform user / Log event
 	InfoUpdate (LangObj().Popup.OutputSet + e);
 }
-function CurDat(NeuObj){ // Return object for the currently displayed goal or replace it
+function CurDat(NeuObj){	// Return object for the currently displayed goal or replace it
 	if (NeuObj) {NeuGoalsArray[someVar.ArrayNo] = NeuObj;}
 	else		{return NeuGoalsArray[someVar.ArrayNo];}
 }
-function DataRefresh(i){ // Refresh the current goals data
+function DataRefresh(i){	// Refresh the current goals data
 	if (!i){xhrHandler({
 		url:"/goals/" + CurDat().slug + "/refresh_graph",
 		name:LangObj().Popup.Refresh.RefreshCall.Name,
@@ -315,7 +313,7 @@ function DataRefresh(i){ // Refresh the current goals data
 		return 2500 * Math.pow(2,(i-1));
 	}
 }
-function IniDisplay(){ // Initialise the display
+function IniDisplay(){		// Initialise the display
 	var frag, BoxCountdown, Span_dlout, BoxBareMin, Span_limsum;
 
 	// Goal Selector
@@ -378,7 +376,7 @@ function IniDisplay(){ // Initialise the display
 		InsStr("dlout", string);
 	}
 }
-function ImageLoader(url){ // Loads the image as string
+function ImageLoader(url){	// Loads the image as string
 	// TODO insert into goal obj and save
 	// TODO: Implement offline detection
 	if (!url){return false;}
