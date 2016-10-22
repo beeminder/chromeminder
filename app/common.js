@@ -6,7 +6,7 @@ var someVar = {updated_at:"",ArrayNo:""};// TODO Depreciate someVar
 var DefGoal = {Loc:undefined, Name:""};
 var RefreshTimeout = "empty";
 
-var KeyedGoalsArray = {};
+var KeyedGoalsArray = {}, KeyedImageArray = {};
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
@@ -248,7 +248,7 @@ function SetOutput(e){		// Displays Goal specific information
 	else {someVar.ArrayNo = e;}
 
 	// Load Image
-	ImageLoader(CurDat().graph_url);
+	ImageLoader(CurDat().graph_url, CurDat().id);
 
 	// Set content in:
 	InsStr("GoalLoc", CurDat().title);				// Menu
@@ -398,7 +398,7 @@ function IniDisplay(){		// Initialise the display
 		InsStr("dlout", string);
 	}
 }
-function ImageLoader(url){	// Loads the image as string
+function ImageLoader(url, key){	// Loads the image as string
 	// TODO insert into goal obj and save
 	// TODO: Implement offline detection
 
@@ -430,6 +430,14 @@ function ImageLoader(url){	// Loads the image as string
 	var reader = new FileReader();
 		reader.onloadend = function () {
 			ByID("graph-img").src = reader.result;
+			console.log(reader.result.length);
+
+			if (typeof key === "string") {
+				KeyedImageArray[key].GraphData = reader.result;
+				chrome.storage.local.set({
+					KeyedData	: KeyedGoalsArray
+				});
+			}
 		};
 	imgxhr.send();
 }
