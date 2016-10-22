@@ -401,7 +401,20 @@ function IniDisplay(){		// Initialise the display
 function ImageLoader(url){	// Loads the image as string
 	// TODO insert into goal obj and save
 	// TODO: Implement offline detection
+
+	// URL Checking
 	if (!url){return false;}
+	if (url.substring(0,39).toLowerCase() != "https://bmndr.s3.amazonaws.com/uploads/") {
+		InfoUpdate("Recieved invalid url: \n" + url); // TODO String Localisation []
+		return false;
+	}
+
+	// Offline detection
+	if (!navigator.onLine) {return false;}
+	// IDEA: should more me done?
+	//			on reconnect script
+	//			timer
+	//			custom callback
 
 	var imgxhr = new XMLHttpRequest();
 		imgxhr.open("GET",url  + "?" + new Date().getTime());
