@@ -6,6 +6,7 @@ var someVar = {updated_at:"",ArrayNo:""};// TODO Depreciate someVar
 var DefGoal = {Loc:undefined, Name:""};
 var RefreshTimeout = "empty";
 
+var KeyedGoalsArray = {};
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
@@ -124,6 +125,7 @@ function PUinit(){			// Initialises Popup.html
 			username	: 	"",
 			token		: 	"",
 			DefGoal		:	{Loc:0},
+			KeyedData	:	{},
 			Lang		:	navigator.languages
 		},
 		Retrieval
@@ -138,6 +140,7 @@ function PUinit(){			// Initialises Popup.html
 		token			= items.token;
 		DefGoal			= items.DefGoal;
 		PrefLangArray	= items.Lang;
+		KeyedGoalsArray	= items.KeyedData;
 
 		if (UName === "" || token === "") {
 			var a = document.createElement('a');
@@ -161,21 +164,40 @@ function PUinit(){			// Initialises Popup.html
 
 		function HandleResponse(response){
 			var WorkingResponse = JSON.parse(response);
-			var DefHolding;
+			var DefHolding, NoOfDefs, PastData, NeuData;
 
 			NeuGoalsArray = []; // Clear Array TODO Implement merging script
 
 			for (var i = 0; i < WorkingResponse.length; i++){
+				NeuData = WorkingResponse[i];
+				PastData = KeyedGoalsArray[NeuData.id];
+
 				if (DefGoal.Name == WorkingResponse[i].slug){DefHolding = i;}
 				NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
+
+				if  (PastData) {// If data has already been exist
+
+					// Nothing has changed, No need to do anything
+					// if (NeuData.updated_at*1000 === PastData.updated_at){} else {
+						KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData, PastData);
+					// }
+					if (PastData.Default) {
+						DefHolding = NeuData.id;
+						NoOfDefs ++;
+					}
+				} else { // If data doesn't exist
+					KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData);
+				}
 			}
 
-			if (!DefHolding){DefHolding = 0;}
+			if		(!DefHolding)	{ DefHolding = 0; }
+			else if (NoOfDefs > 1)	{ DefHolding = 0; }
 			someVar.ArrayNo = DefGoal.Loc = DefHolding;
 
 			chrome.storage.sync.set(
 				{
 					GoalsData	: NeuGoalsArray,
+					KeyedData	: KeyedGoalsArray,
 					DefGoal		: DefGoal
 				},
 				function() {InfoUpdate(LangObj().Popup.HandleDownload.DataSaved);}
@@ -518,24 +540,29 @@ function drawList(){
 	}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
-function ReturnGoalData (neu, old){
-	var WrkID = old.id;
-	if (WrkID === "default") {WrkID = neu.id;}
-	if (neu.id === WrkID){return {
-			"slug"			: neu.slug,
-			"title"			: neu.title,
-			"description"	: neu.description,
-			"id"			: WrkID,
-			"graph_url"		: neu.graph_url,
-			"losedate"		: neu.losedate,
-			"limsum"		: neu.limsum,
-			//"datapoints"	: ReturnDataPoints(neu,old),
-			"updated_at"	: neu.updated_at,
-			"Notify"		: old.notify,
-			"Show"			: old.show
-	};}
-}
-function ReturnGoalElement (object) {
+function ReturnGoalElement (object, old) {
+	var DefaultArray = {
+		Notify		: true,
+		Show		: true
+	};
+
+	if		(!old) {
+		old = DefaultArray;
+		console.log("No Old");
+	}
+	else if ( typeof old === "string" && KeyedGoalsArray[old] ) {
+		old = KeyedGoalsArray[old];
+		console.log("String");
+	}
+	else if ( typeof old === "object" && old.Notify && old.Show ) {
+		old = old;
+		console.log("Object");
+	}
+	else	{
+		console.log("Sommin Gone Wrong");
+		return false;
+	}
+
 	return {
 		"slug"			: object.slug,
 		"title"			: object.title,
@@ -553,8 +580,9 @@ function ReturnGoalElement (object) {
 		"fullroad"		: object.fullroad,
 		"graph_url"		: object.graph_url,
 		"thumb_url"		: object.thumb_url,
-		"Notify"		: true,
-		"Show"			: true
+		"Notify"		:	old.Notify,
+		"Show"			:	old.Show,
+		"autodata"		: object.autodata
 	};
 }
 function DownloadDatapoints (){
