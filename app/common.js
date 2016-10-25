@@ -1,6 +1,6 @@
 /* jshint loopfunc: true, sub: true */
 var ServerStatusTimer = "empty", RefreshTimeout = "empty";
-var UName, updated_at, token, PrefLangArray;
+var UName, updated_at, token, PrefLangArray, CurString;
 var ElementsList = [], NeuGoalsArray = [];
 var someVar = {updated_at:"",ArrayNo:""};// TODO Depreciate someVar
 var DefGoal = {Loc:undefined, Name:""};
@@ -244,8 +244,9 @@ function PUinit(){			// Initialises Popup.html
 }
 function SetOutput(e){		// Displays Goal specific information
 	// If e is not satisfied or valid, use the current goal
-	if (!Number.isInteger(e)){ e = someVar.ArrayNo;}
-	else {someVar.ArrayNo = e;}
+	if		(!Number.isInteger(e))	{ e = someVar.ArrayNo;	}
+	else if (typeof e === "string")	{ CurString = e;		}
+	else							{ someVar.ArrayNo = e;	}
 
 	// Load Image
 	ImageLoader(CurDat().graph_url, CurDat().id);
@@ -285,8 +286,19 @@ function SetOutput(e){		// Displays Goal specific information
 	InfoUpdate (LangObj().Popup.OutputSet + e);
 }
 function CurDat(NeuObj){	// Return object for the currently displayed goal or replace it
-	if (NeuObj) {NeuGoalsArray[someVar.ArrayNo] = NeuObj;}
-	else		{return NeuGoalsArray[someVar.ArrayNo];}
+	if (NeuObj) {
+		console.log("Setting new object");
+		NeuGoalsArray[someVar.ArrayNo] = NeuObj;
+	}
+	else if (CurString) {
+		console.log("Using keyed array");
+		return KeyedGoalsArray[CurString];
+	}
+	else {
+		console.log("Using numbered array");
+		CurString = NeuGoalsArray[someVar.ArrayNo].id;
+		return NeuGoalsArray[someVar.ArrayNo];
+	}
 }
 function DataRefresh(i){	// Refresh the current goals data
 	if (!i){xhrHandler({
@@ -433,7 +445,7 @@ function ImageLoader(url, key){	// Loads the image as string
 			console.log(reader.result.length);
 
 			if (typeof key === "string") {
-				KeyedImageArray[key].GraphData = reader.result;
+				KeyedImageArray[key] = reader.result;
 				chrome.storage.local.set({
 					KeyedData	: KeyedGoalsArray
 				});
