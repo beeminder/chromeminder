@@ -294,7 +294,11 @@ function CurDat(NeuObj){	// Return object for the currently displayed goal or re
 	if		(NeuObj && NeuGoalsArray[someVar.ArrayNo].id === NeuObj.id)
 			{
 				NeuGoalsArray[someVar.ArrayNo] = NeuObj;
-				KeyedGoalsArray[NeuObj.id];
+				KeyedGoalsArray[NeuObj.id] = NeuObj;
+			}
+	else if	(NeuObj && NeuGoalsArray[someVar.ArrayNo].id !== NeuObj.id)
+			{
+				return false;
 			}
 	else if (CurString)
 			{return KeyedGoalsArray[CurString];}
