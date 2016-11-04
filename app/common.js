@@ -244,9 +244,14 @@ function PUinit(){			// Initialises Popup.html
 }
 function SetOutput(e){		// Displays Goal specific information
 	// If e is not satisfied or valid, use the current goal
-	if		(!Number.isInteger(e))	{ e = someVar.ArrayNo;	}
-	else if (typeof e === "string")	{ CurString = e;		}
-	else							{ someVar.ArrayNo = e;	}
+	if 		( typeof e === "string" )
+			{ CurString = e;		}
+	else if	( Number.isInteger(e) && e >= NeuGoalsArray.length		)
+			{
+				someVar.ArrayNo = e;
+				CurString = NeuGoalsArray[e].id;
+			}
+	else	{ e = someVar.ArrayNo;	}
 
 	// Load Image
 	ImageLoader(CurDat().graph_url, CurDat().id);
@@ -286,19 +291,18 @@ function SetOutput(e){		// Displays Goal specific information
 	InfoUpdate (LangObj().Popup.OutputSet + e);
 }
 function CurDat(NeuObj){	// Return object for the currently displayed goal or replace it
-	if (NeuObj) {
-		console.log("Setting new object");
-		NeuGoalsArray[someVar.ArrayNo] = NeuObj;
-	}
-	else if (CurString) {
-		console.log("Using keyed array");
-		return KeyedGoalsArray[CurString];
-	}
-	else {
-		console.log("Using numbered array");
-		CurString = NeuGoalsArray[someVar.ArrayNo].id;
-		return NeuGoalsArray[someVar.ArrayNo];
-	}
+	if		(NeuObj && NeuGoalsArray[someVar.ArrayNo].id === NeuObj.id)
+			{
+				NeuGoalsArray[someVar.ArrayNo] = NeuObj;
+				KeyedGoalsArray[NeuObj.id];
+			}
+	else if (CurString)
+			{return KeyedGoalsArray[CurString];}
+	else
+			{
+				CurString = NeuGoalsArray[someVar.ArrayNo].id;
+				return NeuGoalsArray[someVar.ArrayNo];
+			}
 }
 function DataRefresh(i){	// Refresh the current goals data
 	if (!i){xhrHandler({
