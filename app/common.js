@@ -7,6 +7,7 @@ var DefGoal = {Loc:undefined, Name:""};
 var RefreshTimeout = "empty";
 
 var KeyedGoalsArray = {}, KeyedImageArray = {};
+var DisplayArray = [];
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
@@ -117,6 +118,9 @@ function ISODate(x) { 				// Abstraction
 function InsStr(element,string){ 	// Abstraction
 	// for document.getElementById(element).textContent = string
 	ByID(element).textContent = string;
+}
+function RKeysArray() {
+	return Object.keys(KeyedGoalsArray);
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){			// Initialises Popup.html
@@ -356,22 +360,25 @@ function DataRefresh(i){	// Refresh the current goals data
 	}
 }
 function IniDisplay(){		// Initialise the display
-	var frag, BoxCountdown, Span_dlout, BoxBareMin, Span_limsum;
+	var frag, BoxCountdown, Span_dlout, BoxBareMin, Span_limsum, key;
 
 	// Goal Selector
-	if (NeuGoalsArray.length > 1) {
+	if (RKeysArray().length > 1) {
 		frag = document.createDocumentFragment();
 		for (var i = 0; i < NeuGoalsArray.length; i++){
-			if (NeuGoalsArray[i].Show === true){
+			key = RKeysArray()[i];
+			obj = KeyedGoalsArray[key];
+
+			if (obj.Show === true){
 
 				var a = frag.appendChild(document.createElement('a'));
 				a.className = 'GoalIDBtn';
-				a.id			= NeuGoalsArray[i].slug;
-				a.textContent	= NeuGoalsArray[i].title;
+				a.id			= obj.slug;
+				a.textContent	= obj.title;
 				(function(_i) {a.addEventListener(
 						"click",
-						function() {SetOutput(_i);}
-				);})(i);// TODO: Add an additonal goto link w/ each Selector
+						function() {SetOutput(_i);console.log(_i);}
+				);})(obj.id);// TODO: Add an additonal goto link w/ each Selector
 			}
 		}
 		ByID("TheContent").innerHTML = "";
@@ -379,11 +386,11 @@ function IniDisplay(){		// Initialise the display
 	}
 
 	// Populates text in Menu Box
-	InsStr( "ButtonGoal", LangObj().Popup.ButtonGoal);
-	InsStr( "ButtonRefresh", LangObj().Popup.ButtonRefresh);
-	InsStr( "ButtonData", LangObj().Popup.ButtonData);
-	InsStr( "ButtonSettings", LangObj().Popup.ButtonSettings);
-	InsStr( "OptLink", LangObj().Popup.OptLink);
+	InsStr( "ButtonGoal",		LangObj().Popup.ButtonGoal		);
+	InsStr( "ButtonRefresh",	LangObj().Popup.ButtonRefresh	);
+	InsStr( "ButtonData",		LangObj().Popup.ButtonData		);
+	InsStr( "ButtonSettings",	LangObj().Popup.ButtonSettings	);
+	InsStr( "OptLink",			LangObj().Popup.OptLink			);
 
 	// Populates content is Countdown box
 	BoxCountdown = document.createDocumentFragment();
