@@ -521,6 +521,8 @@ function OPTinit(){
 	document.getElementById("save").addEventListener(
 		"click", save_options
 	);
+	document.getElementById("clear").addEventListener(
+		"click", function () { chrome.storage.sync.clear(); }
 	);
 }
 function save_options() {
@@ -572,6 +574,14 @@ function save_options() {
 			60000
 		);
 	}
+}
+function ClearData () {
+	//
+	chrome.storage.sync.clear();
+
+	// document.getElementById( "username"	).value = "";
+	// document.getElementById( "token"	).value = "";
+	// ^^^^ commented out for development reasons
 }
 function DefaultHandle (i) {
 	ElementsList[DefGoal.Loc].defa.textContent	= "-";
@@ -677,6 +687,8 @@ function ReturnGoalElement (object, old) {
 }
 function DownloadDatapoints (){
 	ByID("data-points").innerHTML = "";
+
+	// API requsest for all datapoints
 	for (var Loc = 0; Loc < NeuGoalsArray.length; Loc++) {
 		xhrHandler({
 			name : "DownloadDatapoints - " + NeuGoalsArray[Loc].slug,
