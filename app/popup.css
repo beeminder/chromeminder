@@ -60,6 +60,11 @@ img {
 }
 #data-points{width: 444px;}
 #meta-data {width: 212px;}
+#NoCredsLink {
+	display: block;
+	font-size: 25px;
+	vertical-align: bottom;
+}
 /**********************************************************/
 .TheContainer {
     position: relative;
