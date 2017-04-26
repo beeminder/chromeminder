@@ -113,19 +113,20 @@ function LinkBM ( ElementId, URLSalt, Slug ) { // Sets the href of a link
 	document.getElementById(ElementId).href =
 	"https://www.beeminder.com" + "/" + UName + "/" + Slug + "/" + URLSalt;
 }
-function LangObj() {
+function LangObj( key ) {
 	var select = "en";
-	// var LangList = ["cy", "en-GB", "en", "fr"];// keys(LocalLang);
-	// for (var i = 0; i < navigator.languages.length; i++){
-	// 	for (var x = 0; x < LangList.length; x++){
-	// 		if (PrefLangArray[i] === LangList[x]) {
-	// 			select = LangList[x].toLowerCase();
-	// 			break;
-	// 		}
-	// 	}
-	// 	if (select) { break; }
-	// }
-	return LocalLang[select];
+	if (select) return LocalLang[select];
+
+	var LangList = ["cy", "en-GB", "en", "fr"];// keys(LocalLang);
+	for (var i = 0; i < navigator.languages.length; i++){
+		for (var x = 0; x < LangList.length; x++){
+			if (PrefLangArray[i] === LangList[x]) {
+				select = LangList[x].toLowerCase();
+				break;
+			}
+		}
+		if (select) { break; }
+	}
 }
 function ISODate ( x ) {				// Abstraction
 	return new Date(x).toISOString().substring(0, 10);
