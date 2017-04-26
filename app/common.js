@@ -29,7 +29,7 @@ var
 function xhrHandler(args){
 	if ( !args || !args.SuccessFunction ) { return false; }
 	/* Arguments:
-	*	SuccessFunction (response) or (response,ExtraVariabl)
+		SuccessFunction (response) or (response,ExtraVariabl)
 							What to do when successful request has been made
 		OfflineFunction ()	What to do when offline
 		name			= string	to identify xhr
@@ -41,36 +41,38 @@ function xhrHandler(args){
 	var name = IfSet( args.name, undefined, " - ");
 
 	// Offline detection
-	if (!navigator.onLine) {
-		if (args.OfflineFunction) {args.OfflineFunction();}
-		else 			{InfoUpdate(name + "Currently Offline");}
-		return false;
-	}
+	if 		( !navigator.onLine &&  args.OfflineFunction )
+			{ args.OfflineFunction();					return false; }
+	else if	( !navigator.onLine && !args.OfflineFunction )
+			{ InfoUpdate( name + "Currently Offline" );	return false; }
 
 	// HTTP request
-	xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function (){
+	var xhr = new XMLHttpRequest();
+		// xhr.onreadystatechange = StateChange;
+		xhr.onload = LoadEvent;
+		xhr.open( "GET",
+			"https://www.beeminder.com/api/v1/users/" + UName +
+			/**/ IfSet( args.url ) + ".json?auth_token=" + token
+		);
+		xhr.send();
+
+	function LoadEvent() {
 		if (xhr.status === 404) {
 			InfoUpdate (name + LangObj().xhr.Status404);
-			if (args.FailFunction){args.FailFunction();}
+			if ( args.FailFunction ){ args.FailFunction(); }
 			xhr.abort();
 		} else {
-			InfoUpdate (name + LangObj().xhr.StateChangeInfo +
-				xhr.status + " / " + xhr.statusText + " / " + xhr.readyState
-			);
+			InfoUpdate (name + LangObj().xhr.StateChangeInfo);
 			if (xhr.status === 200 && xhr.readyState === 4){
-				if (!args.SuccessExtraVar){args.SuccessFunction(xhr.response);}
-				else {args.SuccessFunction(xhr.response, args.SuccessExtraVar);}
+				if		( !args.SuccessExtraVar )
+						{ args.SuccessFunction(xhr.response); }
+				else	{ args.SuccessFunction (
+							xhr.response,
+							args.SuccessExtraVar
+				); }
 			} //If Ready to access data
 		} // If Access denied / allowed
-	}; // func xhr readyState
-
-	xhr.open(
-		"GET",
-		"https://www.beeminder.com/api/v1/users/" + UName +
-		/**/ IfSet(args.url) + ".json?auth_token=" + token
-	);
-	xhr.send();
+	}
 }
 function IfSet(input, bef, aft){	// returns a string containg input if !null
 	var string;
