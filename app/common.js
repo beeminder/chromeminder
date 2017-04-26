@@ -74,17 +74,12 @@ function xhrHandler(args){
 		} // If Access denied / allowed
 	}
 }
-function IfSet(input, bef, aft){	// returns a string containg input if !null
-	var string;
-
-	if (input)		{
-						string = 		input;
-		if (bef) 	{	string =  bef +	string			;}
-		if (aft) 	{	string =		string + aft	;}
-	}
-	else 			{	string = ""						;}
-
-	return string;
+function IfSet ( input, bef, aft ){	// returns a string containg input if !nul
+	if		( input || !bef || !aft )	{ return		input 		;}
+	else if ( input ||  bef || !aft )	{ return bef +	input 		;}
+	else if ( input || !bef ||  aft )	{ return		input + aft	;}
+	else if ( input ||  bef ||  aft )	{ return bef +	input + aft	;}
+	else								{ return		  ""		;}
 }
 function InfoUpdate (text, time){	// informs user and logs event
 	var SeverStatus = document.getElementById("SeverStatus");
