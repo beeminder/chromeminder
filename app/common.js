@@ -100,8 +100,7 @@ function InfoUpdate ( text, time ){	// informs user and logs event
 		time
 	);
 }
-function ByID (item){				// Abstraction
-	// for document.getElementById(item)
+function ByID  ( item ){			// Abstraction
 	return document.getElementById(item);
 }
 function LinkBM ( ElementId, URLSalt, Slug ) { // Sets the href of a link
@@ -128,15 +127,13 @@ function LangObj() {
 	// }
 	return LocalLang[select];
 }
-function ISODate(x) { 				// Abstraction
-	// for new Date(x).toISOString().substring(0, 10)
+function ISODate ( x ) {				// Abstraction
 	return new Date(x).toISOString().substring(0, 10);
 }
-function InsStr(element,string){ 	// Abstraction
-	// for document.getElementById(element).textContent = string
-	ByID(element).textContent = string;
+function InsStr ( element, string ) { 	// Abstraction
+	document.getElementById(element).textContent = string;
 }
-function RKeysArray() {
+function RKeysArray() {// XXX:
 	return Object.keys(KeyedGoalsArray);
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
@@ -265,7 +262,7 @@ function PUinit(){			// Initialises Popup.html
 }
 function SetOutput(e){		// Displays Goal specific information
 	// If e is not satisfied or valid, use the current goal
-	if 		( typeof e === "string" )
+	if 		( typeof e === "string" ) // TODO: Need to validate the goal exists
 			{ CurString = e;		}
 	else if	( Number.isInteger(e) && e >= NeuGoalsArray.length		)
 			{
@@ -278,12 +275,12 @@ function SetOutput(e){		// Displays Goal specific information
 	ImageLoader(CurDat().graph_url, CurDat().id);
 
 	// Set content in:
-	InsStr("GoalLoc", CurDat().title);				// Menu
+	InsStr( "GoalLoc", CurDat().title);				// Menu
 	LinkBM(	"ButtonGoal" 						);	// Menu
 	LinkBM(	"GraphLink"							);	// Menu
 	LinkBM(	"ButtonData",		"datapoints"	);	// Menu
 	LinkBM(	"ButtonSettings",	"settings"		);	// Menu
-	InsStr("limsum", CurDat().limsum);				// Baremin
+	InsStr( "limsum", CurDat().limsum);				// Baremin
 
 	// Stop the refresh recursion if it's set
 	clearTimeout(RefreshTimeout);
@@ -299,6 +296,8 @@ function SetOutput(e){		// Displays Goal specific information
 		return "purple";
 	})( /**/ );
 
+
+
 	// Set content in meta-data
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
 	InsStr("LastUpdateDate", LangObj().Popup.InfoDisplay.LastUpdate(
@@ -312,42 +311,47 @@ function SetOutput(e){		// Displays Goal specific information
 	InfoUpdate (LangObj().Popup.OutputSet + e);
 }
 function CurDat(NeuObj){	// Return object for the currently displayed goal or replace it
-	if		(NeuObj && NeuGoalsArray[someVar.ArrayNo].id === NeuObj.id)
+	// If NeuObj is
+	if		( NeuObj && NeuGoalsArray[someVar.ArrayNo].id === NeuObj.id )
 			{
-				NeuGoalsArray[someVar.ArrayNo] = NeuObj;
-				KeyedGoalsArray[NeuObj.id] = NeuObj;
+				NeuGoalsArray[someVar.ArrayNo]	= NeuObj;
+				KeyedGoalsArray[NeuObj.id]		= NeuObj;
 			}
-	else if	(NeuObj && NeuGoalsArray[someVar.ArrayNo].id !== NeuObj.id)
-			{
-				return false;
-			}
-	else if (CurString)
-			{return KeyedGoalsArray[CurString];}
-	else
-			{
+
+	// If NeuObj is true
+	else if	( NeuObj && NeuGoalsArray[someVar.ArrayNo].id !== NeuObj.id )
+			{ return false; }
+
+	// If there is a goal key return a KeyedGoalsArray item
+	else if ( CurString ) // TODO:
+			{ return KeyedGoalsArray[CurString]; }
+
+	// If CurString isn't set, set it
+	else	{
 				CurString = NeuGoalsArray[someVar.ArrayNo].id;
-				return NeuGoalsArray[someVar.ArrayNo];
+				return KeyedGoalsArray[CurString];
 			}
 }
 function DataRefresh(i){	// Refresh the current goals data
-	if (!i){xhrHandler({
-		url:"/goals/" + CurDat().slug + "/refresh_graph",
-		name:LangObj().Popup.Refresh.RefreshCall.Name,
-		SuccessFunction : RefreshCall
-	});}
-	else if (i) {xhrHandler({
-		url:"/goals/" + CurDat().slug,
-		name:LangObj().Popup.Refresh.GoalGet.Name,
-		SuccessFunction: GoalGet
-	});}
+	if		( !i ) { xhrHandler({
+				url		: "/goals/" + CurDat().slug + "/refresh_graph",
+				name	: LangObj().Popup.Refresh.RefreshCall.Name,
+				SuccessFunction : RefreshCall
+			});}
+	else if	( i ) { xhrHandler({
+				url		: "/goals/" + CurDat().slug,
+				name	: LangObj().Popup.Refresh.GoalGet.Name,
+				SuccessFunction : GoalGet
+			});}
 
 	function RefreshCall (response) {
-		if (response === "true"){
-			InfoUpdate (LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful);
-			RefreshTimeout = setTimeout(function (){DataRefresh (1);},2500);
-		} else if (response !== "true") {
-			InfoUpdate (LangObj().Popup.Refresh.RefreshCall.UpdateNo);
-		} //If refresh true / !true
+		if		(response === "true" ) {
+					InfoUpdate (LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful);
+					RefreshTimeout = setTimeout(function (){DataRefresh (1);},2500);
+				}
+		else if	( response !== "true" ) {
+					InfoUpdate (LangObj().Popup.Refresh.RefreshCall.UpdateNo);
+				} //If refresh true / !true
 	}
 	function GoalGet (response){
 		InfoUpdate("iteration " + i);
@@ -377,7 +381,7 @@ function DataRefresh(i){	// Refresh the current goals data
 	}
 }
 function IniDisplay(){		// Initialise the display
-	var frag, BoxCountdown, Span_dlout, BoxBareMin, Span_limsum, key;
+	var frag, key; // TODO: No longer in use???
 
 	// Goal Selector
 	if (RKeysArray().length > 1) {
@@ -402,44 +406,49 @@ function IniDisplay(){		// Initialise the display
 		ByID("TheContent").appendChild(frag);
 	}
 
-	// Populates text in Menu Box
+	// Populates text and RefreshAction listener in Menu Box
 	InsStr( "ButtonGoal",		LangObj().Popup.ButtonGoal		);
 	InsStr( "ButtonRefresh",	LangObj().Popup.ButtonRefresh	);
 	InsStr( "ButtonData",		LangObj().Popup.ButtonData		);
 	InsStr( "ButtonSettings",	LangObj().Popup.ButtonSettings	);
 	InsStr( "OptLink",			LangObj().Popup.OptLink			);
+	document.getElementById("ButtonRefresh").addEventListener(
+		"click", function(){DataRefresh();}
+	);
 
 	// Populates content is Countdown box
-	BoxCountdown = document.createDocumentFragment();
-	BoxCountdown.appendChild(document.createTextNode(LangObj().Popup.Deadline));
-	BoxCountdown.appendChild(document.createElement("br"));
-	Span_dlout = BoxCountdown.appendChild(document.createElement("span"));
-	Span_dlout.id = "dlout";
+	var BoxCountdown = document.createDocumentFragment();
+		BoxCountdown.appendChild(document.createTextNode(LangObj().Popup.Deadline));
+		BoxCountdown.appendChild(document.createElement("br"));
+	var Span_dlout = BoxCountdown.appendChild(document.createElement("span"));
+		Span_dlout.id = "dlout";
 	ByID("Countdown").appendChild(BoxCountdown);
 
 	// Sets Deadline Counter
 	setInterval(DisplayDeadline,1000);
 
 	// Populates content in BareMin Box
-	BoxBareMin = document.createDocumentFragment();
-	BoxBareMin.appendChild(document.createTextNode(LangObj().Popup.BareMin));
-	BoxBareMin.appendChild(document.createElement("br"));
-	Span_limsum = BoxBareMin.appendChild(document.createElement("span"));
-	Span_limsum.id = "limsum";
+	var BoxBareMin = document.createDocumentFragment();
+		BoxBareMin.appendChild(document.createTextNode(LangObj().Popup.BareMin));
+		BoxBareMin.appendChild(document.createElement("br"));
+	var Span_limsum = BoxBareMin.appendChild(document.createElement("span"));
+		Span_limsum.id = "limsum";
 	ByID("BareMin").appendChild(BoxBareMin);
 
-	InsStr( "Label_Start", LangObj().Popup.InfoDisplay.Start);
-	InsStr( "Label_Now", LangObj().Popup.InfoDisplay.Now);
-	InsStr( "Label_Target", LangObj().Popup.InfoDisplay.Target);
+	// Populates meta-data
+	InsStr( "Label_Start",	LangObj().Popup.InfoDisplay.Start	);
+	InsStr( "Label_Now",	LangObj().Popup.InfoDisplay.Now		);
+	InsStr( "Label_Target",	LangObj().Popup.InfoDisplay.Target	);
 
-	SetOutput(DefGoal.Loc);
+	// Load default goal
+	SetOutput( DefGoal.Loc );
 
 	function DisplayDeadline(){
 		var string = new countdown(CurDat().losedate).toString();
-		if (new Date() > CurDat().losedate){
-			string = LangObj().Popup.PastDeadline + string;
-		}
-		InsStr("dlout", string);
+		if	( new Date() > CurDat().losedate )
+			{ string = LangObj().Popup.PastDeadline + string; }
+		ByID("dlout").innerHTML = string;
+		// 	NOTE: Should really be an append, but because of BR it needs to be innerHTML
 	}
 }
 function ImageLoader(url, key){	// Loads the image as string
@@ -496,43 +505,48 @@ function OPTinit(){
 			GoalsData	:	[]
 		},
 		function(items) {
-			document.getElementById( 'username'	).value = items.username;
-			document.getElementById( 'token'	).value = items.token;
+			ByID( "username"	).value = username	= items.username;
+			ByID( "token"		).value = token		= items.token;
 			updated_at		= items.updated_at;
-			UName			= items.username;
-			token			= items.token;
 			DefGoal			= items.DefGoal;
 			NeuGoalsArray	= items.GoalsData;
-			if (items.username === "" || items.token === "") {
-				InfoUpdate (LangObj().Options.NoUserData);
-			} else if (NeuGoalsArray.length >= 1) {
-				drawList();
-			} else {
-				InfoUpdate (LangObj().Options.NoUserData);
-			}
+			if 		( items.username === "" || items.token === ""	)
+					{ InfoUpdate( LangObj().Options.NoUserData );	}
+			else if ( NeuGoalsArray.length >= 1						)
+					{ drawList();									}
+			else 	{ InfoUpdate( LangObj().Options.NoUserData );	}
 		}
 	);
 
-	document.getElementById('save').addEventListener(
-		'click',
-		save_options
+	document.getElementById("save").addEventListener(
+		"click", save_options
+	);
 	);
 }
 function save_options() {
-	UName = document.getElementById( 'username'	).value;
-	token = document.getElementById( 'token'	).value;
-	if (!DefGoal) {DefGoal = {Loc:0};}
+	UName = document.getElementById( "username"	).value;
+	token = document.getElementById( "token"	).value;
+
+	if	( !DefGoal )
+		{ DefGoal = {Loc:0}; }
+
+	// Authenticate the credentials are valid
+	// TODO: offline handeler - if offline set conection listener
 	xhrHandler({
 		name			: LangObj().Options.save_options.xhrName,
 		SuccessFunction : AuthYes,
 		FailFunction 	: AuthNo
 	});
-	function AuthYes (response){
-		chrome.storage.sync.set({
-			username	:	UName,
-			token		:	token,
-			DefGoal		:	DefGoal
-		},AuthYesNotify);
+
+	function AuthYes (response){ // func on credentials confirmed correct
+		chrome.storage.sync.set(
+			{
+				username	:	UName,
+				token		:	token,
+				DefGoal		:	DefGoal
+			},
+			AuthYesNotify
+		);
 		// if (NeuGoalsArray.length === 0){
 			xhrHandler({
 				name:"Handle Download",
@@ -543,105 +557,116 @@ function save_options() {
 			});
 		// }
 	}
-	function AuthYesNotify () {
-		InsStr("status",LangObj().Options.save_options.OptionsSaved);
-		setTimeout(function(){InsStr("status","");},2000);
+	function AuthYesNotify () { // func to confrim options are saved
+		InsStr( "status", LangObj().Options.save_options.OptionsSaved );
+		setTimeout(
+			function(){InsStr("status","");},
+			2000
+		);
 	}
-	function HandleResponse(response) {
-		console.log(JSON.parse(response));
-	}
-	function AuthNo (){
-		InfoUpdate (LangObj().Options.save_options.Message404,60000);
+	function HandleResponse(response) // onSave GoalsGET handler placeholder
+		{ console.log(JSON.parse(response)); }
+	function AuthNo (){ // func if credentials are not valid
+		InfoUpdate (
+			LangObj().Options.save_options.Message404,
+			60000
+		);
 	}
 }
 function DefaultHandle (i) {
-	ElementsList[DefGoal.Loc].defa.textContent="-";
-	DefGoal.Loc = i;
-	DefGoal.Name = NeuGoalsArray[i].slug;
-	ElementsList[DefGoal.Loc].defa.textContent = LangObj().Options.Default;
+	ElementsList[DefGoal.Loc].defa.textContent	= "-";
+	DefGoal.Loc									= i;
+	DefGoal.Name								= NeuGoalsArray[i].slug;
+	ElementsList[DefGoal.Loc].defa.textContent	= LangObj().Options.Default;
 }
 function drawList(){
-	var TheList = document.getElementById("TheList");
 	for (var i = 0; i < NeuGoalsArray.length; i++){
 		ElementsList[i] = {
-			"item"	: document.createElement('li'),
-			"title"	: document.createElement('a'),
-			"defa"	: document.createElement('a'),
-			"hide"	: document.createElement('a'),
-			"notify": document.createElement('a')
+			"item"	: document.createElement( "li" ),	// List Item
+			"title"	: document.createElement( "a"  ),	// Goal title
+			"defa"	: document.createElement( "a"  ),	// Default selector
+			"hide"	: document.createElement( "a"  ),	// Hide Toggle
+			"notify": document.createElement( "a"  )	// Notification Toggle
 		};
-		ElementsList[i].item.className  = "item";
-		ElementsList[i].title.className = "title";
-		ElementsList[i].defa.className = "default";
-		ElementsList[i].hide.className = "hide";
-		ElementsList[i].notify.className = "notify";
-		ElementsList[i].item.id  = NeuGoalsArray[i].slug + "-item";
-		ElementsList[i].title.id = NeuGoalsArray[i].slug + "-title";
-		ElementsList[i].defa.id = NeuGoalsArray[i].slug + "-defaultBtn";
-		ElementsList[i].hide.id = NeuGoalsArray[i].slug + "-HideBtn";
-		ElementsList[i].notify.id = NeuGoalsArray[i].slug + "-NotifyBtn";
-		ElementsList[i].title.textContent = NeuGoalsArray[i].title;
-		ElementsList[i].defa.textContent = "-";
-		ElementsList[i].hide.textContent = NeuGoalsArray[i].Notify;
-		ElementsList[i].notify.textContent = NeuGoalsArray[i].Show;
-		TheList.appendChild( ElementsList[i].item);
-		   ElementsList[i].item.appendChild(ElementsList[i].title);
-		   ElementsList[i].item.appendChild(ElementsList[i].defa);
-		   ElementsList[i].item.appendChild(ElementsList[i].hide);
-		   ElementsList[i].item.appendChild(ElementsList[i].notify);
+
+		ElementsList[i].item	.className = "item";
+		ElementsList[i].title	.className = "title";
+		ElementsList[i].defa	.className = "default";
+		ElementsList[i].hide	.className = "hide";
+		ElementsList[i].notify	.className = "notify";
+
+		ElementsList[i].item	.id = NeuGoalsArray[i].slug + "-item";
+		ElementsList[i].title	.id = NeuGoalsArray[i].slug + "-title";
+		ElementsList[i].defa	.id = NeuGoalsArray[i].slug + "-defaultBtn";
+		ElementsList[i].hide	.id = NeuGoalsArray[i].slug + "-HideBtn";
+		ElementsList[i].notify	.id = NeuGoalsArray[i].slug + "-NotifyBtn";
+
+		ElementsList[i].title	.textContent = NeuGoalsArray[i].title;
+		ElementsList[i].defa	.textContent = "-";
+		ElementsList[i].hide	.textContent = NeuGoalsArray[i].Notify;
+		ElementsList[i].notify	.textContent = NeuGoalsArray[i].Show;
+
+		ByID("TheList").appendChild( ElementsList[i].item);
+			ElementsList[i].item.appendChild(ElementsList[i].title	);
+			ElementsList[i].item.appendChild(ElementsList[i].defa	);
+			ElementsList[i].item.appendChild(ElementsList[i].hide	);
+			ElementsList[i].item.appendChild(ElementsList[i].notify	);
+
 		(function(_i) {
 			LinkBM(ElementsList[_i].title.id,undefined,NeuGoalsArray[i].slug);
-			ElementsList[_i].defa.addEventListener( "click", function() {DefaultHandle(_i);});
-			// ElementsList[_i].hide.addEventListener( "click", MakeGoalsArray );
-			// notify.addEventListener( "click", functions(){ NotifyHandle(i) } );
+			ElementsList[_i].defa.addEventListener
+				( "click", function() {DefaultHandle(_i);});
+			// ElementsList[_i].hide.addEventListener
+			// 	( "click", MakeGoalsArray );
+			// notify.addEventListener
+			// 	( "click", functions(){ NotifyHandle(i) } );
 		})(i);
-		if (NeuGoalsArray[i].slug === DefGoal.Name) {DefGoal.Loc = i;}
+
+		if	(NeuGoalsArray[i].slug === DefGoal.Name) {DefGoal.Loc = i;}
 	}
-	if (Number.isInteger(DefGoal.Loc)) {
-		ElementsList[DefGoal.Loc].defa.innerHTML = LangObj().Options.Default;
-	} else {
-		DefGoal.Loc = 0;
-		ElementsList[0].defa.innerHTML = LangObj().Options.Default;
-	}
+
+	if 		( Number.isInteger(DefGoal.Loc) )
+			{ ElementsList[DefGoal.Loc].defa.innerHTML = LangObj().Options.Default; }
+	else 	{
+				DefGoal.Loc = 0;
+				ElementsList[0].defa.innerHTML = LangObj().Options.Default;
+			}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
 function ReturnGoalElement (object, old) {
+	// TODO: Implement a Default options set
 	var DefaultArray = {
 		Notify		: true,
 		Show		: true
 	};
 
-	if		(!old) {
-		old = DefaultArray;
-		console.log("No Old");
-	}
-	else if ( typeof old === "string" && KeyedGoalsArray[old] ) {
-		old = KeyedGoalsArray[old];
-		console.log("String");
-	}
-	else if ( typeof old === "object" && old.Notify && old.Show ) {
-		old = old;
-		console.log("Object");
-	}
-	else	{
-		console.log("Sommin Gone Wrong");
-		return false;
-	}
+			// If old parameter is not set return element with default settings
+	if		( !old )
+			{ old = DefaultArray;			console.log("No Old"); }
+			// If old parameter references keyed data
+	else if ( typeof old === "string" && KeyedGoalsArray[old] )
+			{ old = KeyedGoalsArray[old];	console.log("String"); }
+			// If old parameter is anexisitng object
+	else if ( typeof old === "object" && old.Notify && old.Show )
+			{ old = old;					console.log("Object"); }
+	else	// If old parameter isn't valid goal data
+			{ console.log("Sommin Gone Wrong");		 return false; }
 
+	// Return object with local settings added and dates formated into UNIX integer
 	return {
 		"slug"			: object.slug,
 		"title"			: object.title,
 		"description"	: object.description,
 		"id"			: object.id,
-		"losedate"		: object.losedate*1000,		// Date
+		"losedate"		: object.losedate	*1000,	// Date
 		"limsum"		: object.limsum,
 		"DataPoints"	: [],
-		"updated_at"	: object.updated_at*1000,	// Date
-		"initday"		: object.initday*1000,		// Date
+		"updated_at"	: object.updated_at	*1000,	// Date
+		"initday"		: object.initday	*1000,	// Date
 		"initval"		: object.initval,
-		"curday"		: object.curday*1000,		// Date
+		"curday"		: object.curday		*1000,	// Date
 		"curval"		: object.curval,
-		"lastday"		: object.lastday*1000,		// Date
+		"lastday"		: object.lastday	*1000,	// Date
 		"fullroad"		: object.fullroad,
 		"graph_url"		: object.graph_url,
 		"thumb_url"		: object.thumb_url,
@@ -662,38 +687,50 @@ function DownloadDatapoints (){
 			FailFunction : GracefulFail
 		});
 	}
-	return true;
+
 	function HandleDatapoints ( response, QInfo ) {
-		if ( !response || !QInfo ) { return false; }
-		var frag = document.createDocumentFragment();
-		var iCap = 10;
+		if ( !response || !QInfo ) { return false; } // argie validation
+
+		// Convert response into object and place into variables
 		NeuGoalsArray[QInfo.ArrayLoc].datapoints = response = JSON.parse(response);
-		frag.appendChild(document.createTextNode(NeuGoalsArray[QInfo.ArrayLoc].title));
-		frag.appendChild(document.createElement("BR"));
-		frag.appendChild(document.createTextNode("Array length : " + response.length));
-		// TODO String Localisation []
-		frag.appendChild(document.createElement("BR"));
-		if ( response.length <= 10 ) {
-			iCap = response.length;
-		}
+
+		// Cap the number of items to be showed on screen
+		var	iCap = 10;
+		if	( response.length <= 10 )
+			{ iCap = response.length; }
+
+		// doc.frag constuction technique
+		var frag = document.createDocumentFragment();
+			// Poulate frag with Statisitics
+			frag.appendChild(document.createTextNode(NeuGoalsArray[QInfo.ArrayLoc].title));
+			frag.appendChild(document.createElement("BR"));
+			frag.appendChild(document.createTextNode("Array length : " + response.length));
+			frag.appendChild(document.createElement("BR"));
+
+		// Populate frag with datapoints
 		for (var i = 0; i < iCap; i++) {
 			var span = frag.appendChild(document.createElement("span"));
 				span.textContent = response[i].canonical;
 			frag.appendChild(document.createElement("BR"));
 		}
+
+		// Insert frag into document
 		ByID("data-points").appendChild(frag);
+
+		// Testing
 		console.log(response);
 	}
 	function GracefulFail () {
+		// IDEA: could drop the use of fragment for this single element
 		var frag = document.createDocumentFragment();
 		var FailBtn = frag.appendChild(document.createElement("DIV"));
 			FailBtn.className = "Button";
 			FailBtn.appendChild(document.createTextNode("The Download has failed!"));
-			// TODO String Localisation []
 			FailBtn.appendChild(document.createElement("BR"));
 			FailBtn.appendChild(document.createTextNode("Click here to try again!"));
-			// TODO String Localisation []
 			FailBtn.addEventListener("click", function(){ DownloadDatapoints(); });
+
+		// Clear data-points element and append message
 		ByID("data-points").innerHTML = "";
 		ByID("data-points").appendChild(frag);
 	}
