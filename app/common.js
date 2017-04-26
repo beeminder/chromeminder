@@ -104,11 +104,14 @@ function ByID (item){				// Abstraction
 	// for document.getElementById(item)
 	return document.getElementById(item);
 }
-function LinkBM(ElementId, URLSalt, Slug) { // Sets the href of a link
-	if (!ElementId)	{ return false;			}
-	if (!URLSalt)	{ URLSalt = "";			}
-	if (!Slug)		{ Slug = CurDat().slug;	}
-	document.getElementById(ElementId).href=
+function LinkBM ( ElementId, URLSalt, Slug ) { // Sets the href of a link
+	// Validation and Houskeeping
+	if (!ElementId)	{ return false;					}
+	if (!URLSalt)	{ URLSalt 	= "";				}
+	if (!Slug)		{ Slug		= CurDat().slug;	}
+
+	// Set Link
+	document.getElementById(ElementId).href =
 	"https://www.beeminder.com" + "/" + UName + "/" + Slug + "/" + URLSalt;
 }
 function LangObj() {
