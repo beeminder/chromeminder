@@ -307,6 +307,7 @@ function SetOutput(e){		// Displays Goal specific information
 	InsStr("Info_Now",	 ISODate(CurDat().curday)  +" - "+ CurDat().curval	);
 	InsStr("Info_Target",ISODate(LastRoad[0]*1000) +" - "+ LastRoad[1]		);
 	InsStr("Info_Countdown", countdown(LastRoad[0]*1000,null,null,2).toString());
+
 	// Inform user / Log event
 	InfoUpdate (LangObj().Popup.OutputSet + e);
 }
@@ -356,24 +357,29 @@ function DataRefresh(i){	// Refresh the current goals data
 	function GoalGet (response){
 		InfoUpdate("iteration " + i);
 		response = JSON.parse(response);
-		if (response.updated_at === CurDat().updated_at){
-			if (i<=6) {
-				RefreshTimeout = setTimeout(function (){DataRefresh (i+1);}, GrowingDelay(i));
-				InfoUpdate(LangObj().Popup.Refresh.GoalGet.NoUpdate +
-				/**/											i + " " + GrowingDelay(i));
-			} else {
-				InfoUpdate(LangObj().Popup.Refresh.GoalGet.TooManyTries);
-			}
-		} else {
-			CurDat(null);
-			CurDat(ReturnGoalElement(response));
-			SetOutput();
-			chrome.storage.sync.set(
-				{GoalsData:NeuGoalsArray},
-				function() {InfoUpdate(LangObj().Popup.Refresh.GoalGet.NewDataSaved);}
-			);
-			InfoUpdate (LangObj().Popup.Refresh.GoalGet.GoalRefreshed + i + " " + CurDat().updated_at);
-		}
+		// XXX: Untested changes, but sould work?
+		if		( response.updated_at === CurDat().updated_at && i<=6 ) {
+					RefreshTimeout = setTimeout(
+						function (){DataRefresh (i+1);},
+						GrowingDelay(i)
+					);
+					InfoUpdate(
+						LangObj().Popup.Refresh.GoalGet.NoUpdate +
+						i + " " + GrowingDelay(i)
+					);
+				}
+		else if ( response.updated_at === CurDat().updated_at && i>6 )
+				{ InfoUpdate(LangObj().Popup.Refresh.GoalGet.TooManyTries); }
+		else	{
+					console.log("Testing: What doesn this do? "+CurDat(null));
+					CurDat(ReturnGoalElement(response));
+					SetOutput();
+					chrome.storage.sync.set(
+						{GoalsData:NeuGoalsArray},
+						function() {InfoUpdate(LangObj().Popup.Refresh.GoalGet.NewDataSaved);}
+					);
+					InfoUpdate (LangObj().Popup.Refresh.GoalGet.GoalRefreshed + i + " " + CurDat().updated_at);
+				}
 	}
 	function GrowingDelay(i){
 		if (!i) { return false; }
@@ -391,7 +397,6 @@ function IniDisplay(){		// Initialise the display
 			obj = KeyedGoalsArray[key];
 
 			if (obj.Show === true){
-
 				var a = frag.appendChild(document.createElement('a'));
 				a.className = 'GoalIDBtn';
 				a.id			= obj.slug;
