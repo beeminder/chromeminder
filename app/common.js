@@ -1,13 +1,29 @@
-/* jshint loopfunc: true, sub: true */
-var ServerStatusTimer = "empty", RefreshTimeout = "empty";
-var UName, updated_at, token, PrefLangArray, CurString;
-var ElementsList = [], NeuGoalsArray = [];
-var someVar = {updated_at:"",ArrayNo:""};// TODO Depreciate someVar
-var DefGoal = {Loc:undefined, Name:""};
-var RefreshTimeout = "empty";
+/* jshint loopfunc: true, sub: true *//* Editing Prefs:
+	Tab width: 4
+	*/
+var
+	IUTimeout = "empty",		// Info update timeout
+	RefreshTimeout = "empty",	// Refresh Timeout
+	UName,						// Username
+	updated_at,					//
+	token,						// API Token
+	PrefLangArray,				//
+	CurString,					// The KeyedGoalsArray key of current goal
+	ElementsList = [],			//
+	NeuGoalsArray = [],			// Simple goals data array
+	someVar = {// TODO Depreciate someVar
+		updated_at	: "",
+		ArrayNo		: ""
+	},
+	DefGoal = {
+		Loc			: undefined,
+		Name		: ""
+	},
+	RefreshTimeout = "empty",	//
 
-var KeyedGoalsArray = {}, KeyedImageArray = {};
-var DisplayArray = [];
+	KeyedGoalsArray = {},		// Goals array using IDs as key
+	KeyedImageArray = {},		//
+	DisplayArray = [];			//
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler(args){
@@ -22,8 +38,7 @@ function xhrHandler(args){
 		SuccessExtraVar = whatever needs to be passed back
 	*/
 
-	var xhr, name;
-	name = IfSet(args.name,undefined," ");
+	var name = IfSet( args.name, undefined, " - ");
 
 	// Offline detection
 	if (!navigator.onLine) {
