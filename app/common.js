@@ -149,116 +149,106 @@ function PUinit(){			// Initialises Popup.html
 		},
 		Retrieval
 	);
-	document.getElementById("ButtonRefresh").addEventListener(
-		"click", function(){DataRefresh();}
-	);
 	function Retrieval (items){
 		if (!items) { return false; }
 
+		// IDEA: Make a UData object to handle user data instead of multiple variables
 		UName			= items.username;
 		token			= items.token;
 		DefGoal			= items.DefGoal;
 		PrefLangArray	= items.Lang;
 		KeyedGoalsArray	= items.KeyedData;
 
-		if (UName === "" || token === "") {
-			var a = document.createElement('a');
-			a.textContent = LangObj().Popup.NavToOptions;
-			a.href = "/options.html";
-			a.target = "_blank";
+		if (!UName || !token) { // TODO: Make this interface look better
+			var a				= document.createElement('a');
+				a.textContent	= LangObj().Popup.NavToOptions;
+				a.href			= "/options.html";
+				a.target		= "_blank";
+				a.id			= "NoCredsLink";
 			document.body.innerHTML = "";
 			document.body.appendChild(a);
-		} else { // TODO else if (!last API req was too soon)
-			( function(){HandleDownload();} )( /**/ );
-		} //If Data is blank
+		 } else { // TODO else if (!last API req was too soon)
+			xhrHandler({
+				name:"Handle Download",
+				url:"/goals",
+				SuccessFunction	: HandleResponse,
+				FailFunction	: ItHasFailed,
+				OfflineFunction	: ItHasFailed
+			});
+		}
 	}
-	function HandleDownload(){
-		xhrHandler({
-			name:"Handle Download",
-			url:"/goals",
-			SuccessFunction	: HandleResponse,
-			FailFunction	: ItHasFailed,
-			OfflineFunction	: ItHasFailed
-		});
+	function HandleResponse(response){
+		var WorkingResponse = JSON.parse(response),
+			DefHolding = 0,
+			NoOfDefs, PastData, NeuData;
 
-		function HandleResponse(response){
-			var WorkingResponse = JSON.parse(response);
-			var DefHolding, NoOfDefs, PastData, NeuData;
+		NeuGoalsArray = []; // Clear Array
+		// NOTE: This isn't needed here as no data has been added
 
-			NeuGoalsArray = []; // Clear Array TODO Implement merging script
+		for (var i = 0; i < WorkingResponse.length; i++){
+			//
+			NeuData = WorkingResponse[i];
+			//
+			PastData = KeyedGoalsArray[NeuData.id];
 
-			for (var i = 0; i < WorkingResponse.length; i++){
-				NeuData = WorkingResponse[i];
-				PastData = KeyedGoalsArray[NeuData.id];
+			if	( DefGoal.Name == WorkingResponse[i].slug ) { DefHolding = i; }
 
-				if (DefGoal.Name == WorkingResponse[i].slug){DefHolding = i;}
-				NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
+			NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
 
-				if  (PastData) {// If data has already been exist
-
+			if  (PastData)
+				{// If data has already been exist
 					// Nothing has changed, No need to do anything
 					// if (NeuData.updated_at*1000 === PastData.updated_at){} else {
-						KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData, PastData);
+					KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData, PastData);
 					// }
 					if (PastData.Default) {
 						DefHolding = NeuData.id;
 						NoOfDefs ++;
 					}
-				} else { // If data doesn't exist
-					KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData);
 				}
-			}
-
-			if		(!DefHolding)	{ DefHolding = 0; }
-			else if (NoOfDefs > 1)	{ DefHolding = 0; }
-			someVar.ArrayNo = DefGoal.Loc = DefHolding;
-
-			chrome.storage.sync.set(
-				{
-					GoalsData	: NeuGoalsArray,
-					KeyedData	: KeyedGoalsArray,
-					DefGoal		: DefGoal
-				},
-				function() {InfoUpdate(LangObj().Popup.HandleDownload.DataSaved);}
-			);
-
-			InfoUpdate (LangObj().Popup.HandleDownload.DataDownloaded);
-			IniDisplay();
+			if	(!PastData)
+				{  KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData); }
 		}
-		function ItHasFailed() {
-			InfoUpdate("Download has failed, initalising from offline data");
-			chrome.storage.sync.get(
-				{ GoalsData	:	[] },
-				function (items) {
-					NeuGoalsArray = items.GoalsData;
 
-					if (items.GoalsData.length >= 1){
-						someVar.ArrayNo = DefGoal.Loc;
-						IniDisplay();
-					} else {
-						var a = document.createElement('a');
-						a.textContent = "No Goals Available";// TODO LangObj().Popup.NavToOptions;
-						a.href = "/options.html";
-						a.target = "_blank";
-						document.body.innerHTML = "";
-						document.body.appendChild(a);
-					}
+		if (NoOfDefs > 1)	{ DefHolding = 0; }
+		someVar.ArrayNo = DefGoal.Loc = DefHolding;
 
-					var smallest = new Date();
-					var index;
-					for (var i = 0; i < NeuGoalsArray.length; i++){
-						var hello = NeuGoalsArray[i].updated_at;
-						if (smallest > hello){
-							smallest = hello;
-							index = i;
+		// Store newly constructed data
+		chrome.storage.sync.set(
+			{
+				GoalsData	: NeuGoalsArray,
+				KeyedData	: KeyedGoalsArray,
+				DefGoal		: DefGoal
+			},
+			function() {InfoUpdate(LangObj().Popup.HandleDownload.DataSaved);}
+		);
+
+		InfoUpdate (LangObj().Popup.HandleDownload.DataDownloaded);
+		IniDisplay();
+	}
+	function ItHasFailed() {
+		InfoUpdate("Download has failed, initalising from offline data");
+		chrome.storage.sync.get(
+			{ GoalsData	:	[] },
+			function (items) {
+				NeuGoalsArray = items.GoalsData;
+
+				if		(items.GoalsData.length >= 1)
+						{// If there is at least one goal
+							someVar.ArrayNo = DefGoal.Loc;
+							IniDisplay();
 						}
-					}
-
-					var interogant = new countdown(smallest);
-					console.log(interogant.toString());
-				}
-			);
-		}
+				 else 	{// If there is no goal data
+							var a = document.createElement("a");
+								a.textContent	= "No Goals Available";
+								// TODO LangObj().Popup.NavToOptions; ^^^^
+								a.href			= "/options.html";
+								a.target		= "_blank";
+							document.body.innerHTML = "";
+							document.body.appendChild(a);
+						}
+			}
+		);
 	}
 }
 function SetOutput(e){		// Displays Goal specific information
@@ -753,4 +743,3 @@ function DownloadDatapoints (){
 		ByID("data-points").appendChild(frag);
 	}
 }
-
