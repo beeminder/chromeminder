@@ -81,19 +81,21 @@ function IfSet ( input, bef, aft ){	// returns a string containg input if !nul
 	else if ( input ||  bef ||  aft )	{ return bef +	input + aft	;}
 	else								{ return		  ""		;}
 }
-function InfoUpdate (text, time){	// informs user and logs event
-	var SeverStatus = document.getElementById("SeverStatus");
+function InfoUpdate ( text, time ){	// informs user and logs event
+	// Validation and housekeeping
+	if (!text)		{ return false; }
+	if (!time)		{ time = 5000; }
+	if (IUTimeout)	{ clearTimeout(IUTimeout); }
 
-	if (!text) { return false; }
-	if (!time) { time = 5000; }
-	if (ServerStatusTimer !== "empty"){ clearTimeout(ServerStatusTimer); }
+	// Displaying and logging message
+	ByID("SeverStatus").textContent = text;
+	console.log( text );
 
-	SeverStatus.textContent = text;
-	console.log(text);
-	ServerStatusTimer = setTimeout(
+	// Timout to blank out display
+	IUTimeout = setTimeout(
 		function() {
-			SeverStatus.textContent = '';
-			ServerStatusTimer="empty";
+			ByID("SeverStatus").textContent = "";
+			IUTimeout = undefined;
 		},
 		time
 	);
