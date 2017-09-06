@@ -1,2 +1,2 @@
-document.addEventListener('DOMContentLoaded', OPTinit);
+document.addEventListener( 'DOMContentLoaded', OPTinit );
 var pg = "options";

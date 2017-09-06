@@ -1,2 +1,2 @@
-document.addEventListener('DOMContentLoaded', PUinit);
+document.addEventListener( 'DOMContentLoaded', PUinit );
 var pg = "popup";
