@@ -1,6 +1,4 @@
-/* jshint loopfunc: true, sub: true *//* Editing Prefs:
-	Tab width: 4
-	*/
+/* jshint loopfunc: true, sub: true */
 var
 	IUTimeout = "empty",		// Info update timeout
 	RefreshTimeout = "empty",	// Refresh Timeout
@@ -26,8 +24,8 @@ var
 	DisplayArray = [];			//
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
-function xhrHandler(args){
-	if ( !args || !args.SuccessFunction ) { return false; }
+function xhrHandler( args ) {
+	if ( !args || !args.SuccessFunction ) return false;
 	/* Arguments:
 		SuccessFunction (response) or (response,ExtraVariabl)
 							What to do when successful request has been made
@@ -38,119 +36,122 @@ function xhrHandler(args){
 		SuccessExtraVar = whatever needs to be passed back
 	*/
 
-	var name = IfSet( args.name, undefined, " - ");
+	var name = IfSet( args.name, undefined, " - " );
 
 	// Offline detection
-	if 		( !navigator.onLine &&  args.OfflineFunction )
-			{ args.OfflineFunction();					return false; }
-	else if	( !navigator.onLine && !args.OfflineFunction )
-			{ InfoUpdate( name + "Currently Offline" );	return false; }
+	if ( !navigator.onLine && args.OfflineFunction )
+		return args.OfflineFunction();
+
+	else if ( !navigator.onLine && !args.OfflineFunction )
+		return InfoUpdate( name + "Currently Offline" );
 
 	// HTTP request
 	var xhr = new XMLHttpRequest();
 		// xhr.onreadystatechange = StateChange;
 		xhr.onload = LoadEvent;
-		xhr.open( "GET",
+		xhr.open( "GET", // TODO: delegate url to helper func
 			"https://www.beeminder.com/api/v1/users/" + UName +
 			/**/ IfSet( args.url ) + ".json?auth_token=" + token
 		);
 		xhr.send();
 
 	function LoadEvent() {
-		if (xhr.status === 404) {
-			InfoUpdate (name + LangObj().xhr.Status404);
-			if ( args.FailFunction ){ args.FailFunction(); }
+		if ( xhr.status === 404 ) {
+			InfoUpdate( name + LangObj().xhr.Status404 );
+			if ( args.FailFunction )
+				args.FailFunction();
 			xhr.abort();
-		} else {
-			InfoUpdate (name + LangObj().xhr.StateChangeInfo);
-			if (xhr.status === 200 && xhr.readyState === 4){
-				if		( !args.SuccessExtraVar )
-						{ args.SuccessFunction(xhr.response); }
-				else	{ args.SuccessFunction (
-							xhr.response,
-							args.SuccessExtraVar
-				); }
+		}
+
+		else {
+			InfoUpdate( name + LangObj().xhr.StateChangeInfo );
+			if ( xhr.status === 200 && xhr.readyState === 4 ) {
+				if ( !args.SuccessExtraVar )
+					args.SuccessFunction( xhr.response );
+				else
+					args.SuccessFunction( xhr.response, args.SuccessExtraVar );
 			} //If Ready to access data
 		} // If Access denied / allowed
 	}
 }
-function IfSet ( input, bef, aft ){	// returns a string containg input if !nul
-	if		( input || !bef || !aft )	{ return		input 		;}
-	else if ( input ||  bef || !aft )	{ return bef +	input 		;}
-	else if ( input || !bef ||  aft )	{ return		input + aft	;}
-	else if ( input ||  bef ||  aft )	{ return bef +	input + aft	;}
-	else								{ return		  ""		;}
+function IfSet( input, bef, aft ){	// returns a string containg input if !nul
+	if		( input || !bef || !aft )	return		input 		;
+	else if ( input ||  bef || !aft )	return bef +input 		;
+	else if ( input || !bef ||  aft )	return		input + aft	;
+	else if ( input ||  bef ||  aft )	return bef +input + aft	;
+	else								return		  ""		;
 }
-function InfoUpdate ( text, time ){	// informs user and logs event
+function InfoUpdate( text, time ){	// informs user and logs event
 	// Validation and housekeeping
-	if (!text)		{ return false; }
-	if (!time)		{ time = 5000; }
-	if (IUTimeout)	{ clearTimeout(IUTimeout); }
+	if ( !text ) return false;
+	if ( !time ) time = 5000;
+	if ( IUTimeout ) clearTimeout( IUTimeout );
 
 	// Displaying and logging message
-	ByID("SeverStatus").textContent = text;
+	ByID( "SeverStatus" ).textContent = text;
 	console.log( text );
 
 	// Timout to blank out display
 	IUTimeout = setTimeout(
-		function() {
-			ByID("SeverStatus").textContent = "";
+		_ => {
+			ByID( "SeverStatus" ).textContent = "";
 			IUTimeout = undefined;
 		},
 		time
 	);
 }
-function ByID  ( item ){			// Abstraction
-	return document.getElementById(item);
+function ByID( item ) {				// Abstraction
+	return document.getElementById( item );
 }
-function LinkBM ( ElementId, URLSalt, Slug ) { // Sets the href of a link
+function LinkBM( ElementId, URLSalt, Slug ) { // Sets the href of a link
 	// Validation and Houskeeping
-	if (!ElementId)	{ return false;					}
-	if (!URLSalt)	{ URLSalt 	= "";				}
-	if (!Slug)		{ Slug		= CurDat().slug;	}
+	if ( !ElementId ) return false;
+	if ( !URLSalt ) URLSalt = "";
+	if ( !Slug ) Slug = CurDat().slug;
 
 	// Set Link
-	document.getElementById(ElementId).href =
-	"https://www.beeminder.com" + "/" + UName + "/" + Slug + "/" + URLSalt;
+	document.getElementById( ElementId ).href =
+		"https://www.beeminder.com" + "/" + UName + "/" + Slug + "/" + URLSalt;
 }
 function LangObj( key ) {
 	var select = "en";
-	if (select) return LocalLang[select];
+	if ( select ) return LocalLang[ select ];
 
-	var LangList = ["cy", "en-GB", "en", "fr"];// keys(LocalLang);
-	for (var i = 0; i < navigator.languages.length; i++){
-		for (var x = 0; x < LangList.length; x++){
-			if (PrefLangArray[i] === LangList[x]) {
-				select = LangList[x].toLowerCase();
+	var LangList = [ "cy", "en-GB", "en", "fr" ];// keys(LocalLang);
+	for ( var i = 0; i < navigator.languages.length; i++ ) {
+		for ( var j = 0; j < LangList.length; j++ ) {
+			if ( PrefLangArray[ i ] === LangList[ j ] ) {
+				select = LangList[ j ].toLowerCase();
 				break;
 			}
 		}
-		if (select) { break; }
+		if ( select ) break;
 	}
 }
-function ISODate ( x ) {				// Abstraction
-	return new Date(x).toISOString().substring(0, 10);
+function ISODate( x ) {				// Abstraction
+	return new Date( x ).toISOString().substring( 0, 10 );
 }
-function InsStr ( element, string ) { 	// Abstraction
-	document.getElementById(element).textContent = string;
+function InsStr( element, string ) { 	// Abstraction
+	document.getElementById( element ).textContent = string;
 }
 function RKeysArray() {// XXX:
-	return Object.keys(KeyedGoalsArray);
+	return Object.keys( KeyedGoalsArray );
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){			// Initialises Popup.html
 	chrome.storage.sync.get(
 		{ // Data to retrieve
-			username	: 	"",
-			token		: 	"",
-			DefGoal		:	{Loc:0},
-			KeyedData	:	{},
-			Lang		:	navigator.languages
+			username	: "",
+			token		: "",
+			DefGoal		: { Loc: 0 },
+			KeyedData	: {},
+			Lang		: navigator.languages
 		},
 		Retrieval
 	);
-	function Retrieval (items){
-		if (!items) { return false; }
+
+	function Retrieval( items ) {
+		if ( !items ) return false;
 
 		// IDEA: Make a UData object to handle user data instead of multiple variables
 		UName			= items.username;
@@ -159,26 +160,29 @@ function PUinit(){			// Initialises Popup.html
 		PrefLangArray	= items.Lang;
 		KeyedGoalsArray	= items.KeyedData;
 
-		if (!UName || !token) { // TODO: Make this interface look better
-			var a				= document.createElement('a');
-				a.textContent	= LangObj().Popup.NavToOptions;
-				a.href			= "/options.html";
-				a.target		= "_blank";
-				a.id			= "NoCredsLink";
+		if ( !UName || !token ) { // TODO: Make this interface look better
+			var a = document.createElement( 'a' );
+				a.textContent = LangObj().Popup.NavToOptions;
+				a.href = "/options.html";
+				a.target = "_blank";
+				a.id = "NoCredsLink";
+
 			document.body.innerHTML = "";
 			document.body.appendChild(a);
-		 } else { // TODO else if (!last API req was too soon)
-			xhrHandler({
-				name:"Handle Download",
-				url:"/goals",
-				SuccessFunction	: HandleResponse,
-				FailFunction	: ItHasFailed,
-				OfflineFunction	: ItHasFailed
-			});
 		}
+
+		else // TODO else if (!last API req was too soon)
+			xhrHandler( {
+				name: "Handle Download",
+				url: "/goals",
+				SuccessFunction: HandleResponse,
+				FailFunction: ItHasFailed,
+				OfflineFunction: ItHasFailed
+			} );
 	}
-	function HandleResponse(response){
-		var WorkingResponse = JSON.parse(response),
+
+	function HandleResponse( response ) {
+		var WorkingResponse = JSON.parse( response ),
 			DefHolding = 0,
 			NoOfDefs, PastData, NeuData;
 
@@ -186,31 +190,30 @@ function PUinit(){			// Initialises Popup.html
 		// NOTE: This isn't needed here as no data has been added
 
 		for (var i = 0; i < WorkingResponse.length; i++){
-			//
-			NeuData = WorkingResponse[i];
-			//
-			PastData = KeyedGoalsArray[NeuData.id];
+			NeuData = WorkingResponse[ i ];
+			PastData = KeyedGoalsArray[ NeuData.id ];
 
-			if	( DefGoal.Name == WorkingResponse[i].slug ) { DefHolding = i; }
+			if ( DefGoal.Name == WorkingResponse[ i ].slug ) DefHolding = i;
 
-			NeuGoalsArray[i] = ReturnGoalElement(WorkingResponse[i]);
+			NeuGoalsArray[ i ] = ReturnGoalElement( WorkingResponse[ i ] );
 
-			if  (PastData)
-				{// If data has already been exist
-					// Nothing has changed, No need to do anything
-					// if (NeuData.updated_at*1000 === PastData.updated_at){} else {
-					KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData, PastData);
-					// }
-					if (PastData.Default) {
-						DefHolding = NeuData.id;
-						NoOfDefs ++;
-					}
+			if ( PastData ) {
+				// If data has already been exist
+				// Nothing has changed, No need to do anything
+				// if ( NeuData.updated_at * 1000 === PastData.updated_at ) { } else {
+				KeyedGoalsArray[ NeuData.id ]
+					= ReturnGoalElement( NeuData, PastData );
+				// }
+				if ( PastData.Default ) {
+					DefHolding = NeuData.id;
+					NoOfDefs++;
 				}
-			if	(!PastData)
-				{  KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData); }
+			}
+			else
+				KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData);
 		}
 
-		if (NoOfDefs > 1)	{ DefHolding = 0; }
+		if ( NoOfDefs > 1 ) DefHolding = 0;
 		someVar.ArrayNo = DefGoal.Loc = DefHolding;
 
 		// Store newly constructed data
@@ -220,53 +223,53 @@ function PUinit(){			// Initialises Popup.html
 				KeyedData	: KeyedGoalsArray,
 				DefGoal		: DefGoal
 			},
-			function() {InfoUpdate(LangObj().Popup.HandleDownload.DataSaved);}
+			_ => InfoUpdate( LangObj().Popup.HandleDownload.DataSaved )
 		);
 
-		InfoUpdate (LangObj().Popup.HandleDownload.DataDownloaded);
+		InfoUpdate( LangObj().Popup.HandleDownload.DataDownloaded );
 		IniDisplay();
 	}
 	function ItHasFailed() {
-		InfoUpdate("Download has failed, initalising from offline data");
+		InfoUpdate( "Download has failed, initalising from offline data" );
 		chrome.storage.sync.get(
 			{ GoalsData	:	[] },
-			function (items) {
+			function ( items ) {
 				NeuGoalsArray = items.GoalsData;
 
-				if		(items.GoalsData.length >= 1)
-						{// If there is at least one goal
-							someVar.ArrayNo = DefGoal.Loc;
-							IniDisplay();
-						}
-				 else 	{// If there is no goal data
-							var a = document.createElement("a");
-								a.textContent	= "No Goals Available";
-								// TODO LangObj().Popup.NavToOptions; ^^^^
-								a.href			= "/options.html";
-								a.target		= "_blank";
-							document.body.innerHTML = "";
-							document.body.appendChild(a);
-						}
+				if ( items.GoalsData.length >= 1 ) {// If there is at least one goal
+					someVar.ArrayNo = DefGoal.Loc;
+					IniDisplay();
+				}
+				else {// If there is no goal data
+					var a = document.createElement( "a" );
+						a.textContent = "No Goals Available";
+						// TODO LangObj().Popup.NavToOptions; ^^^^
+						a.href = "/options.html";
+						a.target = "_blank";
+
+					document.body.innerHTML = "";
+					document.body.appendChild( a );
+				}
 			}
 		);
 	}
 }
-function SetOutput(e){		// Displays Goal specific information
+function SetOutput( e ) {		// Displays Goal specific information
 	// If e is not satisfied or valid, use the current goal
-	if 		( typeof e === "string" ) // TODO: Need to validate the goal exists
-			{ CurString = e;		}
-	else if	( Number.isInteger(e) && e >= NeuGoalsArray.length		)
-			{
-				someVar.ArrayNo = e;
-				CurString = NeuGoalsArray[e].id;
-			}
-	else	{ e = someVar.ArrayNo;	}
+	if ( typeof e === "string" ) // TODO: Need to validate the goal exists
+		CurString = e;
+	else if ( Number.isInteger( e ) && e >= NeuGoalsArray.length ) {
+		someVar.ArrayNo = e;
+		CurString = NeuGoalsArray[ e ].id;
+	}
+	else
+		e = someVar.ArrayNo;
 
 	// Load Image
-	ImageLoader(CurDat().graph_url, CurDat().id);
+	ImageLoader( CurDat().graph_url, CurDat().id );
 
 	// Set content in:
-	InsStr( "GoalLoc", CurDat().title);				// Menu
+	InsStr( "GoalLoc", CurDat().title );			// Menu
 	LinkBM(	"ButtonGoal" 						);	// Menu
 	LinkBM(	"GraphLink"							);	// Menu
 	LinkBM(	"ButtonData",		"datapoints"	);	// Menu
@@ -274,25 +277,25 @@ function SetOutput(e){		// Displays Goal specific information
 	InsStr( "limsum", CurDat().limsum);				// Baremin
 
 	// Stop the refresh recursion if it's set
-	clearTimeout(RefreshTimeout);
+	clearTimeout( RefreshTimeout );
 
 	// Set the deadline colour TODO move to DisplayDeadline()
-	document.querySelector(".CountdownDisplay").style.backgroundColor = (function(){
-		var daysleft = new countdown(CurDat().losedate).days;
-		if	   	(daysleft  >  2)	{return "#39b44a";}
-		else if (daysleft === 2)	{return "#325fac";}
-		else if (daysleft === 1)	{return "#f7941d";}
-		else if (daysleft === 0)	{return "#c92026";}
-		else if (daysleft  <  0)	{return "#c92026";}
-		return "purple";
-	})( /**/ );
+	document.querySelector( ".CountdownDisplay" ).style.backgroundColor = (
+		_ => { // TODO: delegate to handler function
+			var daysleft = new countdown( CurDat().losedate ).days;
+			if		( daysleft  >  2 )	return "#39b44a";
+			else if ( daysleft === 2 )	return "#325fac";
+			else if ( daysleft === 1 )	return "#f7941d";
+			else if ( daysleft === 0 )	return "#c92026";
+			else if ( daysleft  <  0 )	return "#c92026";
+			return "purple";
+		}
+	)( /**/ );
 
-
-
-	// Set content in meta-data
+	// Set content in meta-data TODO: Something
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
 	InsStr("LastUpdateDate", LangObj().Popup.InfoDisplay.LastUpdate(
-			new countdown(CurDat().updated_at,null,null,1).toString()
+			( new countdown(CurDat().updated_at,null,null,1) ).toString()
 	));
 	InsStr("Info_Start", ISODate(CurDat().initday) +" - "+ CurDat().initval	);
 	InsStr("Info_Now",	 ISODate(CurDat().curday)  +" - "+ CurDat().curval	);
@@ -300,29 +303,29 @@ function SetOutput(e){		// Displays Goal specific information
 	InsStr("Info_Countdown", countdown(LastRoad[0]*1000,null,null,2).toString());
 
 	// Inform user / Log event
-	InfoUpdate (LangObj().Popup.OutputSet + e);
+	InfoUpdate( LangObj().Popup.OutputSet + e );
 }
-function CurDat(NeuObj){	// Return object for the currently displayed goal or replace it
+function CurDat( NeuObj ) {	// Return object for the currently displayed goal or replace it
 	// If NeuObj is
-	if		( NeuObj && NeuGoalsArray[someVar.ArrayNo].id === NeuObj.id )
-			{
-				NeuGoalsArray[someVar.ArrayNo]	= NeuObj;
-				KeyedGoalsArray[NeuObj.id]		= NeuObj;
-			}
+	if ( NeuObj && NeuGoalsArray[ someVar.ArrayNo ].id === NeuObj.id ) {
+		NeuGoalsArray[ someVar.ArrayNo ] = NeuObj;
+		KeyedGoalsArray[ NeuObj.id ] = NeuObj;
+	}
 
 	// If NeuObj is true
-	else if	( NeuObj && NeuGoalsArray[someVar.ArrayNo].id !== NeuObj.id )
-			{ return false; }
+	else if ( NeuObj && NeuGoalsArray[ someVar.ArrayNo ].id !== NeuObj.id )
+		return false;
 
 	// If there is a goal key return a KeyedGoalsArray item
-	else if ( CurString ) // TODO:
-			{ return KeyedGoalsArray[CurString]; }
+	// TODO:
+	else if ( CurString )
+		return KeyedGoalsArray[ CurString ];
 
 	// If CurString isn't set, set it
-	else	{
-				CurString = NeuGoalsArray[someVar.ArrayNo].id;
-				return KeyedGoalsArray[CurString];
-			}
+	else {
+		CurString = NeuGoalsArray[ someVar.ArrayNo ].id;
+		return KeyedGoalsArray[ CurString ];
+	}
 }
 function DataRefresh(i){	// Refresh the current goals data
 	if		( !i ) { xhrHandler({
@@ -385,7 +388,7 @@ function IniDisplay(){		// Initialise the display
 		frag = document.createDocumentFragment();
 		for (var i = 0; i < NeuGoalsArray.length; i++){
 			key = RKeysArray()[i];
-			obj = KeyedGoalsArray[key];
+			var obj = KeyedGoalsArray[key];
 
 			if (obj.Show === true){
 				var a = frag.appendChild(document.createElement('a'));
@@ -447,47 +450,45 @@ function IniDisplay(){		// Initialise the display
 		// 	NOTE: Should really be an append, but because of BR it needs to be innerHTML
 	}
 }
-function ImageLoader(url, key){	// Loads the image as string
+function ImageLoader( url, key ) {	// Loads the image as string
 	// TODO insert into goal obj and save
 	// TODO: Implement offline detection
 
 	// URL Checking
-	if (!url){return false;}
-	if (url.substring(0,39).toLowerCase() != "https://bmndr.s3.amazonaws.com/uploads/") {
-		InfoUpdate("Recieved invalid url: \n" + url); // TODO String Localisation []
-		return false;
+	if ( !url ) { return false; }
+	if (
+		url.substring( 0, 39 ).toLowerCase() != "https://bmndr.s3.amazonaws.com/uploads/"
+	) {
+		return InfoUpdate( "Recieved invalid url: \n" + url ); // TODO String Localisation []
 	}
 
 	// Offline detection
-	if (!navigator.onLine) {return false;}
+	if ( !navigator.onLine ) return false;
 	// IDEA: should more me done?
 	//			on reconnect script
 	//			timer
 	//			custom callback
 
 	var imgxhr = new XMLHttpRequest();
-		imgxhr.open("GET",url  + "?" + new Date().getTime());
+		imgxhr.open( "GET", url + "?" + new Date().getTime() );
 		imgxhr.responseType = "blob";
-		imgxhr.onload = function (){
-			if (imgxhr.status===200){
-				reader.readAsDataURL(imgxhr.response);
-			}
-			else if (imgxhr.status===404){
-				console.log(LangObj().Popup.ImageHandler.NotAnError404);
-			}
+		imgxhr.onload = function () {
+			if ( imgxhr.status === 200 )
+				reader.readAsDataURL( imgxhr.response );
+			else if ( imgxhr.status === 404 )
+				console.log( LangObj().Popup.ImageHandler.NotAnError404 );
 		};
 	var reader = new FileReader();
 		reader.onloadend = function () {
-			ByID("graph-img").src = reader.result;
-			console.log(reader.result.length);
+			ByID( "graph-img" ).src = reader.result;
+			console.log( reader.result.length );
 
-			if (typeof key === "string") {
-				KeyedImageArray[key] = reader.result;
-				chrome.storage.local.set({
-					KeyedData	: KeyedGoalsArray
-				});
+			if ( typeof key === "string" ) {
+				KeyedImageArray[ key ] = reader.result;
+				chrome.storage.local.set( { KeyedData: KeyedGoalsArray } );
 			}
 		};
+
 	imgxhr.send();
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
@@ -501,24 +502,26 @@ function OPTinit(){
 			GoalsData	:	[]
 		},
 		function(items) {
-			ByID( "username"	).value = username	= items.username;
-			ByID( "token"		).value = token		= items.token;
+			ByID( "username"	).value = UName = items.username;
+			ByID( "token"		).value = token = items.token;
 			updated_at		= items.updated_at;
 			DefGoal			= items.DefGoal;
 			NeuGoalsArray	= items.GoalsData;
-			if 		( items.username === "" || items.token === ""	)
-					{ InfoUpdate( LangObj().Options.NoUserData );	}
-			else if ( NeuGoalsArray.length >= 1						)
-					{ drawList();									}
-			else 	{ InfoUpdate( LangObj().Options.NoUserData );	}
+
+			if ( items.username === "" || items.token === "" )
+				InfoUpdate( LangObj().Options.NoUserData );
+			else if ( NeuGoalsArray.length >= 1 )
+				drawList();
+			else
+				InfoUpdate( LangObj().Options.NoUserData );
 		}
 	);
 
-	document.getElementById("save").addEventListener(
+	document.getElementById( "save" ).addEventListener(
 		"click", save_options
 	);
-	document.getElementById("clear").addEventListener(
-		"click", function () { chrome.storage.sync.clear(); }
+	document.getElementById( "clear" ).addEventListener(
+		"click", _ => chrome.storage.sync.clear()
 	);
 }
 function save_options() {
@@ -526,17 +529,17 @@ function save_options() {
 	token = document.getElementById( "token"	).value;
 
 	if	( !DefGoal )
-		{ DefGoal = {Loc:0}; }
+		DefGoal = {Loc:0};
 
 	// Authenticate the credentials are valid
 	// TODO: offline handeler - if offline set conection listener
-	xhrHandler({
+	xhrHandler( {
 		name			: LangObj().Options.save_options.xhrName,
 		SuccessFunction : AuthYes,
 		FailFunction 	: AuthNo
-	});
+	} );
 
-	function AuthYes (response){ // func on credentials confirmed correct
+	function AuthYes( response ) { // func on credentials confirmed correct
 		chrome.storage.sync.set(
 			{
 				username	:	UName,
@@ -546,26 +549,23 @@ function save_options() {
 			AuthYesNotify
 		);
 		// if (NeuGoalsArray.length === 0){
-			xhrHandler({
-				name:"Handle Download",
-				url:"/goals",
-				SuccessFunction	: HandleResponse//,
+			xhrHandler( {
+				name: "Handle Download",
+				url: "/goals",
+				SuccessFunction: HandleResponse//,
 				// FailFunction	: ItHasFailed,
-				// OfflineFunction	: ItHasFailed
-			});
+				// OfflineFunction: ItHasFailed
+			} );
 		// }
 	}
-	function AuthYesNotify () { // func to confrim options are saved
+	function AuthYesNotify() { // func to confrim options are saved
 		InsStr( "status", LangObj().Options.save_options.OptionsSaved );
-		setTimeout(
-			function(){InsStr("status","");},
-			2000
-		);
+		setTimeout( _ => InsStr( "status", "" ), 2000 );
 	}
-	function HandleResponse(response) // onSave GoalsGET handler placeholder
-		{ console.log(JSON.parse(response)); }
-	function AuthNo (){ // func if credentials are not valid
-		InfoUpdate (
+	function HandleResponse( response ) // onSave GoalsGET handler placeholder
+		{ console.log( JSON.parse( response ) ); }
+	function AuthNo() { // func if credentials are not valid
+		InfoUpdate(
 			LangObj().Options.save_options.Message404,
 			60000
 		);
@@ -579,15 +579,18 @@ function ClearData () {
 	// document.getElementById( "token"	).value = "";
 	// ^^^^ commented out for development reasons
 }
-function DefaultHandle (i) {
-	ElementsList[DefGoal.Loc].defa.textContent	= "-";
-	DefGoal.Loc									= i;
-	DefGoal.Name								= NeuGoalsArray[i].slug;
-	ElementsList[DefGoal.Loc].defa.textContent	= LangObj().Options.Default;
+function DefaultHandle( i ) {
+	ElementsList[ DefGoal.Loc ].defa.textContent = "-";
+	DefGoal.Loc = i;
+	DefGoal.Name = NeuGoalsArray[ i ].slug;
+	ElementsList[ DefGoal.Loc ].defa.textContent = LangObj().Options.Default;
 }
 function drawList(){
-	for (var i = 0; i < NeuGoalsArray.length; i++){
-		ElementsList[i] = {
+	for ( var i = 0; i < NeuGoalsArray.length; i++ ) {
+		var elem = ElementsList[ i ];
+		var elemGoals = NeuGoalsArray[ i ];
+
+		elem = {
 			"item"	: document.createElement( "li" ),	// List Item
 			"title"	: document.createElement( "a"  ),	// Goal title
 			"defa"	: document.createElement( "a"  ),	// Default selector
@@ -595,68 +598,75 @@ function drawList(){
 			"notify": document.createElement( "a"  )	// Notification Toggle
 		};
 
-		ElementsList[i].item	.className = "item";
-		ElementsList[i].title	.className = "title";
-		ElementsList[i].defa	.className = "default";
-		ElementsList[i].hide	.className = "hide";
-		ElementsList[i].notify	.className = "notify";
+		elem.item	.className = "item";
+		elem.title	.className = "title";
+		elem.defa	.className = "default";
+		elem.hide	.className = "hide";
+		elem.notify	.className = "notify";
 
-		ElementsList[i].item	.id = NeuGoalsArray[i].slug + "-item";
-		ElementsList[i].title	.id = NeuGoalsArray[i].slug + "-title";
-		ElementsList[i].defa	.id = NeuGoalsArray[i].slug + "-defaultBtn";
-		ElementsList[i].hide	.id = NeuGoalsArray[i].slug + "-HideBtn";
-		ElementsList[i].notify	.id = NeuGoalsArray[i].slug + "-NotifyBtn";
+		elem.item	.id = elemGoals.slug + "-item";
+		elem.title	.id = elemGoals.slug + "-title";
+		elem.defa	.id = elemGoals.slug + "-defaultBtn";
+		elem.hide	.id = elemGoals.slug + "-HideBtn";
+		elem.notify	.id = elemGoals.slug + "-NotifyBtn";
 
-		ElementsList[i].title	.textContent = NeuGoalsArray[i].title;
-		ElementsList[i].defa	.textContent = "-";
-		ElementsList[i].hide	.textContent = NeuGoalsArray[i].Notify;
-		ElementsList[i].notify	.textContent = NeuGoalsArray[i].Show;
+		elem.title	.textContent = elemGoals.title;
+		elem.defa	.textContent = "-";
+		elem.hide	.textContent = elemGoals.Notify;
+		elem.notify	.textContent = elemGoals.Show;
 
-		ByID("TheList").appendChild( ElementsList[i].item);
-			ElementsList[i].item.appendChild(ElementsList[i].title	);
-			ElementsList[i].item.appendChild(ElementsList[i].defa	);
-			ElementsList[i].item.appendChild(ElementsList[i].hide	);
-			ElementsList[i].item.appendChild(ElementsList[i].notify	);
+		ByID("TheList").appendChild( elem.item);
+			elem.item.appendChild( elem.title );
+			elem.item.appendChild( elem.defa );
+			elem.item.appendChild( elem.hide );
+			elem.item.appendChild( elem.notify );
 
-		(function(_i) {
-			LinkBM(ElementsList[_i].title.id,undefined,NeuGoalsArray[i].slug);
-			ElementsList[_i].defa.addEventListener
-				( "click", function() {DefaultHandle(_i);});
-			// ElementsList[_i].hide.addEventListener
+		( function ( _i ) {
+			LinkBM( ElementsList[ _i ].title.id, undefined, elemGoals.slug );
+			ElementsList[ _i ].defa.addEventListener( "click", _ => DefaultHandle( _i ) );
+			// ElementsList[ _i ].hide.addEventListener
 			// 	( "click", MakeGoalsArray );
 			// notify.addEventListener
-			// 	( "click", functions(){ NotifyHandle(i) } );
-		})(i);
+			// 	( "click", functions(){ NotifyHandle( i ) } );
+		} )( i );
 
-		if	(NeuGoalsArray[i].slug === DefGoal.Name) {DefGoal.Loc = i;}
+		if	(elemGoals.slug === DefGoal.Name) {DefGoal.Loc = i;}
 	}
 
-	if 		( Number.isInteger(DefGoal.Loc) )
-			{ ElementsList[DefGoal.Loc].defa.innerHTML = LangObj().Options.Default; }
-	else 	{
-				DefGoal.Loc = 0;
-				ElementsList[0].defa.innerHTML = LangObj().Options.Default;
-			}
+	if ( Number.isInteger( DefGoal.Loc ) )
+		ElementsList[ DefGoal.Loc ].defa.innerHTML = LangObj().Options.Default;
+
+	else {
+		DefGoal.Loc = 0;
+		ElementsList[ 0 ].defa.innerHTML = LangObj().Options.Default;
+	}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
-function ReturnGoalElement (object, old) {
+function ReturnGoalElement( object, old ) {
 	// TODO: Implement a Default options set
 	var DefaultArray = {
 		Notify		: true,
 		Show		: true
 	};
 
-			// If old parameter is not set return element with default settings
-	if		( !old )
-			{ old = DefaultArray;			console.log("No Old"); }
-			// If old parameter references keyed data
-	else if ( typeof old === "string" && KeyedGoalsArray[old] )
-			{ old = KeyedGoalsArray[old];	console.log("String"); }
-			// If old parameter is anexisitng object
-	else if ( typeof old === "object" && old.Notify && old.Show )
-			{ old = old;					console.log("Object"); }
-	else	// If old parameter isn't valid goal data
-			{ console.log("Sommin Gone Wrong");		 return false; }
+	// If old parameter is not set return element with default settings
+	if ( !old ) {
+		old = DefaultArray;
+		console.log( "No Old" );
+	}
+	// If old parameter references keyed data
+	else if ( typeof old === "string" && KeyedGoalsArray[ old ] ) {
+		old = KeyedGoalsArray[ old ];
+		console.log( "String" );
+	}
+	// If old parameter is anexisitng object
+	else if ( typeof old === "object" && old.Notify && old.Show ) {
+		old = old;
+		console.log( "Object" );
+	}
+	// If old parameter isn't valid goal data
+	else
+		return console.log( "Sommin Gone Wrong" );
 
 	// Return object with local settings added and dates formated into UNIX integer
 	return {
@@ -685,61 +695,62 @@ function DownloadDatapoints (){
 	ByID("data-points").innerHTML = "";
 
 	// API requsest for all datapoints
-	for (var Loc = 0; Loc < NeuGoalsArray.length; Loc++) {
-		xhrHandler({
-			name : "DownloadDatapoints - " + NeuGoalsArray[Loc].slug,
+	for ( var Loc = 0; Loc < NeuGoalsArray.length; Loc++ ) {
+		xhrHandler( {
+			name: "DownloadDatapoints - " + NeuGoalsArray[ Loc ].slug,
 			// TODO String Localisation []
-			url : "/goals/" + NeuGoalsArray[Loc].slug + "/datapoints",
-			SuccessFunction : HandleDatapoints,
-			SuccessExtraVar : { ArrayLoc : Loc },
-			FailFunction : GracefulFail
-		});
+			url: "/goals/" + NeuGoalsArray[ Loc ].slug + "/datapoints",
+			SuccessFunction: HandleDatapoints,
+			SuccessExtraVar: { ArrayLoc: Loc },
+			FailFunction: GracefulFail
+		} );
 	}
 
 	function HandleDatapoints ( response, QInfo ) {
-		if ( !response || !QInfo ) { return false; } // argie validation
+		if ( !response || !QInfo ) // argie validation
+			return false;
 
 		// Convert response into object and place into variables
-		NeuGoalsArray[QInfo.ArrayLoc].datapoints = response = JSON.parse(response);
+		NeuGoalsArray[ QInfo.ArrayLoc ].datapoints = response = JSON.parse( response );
 
 		// Cap the number of items to be showed on screen
 		var	iCap = 10;
 		if	( response.length <= 10 )
-			{ iCap = response.length; }
+			iCap = response.length;
 
 		// doc.frag constuction technique
 		var frag = document.createDocumentFragment();
 			// Poulate frag with Statisitics
-			frag.appendChild(document.createTextNode(NeuGoalsArray[QInfo.ArrayLoc].title));
-			frag.appendChild(document.createElement("BR"));
-			frag.appendChild(document.createTextNode("Array length : " + response.length));
-			frag.appendChild(document.createElement("BR"));
+			frag.appendChild( document.createTextNode( NeuGoalsArray[ QInfo.ArrayLoc ].title ) );
+			frag.appendChild( document.createElement( "BR" ) );
+			frag.appendChild( document.createTextNode( "Array length : " + response.length ) );
+			frag.appendChild( document.createElement( "BR" ) );
 
 		// Populate frag with datapoints
-		for (var i = 0; i < iCap; i++) {
-			var span = frag.appendChild(document.createElement("span"));
-				span.textContent = response[i].canonical;
-			frag.appendChild(document.createElement("BR"));
+		for ( var i = 0; i < iCap; i++ ) {
+			var span = frag.appendChild( document.createElement( "span" ) );
+			span.textContent = response[ i ].canonical;
+			frag.appendChild( document.createElement( "BR" ) );
 		}
 
 		// Insert frag into document
-		ByID("data-points").appendChild(frag);
+		ByID( "data-points" ).appendChild( frag );
 
 		// Testing
 		console.log(response);
 	}
-	function GracefulFail () {
+	function GracefulFail() {
 		// IDEA: could drop the use of fragment for this single element
 		var frag = document.createDocumentFragment();
-		var FailBtn = frag.appendChild(document.createElement("DIV"));
+		var FailBtn = frag.appendChild( document.createElement( "DIV" ) );
 			FailBtn.className = "Button";
-			FailBtn.appendChild(document.createTextNode("The Download has failed!"));
-			FailBtn.appendChild(document.createElement("BR"));
-			FailBtn.appendChild(document.createTextNode("Click here to try again!"));
-			FailBtn.addEventListener("click", function(){ DownloadDatapoints(); });
+			FailBtn.appendChild( document.createTextNode( "The Download has failed!" ) );
+			FailBtn.appendChild( document.createElement( "BR" ) );
+			FailBtn.appendChild( document.createTextNode( "Click here to try again!" ) );
+			FailBtn.addEventListener( "click", _ => DownloadDatapoints() );
 
 		// Clear data-points element and append message
-		ByID("data-points").innerHTML = "";
-		ByID("data-points").appendChild(frag);
+		ByID( "data-points" ).innerHTML = "";
+		ByID( "data-points" ).appendChild( frag );
 	}
 }
