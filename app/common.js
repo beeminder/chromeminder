@@ -450,12 +450,10 @@ function ImageLoader( url, key ) {	// Loads the image as string
 	// TODO: Implement offline detection
 
 	// URL Checking
-	if ( !url ) { return false; }
 	if (
-		url.substring( 0, 39 ).toLowerCase() != "https://bmndr.s3.amazonaws.com/uploads/"
-	) {
-		return InfoUpdate( "Recieved invalid url: \n" + url ); // TODO String Localisation []
-	}
+		typeof url !== 'string' ||
+		url.indexOf( "https://bmndr.s3.amazonaws.com/uploads/" ) !== 0
+	) return InfoUpdate( `Recieved invalid url: \n${ url }` ); // TODO String Localisation []
 
 	// Offline detection
 	if ( !navigator.onLine ) return false;
