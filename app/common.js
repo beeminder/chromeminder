@@ -126,14 +126,14 @@ function LangObj( key ) {
 		if ( select ) break;
 	}
 }
-function ISODate( x ) {				// Abstraction
-	return new Date( x ).toISOString().substring( 0, 10 );
+function ISODate( date ) {				// Abstraction
+	return ( new Date( date ) ).toISOString().substring( 0, 10 );
 }
-function InsStr( element, string ) { 	// Abstraction
-	document.getElementById( element ).textContent = string;
 }
 function RKeysArray() {// XXX:
 	return Object.keys( KeyedGoalsArray );
+function InsStr( id, string ) { 	// Abstraction
+	document.getElementById( id ).textContent = string;
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function PUinit(){			// Initialises Popup.html
