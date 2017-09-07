@@ -25,61 +25,58 @@ var
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler( args ) {
-	if ( !args || !args.SuccessFunction ) return false;
-	/* Arguments:
-		SuccessFunction (response) or (response,ExtraVariabl)
-							What to do when successful request has been made
-		OfflineFunction ()	What to do when offline
-		name			= string	to identify xhr
-		url				= string	Salt for specific API calls
-		FailFunction	()	What to do when a 404 has been given
-		SuccessExtraVar = whatever needs to be passed back
-	*/
+	if ( !args || isFunc( args.onSuccess ) ) return false;
+	/**
+	 * Handles xhr requests
+	 * @function xhrHandler
+	 * @param {object} args - Object containing instructions
+	 * @param {string} args.name - Develper readable name for debugging
+	 * @param {string} args.url - Salt for specific API calls
+	 * @param {function} args.onSuccess - What to do when successful request has been made
+	 * @param {function} args.onOffline - What to do when offline
+	 * @param {function} args.onFail - What to do when a 404 has been given
+	 */
 
-	var name = IfSet( args.name, undefined, " - " );
+	var name = args.name ? `${ args.name } - ` : '';
 
 	// Offline detection
-	if ( !navigator.onLine && args.OfflineFunction )
-		return args.OfflineFunction();
-
-	else if ( !navigator.onLine && !args.OfflineFunction )
-		return InfoUpdate( name + "Currently Offline" );
+	if ( !navigator.onLine ) {
+		if ( isFunc( args.onOffline ) )
+			return args.onOffline();
+		else
+			return InfoUpdate( name + "Currently Offline" );
+	}
 
 	// HTTP request
 	var xhr = new XMLHttpRequest();
 		// xhr.onreadystatechange = StateChange;
 		xhr.onload = LoadEvent;
-		xhr.open( "GET", // TODO: delegate url to helper func
-			"https://www.beeminder.com/api/v1/users/" + UName +
-			/**/ IfSet( args.url ) + ".json?auth_token=" + token
-		);
+		xhr.open( "GET", get_apiurl( args.url ) );
 		xhr.send();
 
 	function LoadEvent() {
 		if ( xhr.status === 404 ) {
 			InfoUpdate( name + LangObj().xhr.Status404 );
-			if ( args.FailFunction )
-				args.FailFunction();
+			if ( isFunc( args.onFail ) )
+				args.onFail( xhr.response );
 			xhr.abort();
+			return;
 		}
 
-		else {
-			InfoUpdate( name + LangObj().xhr.StateChangeInfo );
-			if ( xhr.status === 200 && xhr.readyState === 4 ) {
-				if ( !args.SuccessExtraVar )
-					args.SuccessFunction( xhr.response );
-				else
-					args.SuccessFunction( xhr.response, args.SuccessExtraVar );
-			} //If Ready to access data
-		} // If Access denied / allowed
+		InfoUpdate( name + LangObj().xhr.StateChangeInfo );
+		if ( xhr.status === 200 && xhr.readyState === 4 )
+			args.onSuccess( xhr.response );
 	}
 }
-function IfSet( input, bef, aft ){	// returns a string containg input if !nul
-	if		( input || !bef || !aft )	return		input 		;
-	else if ( input ||  bef || !aft )	return bef +input 		;
-	else if ( input || !bef ||  aft )	return		input + aft	;
-	else if ( input ||  bef ||  aft )	return bef +input + aft	;
-	else								return		  ""		;
+function get_apiurl( salt ) {
+	var augment = salt ? `/${ salt }` : '';
+
+	var url = `https://www.beeminder.com/api/v1/users/${ UName }${ augment }.json?auth_token=${ token }`;
+
+	return url;
+}
+function isFunc( func ){
+	return typeof fun === 'function';
 }
 function InfoUpdate( text, time ){	// informs user and logs event
 	// Validation and housekeeping
@@ -174,10 +171,10 @@ function PUinit(){			// Initialises Popup.html
 		else // TODO else if (!last API req was too soon)
 			xhrHandler( {
 				name: "Handle Download",
-				url: "/goals",
-				SuccessFunction: HandleResponse,
-				FailFunction: ItHasFailed,
-				OfflineFunction: ItHasFailed
+				url: "goals",
+				onSuccess: HandleResponse,
+				onFail: ItHasFailed,
+				onOffline: ItHasFailed
 			} );
 	}
 
@@ -328,16 +325,18 @@ function CurDat( NeuObj ) {	// Return object for the currently displayed goal or
 	}
 }
 function DataRefresh(i){	// Refresh the current goals data
-	if		( !i ) { xhrHandler({
-				url		: "/goals/" + CurDat().slug + "/refresh_graph",
-				name	: LangObj().Popup.Refresh.RefreshCall.Name,
-				SuccessFunction : RefreshCall
-			});}
-	else if	( i ) { xhrHandler({
-				url		: "/goals/" + CurDat().slug,
-				name	: LangObj().Popup.Refresh.GoalGet.Name,
-				SuccessFunction : GoalGet
-			});}
+	if ( !i )
+		xhrHandler( {
+			url: `goals/${ CurDat().slug }/refresh_graph`,
+			name: LangObj().Popup.Refresh.RefreshCall.Name,
+			onSuccess: RefreshCall
+		} );
+	else
+		xhrHandler( {
+			url: `goals/${ CurDat().slug }`,
+			name: LangObj().Popup.Refresh.GoalGet.Name,
+			onSuccess: GoalGet
+		} );
 
 	function RefreshCall (response) {
 		if		(response === "true" ) {
@@ -534,9 +533,9 @@ function save_options() {
 	// Authenticate the credentials are valid
 	// TODO: offline handeler - if offline set conection listener
 	xhrHandler( {
-		name			: LangObj().Options.save_options.xhrName,
-		SuccessFunction : AuthYes,
-		FailFunction 	: AuthNo
+		name: LangObj().Options.save_options.xhrName,
+		onSuccess: AuthYes,
+		onFail: AuthNo
 	} );
 
 	function AuthYes( response ) { // func on credentials confirmed correct
@@ -551,10 +550,10 @@ function save_options() {
 		// if (NeuGoalsArray.length === 0){
 			xhrHandler( {
 				name: "Handle Download",
-				url: "/goals",
-				SuccessFunction: HandleResponse//,
-				// FailFunction	: ItHasFailed,
-				// OfflineFunction: ItHasFailed
+				url: "goals",
+				onSuccess: HandleResponse//,
+				// onFail	: ItHasFailed,
+				// onOffline: ItHasFailed
 			} );
 		// }
 	}
@@ -699,14 +698,14 @@ function DownloadDatapoints (){
 		xhrHandler( {
 			name: "DownloadDatapoints - " + NeuGoalsArray[ Loc ].slug,
 			// TODO String Localisation []
-			url: "/goals/" + NeuGoalsArray[ Loc ].slug + "/datapoints",
-			SuccessFunction: HandleDatapoints,
+			url: `goals/${ NeuGoalsArray[ Loc ].slug }/datapoints`,
+			onSuccess: HandleDatapoints.bind( null, { ArrayLoc: Loc } ),
 			SuccessExtraVar: { ArrayLoc: Loc },
-			FailFunction: GracefulFail
+			onFail: GracefulFail
 		} );
 	}
 
-	function HandleDatapoints ( response, QInfo ) {
+	function HandleDatapoints( QInfo, response ) {
 		if ( !response || !QInfo ) // argie validation
 			return false;
 
