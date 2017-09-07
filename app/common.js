@@ -695,37 +695,38 @@ function DownloadDatapoints (){
 			name: "DownloadDatapoints - " + NeuGoalsArray[ Loc ].slug,
 			// TODO String Localisation []
 			url: `goals/${ NeuGoalsArray[ Loc ].slug }/datapoints`,
-			onSuccess: HandleDatapoints.bind( null, { ArrayLoc: Loc } ),
+			onSuccess: success.bind( null, { ArrayLoc: Loc } ),
 			SuccessExtraVar: { ArrayLoc: Loc },
-			onFail: GracefulFail
+			onFail: fail
 		} );
 	}
 
-	function HandleDatapoints( QInfo, response ) {
-		if ( !response || !QInfo ) // argie validation
+	function success( QInfo, response ) {
+		if ( !response || !QInfo )
 			return false;
 
+		var goalData = NeuGoalsArray[ QInfo.ArrayLoc ];
+
 		// Convert response into object and place into variables
-		NeuGoalsArray[ QInfo.ArrayLoc ].datapoints = response = JSON.parse( response );
+		response = goalData.datapoints = JSON.parse( response );
 
 		// Cap the number of items to be showed on screen
-		var	iCap = 10;
-		if	( response.length <= 10 )
-			iCap = response.length;
+		var	iCap = response.length <= 10 ? response.length : 10;
 
 		// doc.frag constuction technique
 		var frag = document.createDocumentFragment();
 			// Poulate frag with Statisitics
-			frag.appendChild( document.createTextNode( NeuGoalsArray[ QInfo.ArrayLoc ].title ) );
-			frag.appendChild( document.createElement( "BR" ) );
-			frag.appendChild( document.createTextNode( "Array length : " + response.length ) );
-			frag.appendChild( document.createElement( "BR" ) );
+			frag.appendChild( document.createTextNode( goalData.title ) );
+			frag.appendChild( document.createElement( "br" ) );
+			frag.appendChild( document.createTextNode( `Array length : ${ response.length }` ) );
+			frag.appendChild( document.createElement( "br" ) );
 
 		// Populate frag with datapoints
 		for ( var i = 0; i < iCap; i++ ) {
 			var span = frag.appendChild( document.createElement( "span" ) );
-			span.textContent = response[ i ].canonical;
-			frag.appendChild( document.createElement( "BR" ) );
+				span.textContent = response[ i ].canonical;
+
+			frag.appendChild( document.createElement( "br" ) );
 		}
 
 		// Insert frag into document
@@ -734,10 +735,9 @@ function DownloadDatapoints (){
 		// Testing
 		console.log(response);
 	}
-	function GracefulFail() {
-		// IDEA: could drop the use of fragment for this single element
-		var frag = document.createDocumentFragment();
-		var FailBtn = frag.appendChild( document.createElement( "DIV" ) );
+
+	function fail() {
+		var FailBtn = document.createElement( "DIV" );
 			FailBtn.className = "Button";
 			FailBtn.appendChild( document.createTextNode( "The Download has failed!" ) );
 			FailBtn.appendChild( document.createElement( "BR" ) );
@@ -746,6 +746,6 @@ function DownloadDatapoints (){
 
 		// Clear data-points element and append message
 		ByID( "data-points" ).innerHTML = "";
-		ByID( "data-points" ).appendChild( frag );
+		ByID( "data-points" ).appendChild( FailBtn );
 	}
 }
