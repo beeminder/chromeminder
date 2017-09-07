@@ -129,9 +129,6 @@ function LangObj( key ) {
 function ISODate( date ) {				// Abstraction
 	return ( new Date( date ) ).toISOString().substring( 0, 10 );
 }
-}
-function RKeysArray() {// XXX:
-	return Object.keys( KeyedGoalsArray );
 function InsStr( id, string ) { 	// Abstraction
 	document.getElementById( id ).textContent = string;
 }
@@ -384,25 +381,28 @@ function IniDisplay(){		// Initialise the display
 	var frag, key; // TODO: No longer in use???
 
 	// Goal Selector
-	if (RKeysArray().length > 1) {
+	var keys = Object.keys( KeyedGoalsArray );
+	if ( keys.length > 1 ) {
 		frag = document.createDocumentFragment();
-		for (var i = 0; i < NeuGoalsArray.length; i++){
-			key = RKeysArray()[i];
-			var obj = KeyedGoalsArray[key];
 
-			if (obj.Show === true){
-				var a = frag.appendChild(document.createElement('a'));
-				a.className = 'GoalIDBtn';
-				a.id			= obj.slug;
-				a.textContent	= obj.title;
-				(function(_i) {a.addEventListener(
-						"click",
-						function() {SetOutput(_i);console.log(_i);}
-				);})(obj.id);// TODO: Add an additonal goto link w/ each Selector
+		for ( var i = 0; i < NeuGoalsArray.length; i++ ) {
+			key = keys[ i ];
+			var obj = KeyedGoalsArray[ key ];
+
+			if ( obj.Show === true ) {
+				var a = frag.appendChild( document.createElement( 'a' ) );
+					a.className = 'GoalIDBtn';
+					a.id = obj.slug;
+					a.textContent = obj.title;
+
+				( function ( _i ) {
+					a.addEventListener( "click", _ => SetOutput( _i ) );
+				} )( obj.id );// TODO: Add an additonal goto link w/ each Selector
 			}
 		}
-		ByID("TheContent").innerHTML = "";
-		ByID("TheContent").appendChild(frag);
+
+		ByID( "TheContent" ).innerHTML = "";
+		ByID( "TheContent" ).appendChild( frag );
 	}
 
 	// Populates text and RefreshAction listener in Menu Box
@@ -411,28 +411,28 @@ function IniDisplay(){		// Initialise the display
 	InsStr( "ButtonData",		LangObj().Popup.ButtonData		);
 	InsStr( "ButtonSettings",	LangObj().Popup.ButtonSettings	);
 	InsStr( "OptLink",			LangObj().Popup.OptLink			);
-	document.getElementById("ButtonRefresh").addEventListener(
-		"click", function(){DataRefresh();}
+	document.getElementById( "ButtonRefresh" ).addEventListener(
+		"click", _ => DataRefresh()
 	);
 
 	// Populates content is Countdown box
 	var BoxCountdown = document.createDocumentFragment();
-		BoxCountdown.appendChild(document.createTextNode(LangObj().Popup.Deadline));
-		BoxCountdown.appendChild(document.createElement("br"));
-	var Span_dlout = BoxCountdown.appendChild(document.createElement("span"));
+		BoxCountdown.appendChild( document.createTextNode( LangObj().Popup.Deadline ) );
+		BoxCountdown.appendChild( document.createElement( "br" ) );
+	var Span_dlout = BoxCountdown.appendChild( document.createElement( "span" ) );
 		Span_dlout.id = "dlout";
-	ByID("Countdown").appendChild(BoxCountdown);
+	ByID( "Countdown" ).appendChild( BoxCountdown );
 
 	// Sets Deadline Counter
-	setInterval(DisplayDeadline,1000);
+	setInterval( DisplayDeadline, 1000 );
 
 	// Populates content in BareMin Box
 	var BoxBareMin = document.createDocumentFragment();
-		BoxBareMin.appendChild(document.createTextNode(LangObj().Popup.BareMin));
-		BoxBareMin.appendChild(document.createElement("br"));
-	var Span_limsum = BoxBareMin.appendChild(document.createElement("span"));
+		BoxBareMin.appendChild( document.createTextNode( LangObj().Popup.BareMin ) );
+		BoxBareMin.appendChild( document.createElement( "br" ) );
+	var Span_limsum = BoxBareMin.appendChild( document.createElement( "span" ) );
 		Span_limsum.id = "limsum";
-	ByID("BareMin").appendChild(BoxBareMin);
+	ByID( "BareMin" ).appendChild( BoxBareMin );
 
 	// Populates meta-data
 	InsStr( "Label_Start",	LangObj().Popup.InfoDisplay.Start	);
@@ -444,8 +444,10 @@ function IniDisplay(){		// Initialise the display
 
 	function DisplayDeadline(){
 		var string = new countdown(CurDat().losedate).toString();
+
 		if	( new Date() > CurDat().losedate )
-			{ string = LangObj().Popup.PastDeadline + string; }
+			string = LangObj().Popup.PastDeadline + string;
+
 		ByID("dlout").innerHTML = string;
 		// 	NOTE: Should really be an append, but because of BR it needs to be innerHTML
 	}
