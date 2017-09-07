@@ -44,7 +44,7 @@ function xhrHandler( args ) {
 		if ( isFunc( args.onOffline ) )
 			return args.onOffline();
 		else
-			return InfoUpdate( name + "Currently Offline" );
+			return log( name + "Currently Offline" );
 	}
 
 	// HTTP request
@@ -56,14 +56,14 @@ function xhrHandler( args ) {
 
 	function LoadEvent() {
 		if ( xhr.status === 404 ) {
-			InfoUpdate( name + LangObj().xhr.Status404 );
+			log( name + LangObj().xhr.Status404 );
 			if ( isFunc( args.onFail ) )
 				args.onFail( xhr.response );
 			xhr.abort();
 			return;
 		}
 
-		InfoUpdate( name + LangObj().xhr.StateChangeInfo );
+		log( name + LangObj().xhr.StateChangeInfo );
 		if ( xhr.status === 200 && xhr.readyState === 4 )
 			args.onSuccess( xhr.response );
 	}
@@ -78,7 +78,7 @@ function get_apiurl( salt ) {
 function isFunc( func ){
 	return typeof fun === 'function';
 }
-function InfoUpdate( text, time ){	// informs user and logs event
+function log( text, time ){	// informs user and logs event
 	// Validation and housekeeping
 	if ( !text ) return false;
 	if ( !time ) time = 5000;
@@ -218,14 +218,14 @@ function PUinit(){			// Initialises Popup.html
 				KeyedData	: KeyedGoalsArray,
 				DefGoal		: DefGoal
 			},
-			_ => InfoUpdate( LangObj().Popup.HandleDownload.DataSaved )
+			_ => log( LangObj().Popup.HandleDownload.DataSaved )
 		);
 
-		InfoUpdate( LangObj().Popup.HandleDownload.DataDownloaded );
+		log( LangObj().Popup.HandleDownload.DataDownloaded );
 		IniDisplay();
 	}
 	function ItHasFailed() {
-		InfoUpdate( "Download has failed, initalising from offline data" );
+		log( "Download has failed, initalising from offline data" );
 		chrome.storage.sync.get(
 			{ GoalsData	:	[] },
 			function ( items ) {
@@ -298,7 +298,7 @@ function SetOutput( e ) {		// Displays Goal specific information
 	InsStr("Info_Countdown", countdown(LastRoad[0]*1000,null,null,2).toString());
 
 	// Inform user / Log event
-	InfoUpdate( LangObj().Popup.OutputSet + e );
+	log( LangObj().Popup.OutputSet + e );
 }
 function CurDat( NeuObj ) {	// Return object for the currently displayed goal or replace it
 	// If NeuObj is
@@ -338,31 +338,31 @@ function DataRefresh( i ){	// Refresh the current goals data
 
 	function RefreshCall( response ) {
 		if ( response === "true" ) {
-			InfoUpdate( LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful );
+			log( LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful );
 			RefreshTimeout = setTimeout( _ => DataRefresh( 1 ), 2500 );
 		}
 		else
-			InfoUpdate( LangObj().Popup.Refresh.RefreshCall.UpdateNo );
+			log( LangObj().Popup.Refresh.RefreshCall.UpdateNo );
 	}
 	function GoalGet( response ) {
-		InfoUpdate( `iteration ${i}` );
+		log( `iteration ${i}` );
 		response = JSON.parse( response );
 		// XXX: Untested changes, but sould work?
 		if ( response.updated_at === CurDat().updated_at && i <= 6 ) {
 			RefreshTimeout = setTimeout( _ => DataRefresh( i + 1 ), GrowingDelay( i ) );
-			InfoUpdate( `${ LangObj().Popup.Refresh.GoalGet.NoUpdate }${ i } ${ GrowingDelay( i ) }` );
+			log( `${ LangObj().Popup.Refresh.GoalGet.NoUpdate }${ i } ${ GrowingDelay( i ) }` );
 		}
 		else if ( response.updated_at === CurDat().updated_at && i > 6 )
-			InfoUpdate( LangObj().Popup.Refresh.GoalGet.TooManyTries );
+			log( LangObj().Popup.Refresh.GoalGet.TooManyTries );
 		else {
 			console.log( "Testing: What doesn this do? " + CurDat( null ) );
 			CurDat( ReturnGoalElement( response ) );
 			SetOutput();
 			chrome.storage.sync.set(
 				{ GoalsData: NeuGoalsArray },
-				_ => InfoUpdate( LangObj().Popup.Refresh.GoalGet.NewDataSaved )
+				_ => log( LangObj().Popup.Refresh.GoalGet.NewDataSaved )
 			);
-			InfoUpdate( `${ LangObj().Popup.Refresh.GoalGet.GoalRefreshed }${ i } ${ CurDat().updated_at }` );
+			log( `${ LangObj().Popup.Refresh.GoalGet.GoalRefreshed }${ i } ${ CurDat().updated_at }` );
 		}
 	}
 	function GrowingDelay( i ) {
@@ -453,7 +453,7 @@ function ImageLoader( url, key ) {	// Loads the image as string
 	if (
 		typeof url !== 'string' ||
 		url.indexOf( "https://bmndr.s3.amazonaws.com/uploads/" ) !== 0
-	) return InfoUpdate( `Recieved invalid url: \n${ url }` ); // TODO String Localisation []
+	) return log( `Recieved invalid url: \n${ url }` ); // TODO String Localisation []
 
 	// Offline detection
 	if ( !navigator.onLine ) return false;
@@ -502,11 +502,11 @@ function OPTinit(){
 			NeuGoalsArray	= items.GoalsData;
 
 			if ( items.username === "" || items.token === "" )
-				InfoUpdate( LangObj().Options.NoUserData );
+				log( LangObj().Options.NoUserData );
 			else if ( NeuGoalsArray.length >= 1 )
 				drawList();
 			else
-				InfoUpdate( LangObj().Options.NoUserData );
+				log( LangObj().Options.NoUserData );
 		}
 	);
 
@@ -558,7 +558,7 @@ function save_options() {
 	function HandleResponse( response ) // onSave GoalsGET handler placeholder
 		{ console.log( JSON.parse( response ) ); }
 	function AuthNo() { // func if credentials are not valid
-		InfoUpdate(
+		log(
 			LangObj().Options.save_options.Message404,
 			60000
 		);
@@ -689,12 +689,13 @@ function DownloadDatapoints (){
 
 	// API requsest for all datapoints
 	for ( var Loc = 0; Loc < NeuGoalsArray.length; Loc++ ) {
+		var slug = NeuGoalsArray[ Loc ].slug;
+
 		xhrHandler( {
-			name: "DownloadDatapoints - " + NeuGoalsArray[ Loc ].slug,
+			name: `DownloadDatapoints - ${ slug }`,
 			// TODO String Localisation []
-			url: `goals/${ NeuGoalsArray[ Loc ].slug }/datapoints`,
+			url: `goals/${ slug }/datapoints`,
 			onSuccess: success.bind( null, { ArrayLoc: Loc } ),
-			SuccessExtraVar: { ArrayLoc: Loc },
 			onFail: fail
 		} );
 	}
@@ -708,18 +709,15 @@ function DownloadDatapoints (){
 		// Convert response into object and place into variables
 		response = goalData.datapoints = JSON.parse( response );
 
-		// Cap the number of items to be showed on screen
-		var	iCap = response.length <= 10 ? response.length : 10;
-
-		// doc.frag constuction technique
+		// Poulate frag with Statisitics
 		var frag = document.createDocumentFragment();
-			// Poulate frag with Statisitics
 			frag.appendChild( document.createTextNode( goalData.title ) );
 			frag.appendChild( document.createElement( "br" ) );
 			frag.appendChild( document.createTextNode( `Array length : ${ response.length }` ) );
 			frag.appendChild( document.createElement( "br" ) );
 
 		// Populate frag with datapoints
+		var	iCap = response.length <= 10 ? response.length : 10;
 		for ( var i = 0; i < iCap; i++ ) {
 			var span = frag.appendChild( document.createElement( "span" ) );
 				span.textContent = response[ i ].canonical;
@@ -729,9 +727,6 @@ function DownloadDatapoints (){
 
 		// Insert frag into document
 		ByID( "data-points" ).appendChild( frag );
-
-		// Testing
-		console.log(response);
 	}
 
 	function fail() {
