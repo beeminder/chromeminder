@@ -100,15 +100,16 @@ function InfoUpdate( text, time ){	// informs user and logs event
 function ByID( item ) {				// Abstraction
 	return document.getElementById( item );
 }
-function LinkBM( ElementId, URLSalt, Slug ) { // Sets the href of a link
+function LinkBM( id, salt, slug ) { // Sets the href of a link
 	// Validation and Houskeeping
-	if ( !ElementId ) return false;
-	if ( !URLSalt ) URLSalt = "";
-	if ( !Slug ) Slug = CurDat().slug;
+	if ( !id ) return false;
+
+	salt = salt ? salt : "";
+	slug = slug ? slug : CurDat().slug;
 
 	// Set Link
-	document.getElementById( ElementId ).href =
-		"https://www.beeminder.com" + "/" + UName + "/" + Slug + "/" + URLSalt;
+	document.getElementById( id ).href =
+		`https://www.beeminder.com/${ UName }/${ slug }/${ salt }`;
 }
 function LangObj( key ) {
 	var select = "en";
