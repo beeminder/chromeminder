@@ -24,7 +24,11 @@ var
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler( args ) {
-	if ( !args || isFunc( args.onSuccess ) ) return false;
+	if ( !args )
+		throw new Error( 'No `args` obj passed to xhr handler' );
+	if ( !isFunc( args.onSuccess ) )
+		throw new Error( '`args.onSuccess` is not a function' );
+	//return false;
 	/**
 	 * Handles xhr requests
 	 * @function xhrHandler
