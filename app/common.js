@@ -84,7 +84,6 @@ function isFunc( func ){
 function log( text, time ){	// informs user and logs event
 	// Validation and housekeeping
 	if ( !text ) return false;
-	if ( !time ) time = 5000;
 	if ( IUTimeout ) clearTimeout( IUTimeout );
 
 	// Displaying and logging message
@@ -97,7 +96,7 @@ function log( text, time ){	// informs user and logs event
 			ByID( "SeverStatus" ).textContent = "";
 			IUTimeout = undefined;
 		},
-		time
+		time ? time : 5000
 	);
 }
 function ByID( item ) {				// Abstraction
