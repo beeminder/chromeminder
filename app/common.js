@@ -132,7 +132,7 @@ function InsStr( id, string ) { 	// Abstraction
 	document.getElementById( id ).textContent = string;
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
-function PUinit(){			// Initialises Popup.html
+function initialisePopup(){			// Initialises Popup.html
 	chrome.storage.sync.get(
 		{ // Data to retrieve
 			username	: "",
@@ -484,7 +484,7 @@ function ImageLoader( url, key ) {	// Loads the image as string
 	imgxhr.send();
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
-function OPTinit(){
+function initialiseOptions(){
 	chrome.storage.sync.get(
 		{
 			username	: 	"",
