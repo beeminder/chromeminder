@@ -75,7 +75,7 @@ function get_apiurl( salt ) {
 	return url;
 }
 function isFunc( func ){
-	return typeof fun === 'function';
+	return typeof func === 'function';
 }
 function log( text, time ){	// informs user and logs event
 	// Validation and housekeeping
