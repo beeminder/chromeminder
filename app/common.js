@@ -1,4 +1,3 @@
-/* jshint loopfunc: true, sub: true */
 var
 	IUTimeout = "empty",		// Info update timeout
 	RefreshTimeout = "empty",	// Refresh Timeout

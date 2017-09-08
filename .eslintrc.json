@@ -1,34 +1,40 @@
 {
-    "env": {
-        "browser": true
-    },
-    "parserOptions": {
-        "ecmaFeatures": {
-            "jsx": true
-        },
-        "sourceType": "module"
-    },
-    "rules": {
-        "no-const-assign": "warn",
-        "no-this-before-super": "warn",
-        "no-undef": "warn",
-        "no-unreachable": "warn",
-        "no-unused-vars": [
-            "warn",
-            {
-                "varsIgnorePattern" : "PUinit|OPTinit|ClearData",
-                "args" : "none",
-                "vars" : "local"
-            }
-        ],
-        "constructor-super": "warn",
-        "valid-typeof": "warn"
-    },
-    "globals": {
-        "chrome" : true,
-        "countdown" : true,
-        "PUinit": true,
-        "OPTinit" : true,
-        "LocalLang" : true
-    }
+	"env": {
+		"browser": true
+	},
+	"parserOptions": {
+		"ecmaFeatures": {
+			"jsx": true
+		},
+		"sourceType": "module"
+	},
+	"rules": {
+		"no-const-assign": "warn",
+		"no-this-before-super": "warn",
+		"no-undef": "warn",
+		"no-unreachable": "warn",
+		"no-unused-vars": [
+			"warn",
+			{
+				"varsIgnorePattern" : "initialisePopup|initialiseOptions|ClearData",
+				"args" : "none",
+				"vars" : "local"
+			}
+		],
+		"constructor-super": "warn",
+		"no-extra-semi":"warn",
+		"semi":"warn",
+		"no-irregular-whitespace": "warn",
+		"dot-notation":"warn",
+		"dot-location":["warn","property"],
+		"valid-typeof": "warn"
+	},
+	"globals": {
+		"chrome" : true,
+		"countdown" : true,
+		"PUinit": true,
+		"OPTinit" : true,
+		"LocalLang" : true
+	}
+
 }
