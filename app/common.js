@@ -532,52 +532,42 @@ function initialiseOptions(){
 		"click", _ => chrome.storage.sync.clear()
 	);
 }
-function save_options() {
+function saveOptions() {
 	UName = document.getElementById( "username"	).value;
 	token = document.getElementById( "token"	).value;
 
-	if	( !DefGoal )
-		DefGoal = {Loc:0};
+	if ( !DefGoal )
+		DefGoal = { Loc: 0 };
 
 	// Authenticate the credentials are valid
 	// TODO: offline handeler - if offline set conection listener
 	xhrHandler( {
 		name: LangObj().Options.save_options.xhrName,
-		onSuccess: AuthYes,
-		onFail: AuthNo
+		onSuccess: saveOptions_authSuccess,
+		onFail: _ => log( LangObj().Options.save_options.Message404, 60000 )
 	} );
-
-	function AuthYes( response ) { // func on credentials confirmed correct
-		chrome.storage.sync.set(
-			{
-				username	:	UName,
-				token		:	token,
-				DefGoal		:	DefGoal
-			},
-			AuthYesNotify
-		);
-		// if (NeuGoalsArray.length === 0){
-			xhrHandler( {
-				name: "Handle Download",
-				url: "goals",
-				onSuccess: HandleResponse//,
-				// onFail	: ItHasFailed,
-				// onOffline: ItHasFailed
-			} );
-		// }
-	}
-	function AuthYesNotify() { // func to confrim options are saved
-		InsStr( "status", LangObj().Options.save_options.OptionsSaved );
-		setTimeout( _ => InsStr( "status", "" ), 2000 );
-	}
-	function HandleResponse( response ) // onSave GoalsGET handler placeholder
-		{ console.log( JSON.parse( response ) ); }
-	function AuthNo() { // func if credentials are not valid
-		log(
-			LangObj().Options.save_options.Message404,
-			60000
-		);
-	}
+}
+function saveOptions_authSuccess( response ) {
+	chrome.storage.sync.set(
+		{
+			username	:	UName,
+			token		:	token,
+			DefGoal		:	DefGoal
+		},
+		_ => {
+			InsStr( "status", LangObj().Options.save_options.OptionsSaved );
+			setTimeout( _ => InsStr( "status", "" ), 2000 );
+		}
+	);
+	// if (NeuGoalsArray.length === 0){
+		xhrHandler( {
+			name: "Handle Download",
+			url: "goals",
+			onSuccess: _ => console.log( JSON.parse( response ) )//,
+			// onFail	: ItHasFailed,
+			// onOffline: ItHasFailed
+		} );
+	// }
 }
 function ClearData () {
 	//
