@@ -113,21 +113,6 @@ function LinkBM( id, salt, slug ) { // Sets the href of a link
 	document.getElementById( id ).href =
 		`https://www.beeminder.com/${ UName }/${ slug }/${ salt }`;
 }
-function LangObj( key ) {
-	var select = "en";
-	if ( select ) return languages[ select ];
-
-	var LangList = [ "cy", "en-GB", "en", "fr" ];// keys(LocalLang);
-	for ( var i = 0; i < navigator.languages.length; i++ ) {
-		for ( var j = 0; j < LangList.length; j++ ) {
-			if ( PrefLangArray[ i ] === LangList[ j ] ) {
-				select = LangList[ j ].toLowerCase();
-				break;
-			}
-		}
-		if ( select ) break;
-	}
-}
 function ISODate( date ) {				// Abstraction
 	return ( new Date( date ) ).toISOString().substring( 0, 10 );
 }
@@ -354,7 +339,7 @@ function DataRefresh_RefreshCall( response ) {
 	}
 	else
 		log( _i( 'Beeminder Sever Says no' ) );
-};
+}
 function DataRefresh_GoalGet( i, response ) {
 	log( `iteration ${ i }` );
 	response = JSON.parse( response );
