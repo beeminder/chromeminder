@@ -59,14 +59,14 @@ function xhrHandler( args ) {
 
 	function LoadEvent() {
 		if ( xhr.status === 404 ) {
-			log( name + LangObj().xhr.Status404 );
+			log( `${ name }${ _i( 'Server 404 error' ) }` );
 			if ( isFunc( args.onFail ) )
 				args.onFail( xhr.response );
 			xhr.abort();
 			return;
 		}
 
-		log( name + LangObj().xhr.StateChangeInfo );
+		log( `${ name }${ _i( 'xhr Handler ' ) }` );
 		if ( xhr.status === 200 && xhr.readyState === 4 )
 			args.onSuccess( xhr.response );
 	}
@@ -115,7 +115,7 @@ function LinkBM( id, salt, slug ) { // Sets the href of a link
 }
 function LangObj( key ) {
 	var select = "en";
-	if ( select ) return LocalLang[ select ];
+	if ( select ) return languages[ select ];
 
 	var LangList = [ "cy", "en-GB", "en", "fr" ];// keys(LocalLang);
 	for ( var i = 0; i < navigator.languages.length; i++ ) {
@@ -159,7 +159,7 @@ function initialisePopup(){			// Initialises Popup.html
 
 		if ( !UName || !token ) { // TODO: Make this interface look better
 			var a = document.createElement( 'a' );
-				a.textContent = LangObj().Popup.NavToOptions;
+				a.textContent = _i( 'You need to enter your details in the options page ' );
 				a.href = "/options.html";
 				a.target = "_blank";
 				a.id = "NoCredsLink";
@@ -220,10 +220,10 @@ function initialisePopup(){			// Initialises Popup.html
 				KeyedData	: KeyedGoalsArray,
 				DefGoal		: DefGoal
 			},
-			_ => log( LangObj().Popup.HandleDownload.DataSaved )
+			_ => log( _i( "Data has been downloaded" ) )
 		);
 
-		log( LangObj().Popup.HandleDownload.DataDownloaded );
+		log( _i( "Goal data has been saved" ) );
 		IniDisplay();
 	}
 	function ItHasFailed() {
@@ -240,7 +240,7 @@ function initialisePopup(){			// Initialises Popup.html
 				else {// If there is no goal data
 					var a = document.createElement( "a" );
 						a.textContent = "No Goals Available";
-						// TODO LangObj().Popup.NavToOptions; ^^^^
+						// TODO lang( "You need to enter your details in the options page " ); ^^^^
 						a.href = "/options.html";
 						a.target = "_blank";
 
@@ -291,16 +291,20 @@ function SetOutput( e ) {		// Displays Goal specific information
 
 	// Set content in meta-data TODO: Something
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
-	InsStr("LastUpdateDate", LangObj().Popup.InfoDisplay.LastUpdate(
-			( new countdown(CurDat().updated_at,null,null,1) ).toString()
-	));
+	InsStr(
+		"LastUpdateDate",
+		_i(
+			'LastUpdate',
+			( new countdown( CurDat().updated_at, null, null, 1 ) ).toString()
+		)
+	);
 	InsStr("Info_Start", ISODate(CurDat().initday) +" - "+ CurDat().initval	);
 	InsStr("Info_Now",	 ISODate(CurDat().curday)  +" - "+ CurDat().curval	);
 	InsStr("Info_Target",ISODate(LastRoad[0]*1000) +" - "+ LastRoad[1]		);
 	InsStr("Info_Countdown", countdown(LastRoad[0]*1000,null,null,2).toString());
 
 	// Inform user / Log event
-	log( LangObj().Popup.OutputSet + e );
+	log( `${ _i( "Output Set" ) } : ${ e }` );
 }
 function CurDat( NeuObj ) {	// Return object for the currently displayed goal or replace it
 	// If NeuObj is
@@ -330,14 +334,14 @@ function DataRefresh( i ) {	// Refresh the current goals data
 	// no i arg => call refresh endpoint
 	if ( !i ) {
 		req.url = `goals/${ CurDat().slug }/refresh_graph`;
-		req.name = LangObj().Popup.Refresh.RefreshCall.Name;
+		req.name = _i( 'Refresh ' );
 		req.onSuccess = DataRefresh_RefreshCall;
 	}
 
 	// Check for new data in goals endpoint
 	else {
 		req.url = `goals/${ CurDat().slug }`;
-		req.name = LangObj().Popup.Refresh.GoalGet.Name;
+		req.name = _i( 'Refresh - Goal Update' );
 		req.onSuccess = DataRefresh_GoalGet.bind( null, i );
 	}
 
@@ -345,11 +349,11 @@ function DataRefresh( i ) {	// Refresh the current goals data
 }
 function DataRefresh_RefreshCall( response ) {
 	if ( response === "true" ) {
-		log( LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful );
+		log( _i( 'Waiting for Graph to refresh' ) );
 		RefreshTimeout = setTimeout( _ => DataRefresh( 1 ), 2500 );
 	}
 	else
-		log( LangObj().Popup.Refresh.RefreshCall.UpdateNo );
+		log( _i( 'Beeminder Sever Says no' ) );
 };
 function DataRefresh_GoalGet( i, response ) {
 	log( `iteration ${ i }` );
@@ -362,12 +366,12 @@ function DataRefresh_GoalGet( i, response ) {
 		);
 
 		log(
-			`${ LangObj().Popup.Refresh.GoalGet.NoUpdate }${ i } ${ delay( i ) }`
+			`${ _i( 'No Update' ) }, ${ i } ${ delay( i ) }`
 		);
 	}
 
 	else if ( response.updated_at === CurDat().updated_at && i > 6 )
-		log( LangObj().Popup.Refresh.GoalGet.TooManyTries );
+		log( _i( 'The goal seems not to have updated, aborting refresh' ) );
 
 	else {
 		console.log( `Testing: What doesn't this do? ${ CurDat( null ) }` );
@@ -376,9 +380,9 @@ function DataRefresh_GoalGet( i, response ) {
 
 		chrome.storage.sync.set(
 			{ GoalsData: NeuGoalsArray },
-			_ => log( LangObj().Popup.Refresh.GoalGet.NewDataSaved )
+			_ => log( _i( 'New goal data has been saved' ) )
 		);
-		log( `${ LangObj().Popup.Refresh.GoalGet.GoalRefreshed }${ i } ${ CurDat().updated_at }` );
+		log( `${ _i( 'Graph Refreshed' ) } ${ i } ${ CurDat().updated_at }` );
 	}
 }
 function delay( i ) {
@@ -414,18 +418,18 @@ function IniDisplay(){		// Initialise the display
 	}
 
 	// Populates text and RefreshAction listener in Menu Box
-	InsStr( "ButtonGoal",		LangObj().Popup.ButtonGoal		);
-	InsStr( "ButtonRefresh",	LangObj().Popup.ButtonRefresh	);
-	InsStr( "ButtonData",		LangObj().Popup.ButtonData		);
-	InsStr( "ButtonSettings",	LangObj().Popup.ButtonSettings	);
-	InsStr( "OptLink",			LangObj().Popup.OptLink			);
+	InsStr( "ButtonGoal",		_i( 'GOTO' )		);
+	InsStr( "ButtonRefresh",	_i( 'Refresh' )	);
+	InsStr( "ButtonData",		_i( 'Data' )		);
+	InsStr( "ButtonSettings",	_i( 'Settings' )	);
+	InsStr( "OptLink",			_i( 'Options' )			);
 	document.getElementById( "ButtonRefresh" ).addEventListener(
 		"click", _ => DataRefresh()
 	);
 
 	// Populates content is Countdown box
 	var BoxCountdown = document.createDocumentFragment();
-		BoxCountdown.appendChild( document.createTextNode( LangObj().Popup.Deadline ) );
+		BoxCountdown.appendChild( document.createTextNode( _i( 'Deadline' ) ) );
 		BoxCountdown.appendChild( document.createElement( "br" ) );
 	var Span_dlout = BoxCountdown.appendChild( document.createElement( "span" ) );
 		Span_dlout.id = "dlout";
@@ -436,16 +440,16 @@ function IniDisplay(){		// Initialise the display
 
 	// Populates content in BareMin Box
 	var BoxBareMin = document.createDocumentFragment();
-		BoxBareMin.appendChild( document.createTextNode( LangObj().Popup.BareMin ) );
+		BoxBareMin.appendChild( document.createTextNode( _i( 'Deadline' ) ) );
 		BoxBareMin.appendChild( document.createElement( "br" ) );
 	var Span_limsum = BoxBareMin.appendChild( document.createElement( "span" ) );
 		Span_limsum.id = "limsum";
 	ByID( "BareMin" ).appendChild( BoxBareMin );
 
 	// Populates meta-data
-	InsStr( "Label_Start",	LangObj().Popup.InfoDisplay.Start	);
-	InsStr( "Label_Now",	LangObj().Popup.InfoDisplay.Now		);
-	InsStr( "Label_Target",	LangObj().Popup.InfoDisplay.Target	);
+	InsStr( "Label_Start",	_i( 'Now' )	);
+	InsStr( "Label_Now",	_i( 'Start' )	);
+	InsStr( "Label_Target",	_i( 'Target' )	);
 
 	// Load default goal
 	SetOutput( DefGoal.Loc );
@@ -454,7 +458,7 @@ function IniDisplay(){		// Initialise the display
 		var string = new countdown(CurDat().losedate).toString();
 
 		if	( new Date() > CurDat().losedate )
-			string = LangObj().Popup.PastDeadline + string;
+			string = `${ _i( 'Past Deadline!' ) }</br>${ string }`;
 
 		ByID("dlout").innerHTML = string;
 		// 	NOTE: Should really be an append, but because of BR it needs to be innerHTML
@@ -484,7 +488,7 @@ function ImageLoader( url, key ) {	// Loads the image as string
 			if ( imgxhr.status === 200 )
 				reader.readAsDataURL( imgxhr.response );
 			else if ( imgxhr.status === 404 )
-				console.log( LangObj().Popup.ImageHandler.NotAnError404 );
+				console.log( _i( '404 expected' ) );
 		};
 	var reader = new FileReader();
 		reader.onloadend = function () {
@@ -517,11 +521,11 @@ function initialiseOptions(){
 			NeuGoalsArray	= items.GoalsData;
 
 			if ( items.username === "" || items.token === "" )
-				log( LangObj().Options.NoUserData );
+				log( _i( 'There be no data' ) );
 			else if ( NeuGoalsArray.length >= 1 )
 				drawList();
 			else
-				log( LangObj().Options.NoUserData );
+				log( _i( 'There be no data' ) );
 		}
 	);
 
@@ -542,9 +546,9 @@ function saveOptions() {
 	// Authenticate the credentials are valid
 	// TODO: offline handeler - if offline set conection listener
 	xhrHandler( {
-		name: LangObj().Options.save_options.xhrName,
+		name: _i( 'Credential Check' ),
 		onSuccess: saveOptions_authSuccess,
-		onFail: _ => log( LangObj().Options.save_options.Message404, 60000 )
+		onFail: _ => log( _i( '404: Check details try again' ), 60000 )
 	} );
 }
 function saveOptions_authSuccess( response ) {
@@ -555,7 +559,7 @@ function saveOptions_authSuccess( response ) {
 			DefGoal		:	DefGoal
 		},
 		_ => {
-			InsStr( "status", LangObj().Options.save_options.OptionsSaved );
+			InsStr( "status", _i( 'Options saved.' ) );
 			setTimeout( _ => InsStr( "status", "" ), 2000 );
 		}
 	);
@@ -581,7 +585,7 @@ function DefaultHandle( i ) {
 	ElementsList[ DefGoal.Loc ].defa.textContent = "-";
 	DefGoal.Loc = i;
 	DefGoal.Name = NeuGoalsArray[ i ].slug;
-	ElementsList[ DefGoal.Loc ].defa.textContent = LangObj().Options.Default;
+	ElementsList[ DefGoal.Loc ].defa.textContent = _i( 'Default' );
 }
 function drawList(){
 	for ( var i = 0; i < NeuGoalsArray.length; i++ ) {
@@ -632,11 +636,11 @@ function drawList(){
 	}
 
 	if ( Number.isInteger( DefGoal.Loc ) )
-		ElementsList[ DefGoal.Loc ].defa.innerHTML = LangObj().Options.Default;
+		ElementsList[ DefGoal.Loc ].defa.innerHTML = _i( 'Default' );
 
 	else {
 		DefGoal.Loc = 0;
-		ElementsList[ 0 ].defa.innerHTML = LangObj().Options.Default;
+		ElementsList[ 0 ].defa.innerHTML = _i( 'Default' );
 	}
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
@@ -718,7 +722,7 @@ function DownloadDatapoints (){
 		var frag = document.createDocumentFragment();
 			frag.appendChild( document.createTextNode( goalData.title ) );
 			frag.appendChild( document.createElement( "br" ) );
-			frag.appendChild( document.createTextNode( `Array length : ${ response.length }` ) );
+			frag.appendChild( document.createTextNode( `Number of Datapoints : ${ response.length }` ) );
 			frag.appendChild( document.createElement( "br" ) );
 
 		// Populate frag with datapoints

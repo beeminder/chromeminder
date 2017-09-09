@@ -16,7 +16,7 @@
 		"no-unused-vars": [
 			"warn",
 			{
-				"varsIgnorePattern" : "initialisePopup|initialiseOptions|ClearData",
+				"varsIgnorePattern" : "initialisePopup|initialiseOptions|ClearData|_i",
 				"args" : "none",
 				"vars" : "local"
 			}
@@ -32,8 +32,9 @@
 	"globals": {
 		"chrome" : true,
 		"countdown" : true,
-		"PUinit": true,
-		"OPTinit" : true,
+		"initialisePopup": true,
+		"initialiseOptions" : true,
+		"_i" : true,
 		"LocalLang" : true
 	}
 
