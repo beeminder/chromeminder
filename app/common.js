@@ -324,53 +324,66 @@ function CurDat( NeuObj ) {	// Return object for the currently displayed goal or
 		return KeyedGoalsArray[ CurString ];
 	}
 }
-function DataRefresh( i ){	// Refresh the current goals data
-	if ( !i )
-		xhrHandler( {
-			url: `goals/${ CurDat().slug }/refresh_graph`,
-			name: LangObj().Popup.Refresh.RefreshCall.Name,
-			onSuccess: RefreshCall
-		} );
-	else
-		xhrHandler( {
-			url: `goals/${ CurDat().slug }`,
-			name: LangObj().Popup.Refresh.GoalGet.Name,
-			onSuccess: GoalGet
-		} );
+function DataRefresh( i ) {	// Refresh the current goals data
+	var req = {};
 
-	function RefreshCall( response ) {
-		if ( response === "true" ) {
-			log( LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful );
-			RefreshTimeout = setTimeout( _ => DataRefresh( 1 ), 2500 );
-		}
-		else
-			log( LangObj().Popup.Refresh.RefreshCall.UpdateNo );
+	// no i arg => call refresh endpoint
+	if ( !i ) {
+		req.url = `goals/${ CurDat().slug }/refresh_graph`;
+		req.name = LangObj().Popup.Refresh.RefreshCall.Name;
+		req.onSuccess = DataRefresh_RefreshCall;
 	}
-	function GoalGet( response ) {
-		log( `iteration ${i}` );
-		response = JSON.parse( response );
-		// XXX: Untested changes, but sould work?
-		if ( response.updated_at === CurDat().updated_at && i <= 6 ) {
-			RefreshTimeout = setTimeout( _ => DataRefresh( i + 1 ), GrowingDelay( i ) );
-			log( `${ LangObj().Popup.Refresh.GoalGet.NoUpdate }${ i } ${ GrowingDelay( i ) }` );
-		}
-		else if ( response.updated_at === CurDat().updated_at && i > 6 )
-			log( LangObj().Popup.Refresh.GoalGet.TooManyTries );
-		else {
-			console.log( "Testing: What doesn this do? " + CurDat( null ) );
-			CurDat( ReturnGoalElement( response ) );
-			SetOutput();
-			chrome.storage.sync.set(
-				{ GoalsData: NeuGoalsArray },
-				_ => log( LangObj().Popup.Refresh.GoalGet.NewDataSaved )
-			);
-			log( `${ LangObj().Popup.Refresh.GoalGet.GoalRefreshed }${ i } ${ CurDat().updated_at }` );
-		}
+
+	// Check for new data in goals endpoint
+	else {
+		req.url = `goals/${ CurDat().slug }`;
+		req.name = LangObj().Popup.Refresh.GoalGet.Name;
+		req.onSuccess = DataRefresh_GoalGet.bind( null, i );
 	}
-	function GrowingDelay( i ) {
-		if ( !i ) return false;
-		return 2500 * Math.pow( 2, ( i - 1 ) );
+
+	xhrHandler( req );
+}
+function DataRefresh_RefreshCall( response ) {
+	if ( response === "true" ) {
+		log( LangObj().Popup.Refresh.RefreshCall.UpdateSuccessful );
+		RefreshTimeout = setTimeout( _ => DataRefresh( 1 ), 2500 );
 	}
+	else
+		log( LangObj().Popup.Refresh.RefreshCall.UpdateNo );
+};
+function DataRefresh_GoalGet( i, response ) {
+	log( `iteration ${ i }` );
+	response = JSON.parse( response );
+
+	if ( response.updated_at === CurDat().updated_at && i <= 6 ) {
+		RefreshTimeout = setTimeout(
+			_ => DataRefresh( i + 1 ),
+			delay( i )
+		);
+
+		log(
+			`${ LangObj().Popup.Refresh.GoalGet.NoUpdate }${ i } ${ delay( i ) }`
+		);
+	}
+
+	else if ( response.updated_at === CurDat().updated_at && i > 6 )
+		log( LangObj().Popup.Refresh.GoalGet.TooManyTries );
+
+	else {
+		console.log( `Testing: What doesn't this do? ${ CurDat( null ) }` );
+		CurDat( ReturnGoalElement( response ) );
+		SetOutput();
+
+		chrome.storage.sync.set(
+			{ GoalsData: NeuGoalsArray },
+			_ => log( LangObj().Popup.Refresh.GoalGet.NewDataSaved )
+		);
+		log( `${ LangObj().Popup.Refresh.GoalGet.GoalRefreshed }${ i } ${ CurDat().updated_at }` );
+	}
+}
+function delay( i ) {
+	if ( !i ) return false;
+	return 2500 * Math.pow( 2, ( i - 1 ) );
 }
 function IniDisplay(){		// Initialise the display
 	var frag, key; // TODO: No longer in use???
