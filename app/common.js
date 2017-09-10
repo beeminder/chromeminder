@@ -270,35 +270,44 @@ function SetOutput( e ) {		// Displays Goal specific information
 	else
 		e = someVar.ArrayNo;
 
+	var goal = CurDat();
+
 	// Load Image
-	ImageLoader( CurDat().graph_url, CurDat().id );
+	ImageLoader( goal.graph_url, goal.id );
 
 	// Set content in:
-	InsStr( "GoalLoc", CurDat().title );			// Menu
+	InsStr( "GoalLoc", goal.title );			// Menu
 	LinkBM(	"ButtonGoal" 						);	// Menu
 	LinkBM(	"GraphLink"							);	// Menu
 	LinkBM(	"ButtonData",		"datapoints"	);	// Menu
 	LinkBM(	"ButtonSettings",	"settings"		);	// Menu
-	InsStr( "limsum", CurDat().limsum);				// Baremin
+	InsStr( "limsum", goal.limsum);				// Baremin
 
 	// Stop the refresh recursion if it's set
 	clearTimeout( RefreshTimeout );
 
 	// Set the deadline colour TODO move to DisplayDeadline()
 	setCountdownColour();
-
-	// Set content in meta-data TODO: Something
-	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
-	insertString_i( 'LastUpdateDate', 'LastUpdate',
-		( new countdown( CurDat().updated_at, null, null, 1 ) ).toString()
-	);
-	InsStr("Info_Start", ISODate(CurDat().initday) +" - "+ CurDat().initval	);
-	InsStr("Info_Now",	 ISODate(CurDat().curday)  +" - "+ CurDat().curval	);
-	InsStr("Info_Target",ISODate(LastRoad[0]*1000) +" - "+ LastRoad[1]		);
-	InsStr("Info_Countdown", countdown(LastRoad[0]*1000,null,null,2).toString());
+	setMetaData( goal );
 
 	// Inform user / Log event
 	log( _i( "Output Set", e ) );
+}
+function setMetaData( goal ) {
+	var lastRoad = goal.fullroad[ goal.fullroad.length - 1 ];
+
+	var updated = countdown( goal.updated_at, null, null, 1 ).toString();
+	var start = `${ ISODate( goal.initday ) } - ${ goal.initval }`;
+	var now = `${ ISODate( goal.curday ) } - ${ goal.curval }`;
+	var target = `${ ISODate( lastRoad[ 0 ] * 1000 ) } - ${ lastRoad[ 1 ] }`;
+	var targetCD = countdown( lastRoad[ 0 ] * 1000, null, null, 2 ).toString();
+
+	insertString_i( 'LastUpdateDate', 'LastUpdate', updated );
+	InsStr( "Info_Start", start );
+	InsStr( "Info_Now", now );
+	InsStr( "Info_Target", target );
+	InsStr( "Info_Countdown", targetCD );
+
 }
 function CurDat( NeuObj ) {	// Return object for the currently displayed goal or replace it
 	// If NeuObj is
