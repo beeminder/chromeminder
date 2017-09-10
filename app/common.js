@@ -24,11 +24,6 @@ var
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
 function xhrHandler( args ) {
-	if ( !args )
-		throw new Error( 'No `args` obj passed to xhr handler' );
-	if ( !isFunc( args.onSuccess ) )
-		throw new Error( '`args.onSuccess` is not a function' );
-	//return false;
 	/**
 	 * Handles xhr requests
 	 * @function xhrHandler
@@ -39,6 +34,10 @@ function xhrHandler( args ) {
 	 * @param {function} args.onOffline - What to do when offline
 	 * @param {function} args.onFail - What to do when a 404 has been given
 	 */
+	if ( !args )
+		throw new Error( 'No `args` obj passed to xhr handler' );
+	if ( !isFunc( args.onSuccess ) )
+		throw new Error( '`args.onSuccess` is not a function' );
 
 	var name = args.name ? `${ args.name } - ` : '';
 
