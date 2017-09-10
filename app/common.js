@@ -125,6 +125,23 @@ function insertString_i( id, string, ...args ) {
 function addClick( elem, func ) {
 	return elem.addEventListener( 'click', func );
 }
+function setCountdownColour() {
+	var colour = convertDeadlineToColour( CurDat().losedate );
+	var display = document.querySelector( ".CountdownDisplay" );
+
+	display.style.backgroundColor = colour;
+}
+function convertDeadlineToColour( losedate ) {
+	var daysleft = new countdown( losedate ).days;
+
+	if ( daysleft > 2 ) return "#39b44a";
+	else if ( daysleft === 2 ) return "#325fac";
+	else if ( daysleft === 1 ) return "#f7941d";
+	else if ( daysleft === 0 ) return "#c92026";
+	else if ( daysleft < 0 ) return "#c92026";
+
+	return "purple";
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
 	chrome.storage.sync.get(
@@ -268,17 +285,7 @@ function SetOutput( e ) {		// Displays Goal specific information
 	clearTimeout( RefreshTimeout );
 
 	// Set the deadline colour TODO move to DisplayDeadline()
-	document.querySelector( ".CountdownDisplay" ).style.backgroundColor = (
-		_ => { // TODO: delegate to handler function
-			var daysleft = new countdown( CurDat().losedate ).days;
-			if		( daysleft  >  2 )	return "#39b44a";
-			else if ( daysleft === 2 )	return "#325fac";
-			else if ( daysleft === 1 )	return "#f7941d";
-			else if ( daysleft === 0 )	return "#c92026";
-			else if ( daysleft  <  0 )	return "#c92026";
-			return "purple";
-		}
-	)( /**/ );
+	setCountdownColour();
 
 	// Set content in meta-data TODO: Something
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
@@ -445,8 +452,10 @@ function IniDisplay(){		// Initialise the display
 		if	( new Date() > CurDat().losedate )
 			string = `${ _i( 'Past Deadline!' ) }</br>${ string }`;
 
-		ByID("dlout").innerHTML = string;
+		ByID( "dlout" ).innerHTML = string;
 		// 	NOTE: Should really be an append, but because of BR it needs to be innerHTML
+
+		setCountdownColour();
 	}
 }
 function ImageLoader( url, key ) {	// Loads the image as string
