@@ -575,61 +575,58 @@ function DefaultHandle( i ) {
 	DefGoal.Name = NeuGoalsArray[ i ].slug;
 	ElementsList[ DefGoal.Loc ].defa.textContent = _i( 'Default' );
 }
-function drawList(){
+function drawList() {
+	var frag = document.createDocumentFragment();
+
 	for ( var i = 0; i < NeuGoalsArray.length; i++ ) {
-		var elem = ElementsList[ i ];
-		var elemGoals = NeuGoalsArray[ i ];
+		var listItem = makeListItem( i );
 
-		elem = {
-			"item"	: document.createElement( "li" ),	// List Item
-			"title"	: document.createElement( "a"  ),	// Goal title
-			"defa"	: document.createElement( "a"  ),	// Default selector
-			"hide"	: document.createElement( "a"  ),	// Hide Toggle
-			"notify": document.createElement( "a"  )	// Notification Toggle
-		};
-
-		elem.item	.className = "item";
-		elem.title	.className = "title";
-		elem.defa	.className = "default";
-		elem.hide	.className = "hide";
-		elem.notify	.className = "notify";
-
-		elem.item	.id = elemGoals.slug + "-item";
-		elem.title	.id = elemGoals.slug + "-title";
-		elem.defa	.id = elemGoals.slug + "-defaultBtn";
-		elem.hide	.id = elemGoals.slug + "-HideBtn";
-		elem.notify	.id = elemGoals.slug + "-NotifyBtn";
-
-		elem.title	.textContent = elemGoals.title;
-		elem.defa	.textContent = "-";
-		elem.hide	.textContent = elemGoals.Notify;
-		elem.notify	.textContent = elemGoals.Show;
-
-		ByID("TheList").appendChild( elem.item);
-			elem.item.appendChild( elem.title );
-			elem.item.appendChild( elem.defa );
-			elem.item.appendChild( elem.hide );
-			elem.item.appendChild( elem.notify );
-
-		( function ( _i ) {
-			LinkBM( ElementsList[ _i ].title.id, undefined, elemGoals.slug );
-			ElementsList[ _i ].defa.addEventListener( "click", _ => DefaultHandle( _i ) );
-			// ElementsList[ _i ].hide.addEventListener
-			// 	( "click", MakeGoalsArray );
-			// notify.addEventListener
-			// 	( "click", functions(){ NotifyHandle( i ) } );
-		} )( i );
-
-		if	(elemGoals.slug === DefGoal.Name) {DefGoal.Loc = i;}
+		frag.appendChild( listItem.item );
 	}
 
+	ByID( 'TheList' ).appendChild( frag );
+
 	if ( Number.isInteger( DefGoal.Loc ) )
-		ElementsList[ DefGoal.Loc ].defa.innerHTML = _i( 'Default' );
+		ElementsList[ DefGoal.Loc ].default.innerHTML = _i( 'Default' );
 
 	else {
 		DefGoal.Loc = 0;
-		ElementsList[ 0 ].defa.innerHTML = _i( 'Default' );
+		ElementsList[ 0 ].default.innerHTML = _i( 'Default' );
 	}
+}
+function makeListItem( i ) {
+	var goal = NeuGoalsArray[ i ];
+	var slug = goal.slug;
+
+	var item = document.createElement( 'li' );
+		item.className = 'item';
+		item.id = `${ slug }-item`;
+
+	var pack = { slug, item };
+
+	var title = makeListLink( 'title', `title`, goal.title, pack );
+		title.href = `https://www.beeminder.com/${ UName }/${ slug }/`;
+	var defa = makeListLink( 'default', `defaultBtn`, '-', pack );
+	var hide = makeListLink( 'hide', `HideBtn`, goal.Notify, pack );
+	var notify = makeListLink( 'notify', `NotifyBtn`, goal.Show, pack );
+
+	addClick( defa, _ => DefaultHandle( i ) );
+	// addClick( hide, MakeGoalsArray );
+	// addClick( notify, _ => NotifyHandle( i ) );
+
+	if ( goal.slug === DefGoal.Name ) DefGoal.Loc = i;
+
+	return ElementsList[ i ] = { item, title, defa, hide, notify, };
+}
+function makeListLink( className, id, text, { slug, item } ) {
+	var elem = document.createElement( 'a' );
+		elem.className = className;
+		elem.id = `${ slug }-${ id }`;
+		elem.textContent = text;
+
+	item.appendChild( elem );
+
+	return elem;
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
 function ReturnGoalElement( object, old ) {
