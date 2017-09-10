@@ -99,10 +99,11 @@ function log( text, time ){	// informs user and logs event
 		time ? time : 5000
 	);
 }
-function ByID( item ) {				// Abstraction
+/* --- --- --- ---		Helper Functions			--- --- --- --- */
+function ByID( item ) {
 	return document.getElementById( item );
 }
-function LinkBM( id, salt, slug ) { // Sets the href of a link
+function LinkBM( id, salt, slug ) {
 	// Validation and Houskeeping
 	if ( !id ) return false;
 
@@ -113,10 +114,10 @@ function LinkBM( id, salt, slug ) { // Sets the href of a link
 	document.getElementById( id ).href =
 		`https://www.beeminder.com/${ UName }/${ slug }/${ salt }`;
 }
-function ISODate( date ) {				// Abstraction
+function ISODate( date ) {
 	return ( new Date( date ) ).toISOString().substring( 0, 10 );
 }
-function InsStr( id, string ) { 	// Abstraction
+function InsStr( id, string ) {
 	document.getElementById( id ).textContent = string;
 }
 function addClick( elem, func ) {
