@@ -119,6 +119,9 @@ function ISODate( date ) {				// Abstraction
 function InsStr( id, string ) { 	// Abstraction
 	document.getElementById( id ).textContent = string;
 }
+function addClick( elem, func ) {
+	return elem.addEventListener( 'click', func );
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
 	chrome.storage.sync.get(
