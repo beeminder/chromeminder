@@ -428,24 +428,12 @@ function IniDisplay(){		// Initialise the display
 		"click", _ => DataRefresh()
 	);
 
-	// Populates content is Countdown box
-	var BoxCountdown = document.createDocumentFragment();
-		BoxCountdown.appendChild( document.createTextNode( _i( 'Deadline' ) ) );
-		BoxCountdown.appendChild( document.createElement( "br" ) );
-	var Span_dlout = BoxCountdown.appendChild( document.createElement( "span" ) );
-		Span_dlout.id = "dlout";
-	ByID( "Countdown" ).appendChild( BoxCountdown );
+	// Headings
+	ByID( 'countdownHeading' ).textContent = _i( 'Deadline' );
+	ByID( 'bareMinHeading' ).textContent = _i( 'Deadline' );
 
-	// Sets Deadline Counter
-	setInterval( DisplayDeadline, 1000 );
-
-	// Populates content in BareMin Box
-	var BoxBareMin = document.createDocumentFragment();
-		BoxBareMin.appendChild( document.createTextNode( _i( 'Deadline' ) ) );
-		BoxBareMin.appendChild( document.createElement( "br" ) );
-	var Span_limsum = BoxBareMin.appendChild( document.createElement( "span" ) );
-		Span_limsum.id = "limsum";
-	ByID( "BareMin" ).appendChild( BoxBareMin );
+	// Dealine Updater
+	setInterval( updateDeadline, 1000 );
 
 	// Populates meta-data
 	insertString_i( 'Label_Start',	'Now'	);
@@ -454,18 +442,21 @@ function IniDisplay(){		// Initialise the display
 
 	// Load default goal
 	SetOutput( DefGoal.Loc );
+}
+function updateDeadline(){
+	/**
+	 * @function updateDeadline
+	 * called by 1 second interval that upadates the deadline countdown
+	 */
 
-	function DisplayDeadline(){
-		var string = new countdown(CurDat().losedate).toString();
+	var losedate = CurDat().losedate;
 
-		if	( new Date() > CurDat().losedate )
-			string = `${ _i( 'Past Deadline!' ) }</br>${ string }`;
+	ByID( 'countdownValue' ).innerHTML = countdown( losedate ).toString();
 
-		ByID( "dlout" ).innerHTML = string;
-		// 	NOTE: Should really be an append, but because of BR it needs to be innerHTML
+	if ( new Date() > losedate )
+		ByID( 'countdownFailed' ).textContent = _i( 'Past Deadline!' );
 
-		setCountdownColour();
-	}
+	setCountdownColour();
 }
 function ImageLoader( url, key ) {	// Loads the image as string
 	// TODO insert into goal obj and save
