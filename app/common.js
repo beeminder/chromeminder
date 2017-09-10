@@ -119,6 +119,9 @@ function ISODate( date ) {
 function InsStr( id, string ) {
 	document.getElementById( id ).textContent = string;
 }
+function insertString_i( id, string, ...args ) {
+	document.getElementById( id ).textContent = _i( string, ...args );
+}
 function addClick( elem, func ) {
 	return elem.addEventListener( 'click', func );
 }
@@ -279,12 +282,8 @@ function SetOutput( e ) {		// Displays Goal specific information
 
 	// Set content in meta-data TODO: Something
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
-	InsStr(
-		"LastUpdateDate",
-		_i(
-			'LastUpdate',
-			( new countdown( CurDat().updated_at, null, null, 1 ) ).toString()
-		)
+	insertString_i( "LastUpdateDate", 'LastUpdate',
+		( new countdown( CurDat().updated_at, null, null, 1 ) ).toString()
 	);
 	InsStr("Info_Start", ISODate(CurDat().initday) +" - "+ CurDat().initval	);
 	InsStr("Info_Now",	 ISODate(CurDat().curday)  +" - "+ CurDat().curval	);
@@ -404,11 +403,11 @@ function IniDisplay(){		// Initialise the display
 	}
 
 	// Populates text and RefreshAction listener in Menu Box
-	InsStr( "ButtonGoal",		_i( 'GOTO' )		);
-	InsStr( "ButtonRefresh",	_i( 'Refresh' )	);
-	InsStr( "ButtonData",		_i( 'Data' )		);
-	InsStr( "ButtonSettings",	_i( 'Settings' )	);
-	InsStr( "OptLink",			_i( 'Options' )			);
+	insertString_i( "ButtonGoal",		'GOTO'		);
+	insertString_i( "ButtonRefresh",	'Refresh'	);
+	insertString_i( "ButtonData",		'Data'		);
+	insertString_i( "ButtonSettings",	'Settings'	);
+	insertString_i( "OptLink",			'Options'	);
 	document.getElementById( "ButtonRefresh" ).addEventListener(
 		"click", _ => DataRefresh()
 	);
@@ -433,9 +432,9 @@ function IniDisplay(){		// Initialise the display
 	ByID( "BareMin" ).appendChild( BoxBareMin );
 
 	// Populates meta-data
-	InsStr( "Label_Start",	_i( 'Now' )	);
-	InsStr( "Label_Now",	_i( 'Start' )	);
-	InsStr( "Label_Target",	_i( 'Target' )	);
+	insertString_i( "Label_Start",	'Now'	);
+	insertString_i( "Label_Now",	'Start'	);
+	insertString_i( "Label_Target",	'Target');
 
 	// Load default goal
 	SetOutput( DefGoal.Loc );
@@ -545,7 +544,7 @@ function saveOptions_authSuccess( response ) {
 			DefGoal		:	DefGoal
 		},
 		_ => {
-			InsStr( "status", _i( 'Options saved.' ) );
+			insertString_i( "status", 'Options saved.' );
 			setTimeout( _ => InsStr( "status", "" ), 2000 );
 		}
 	);
