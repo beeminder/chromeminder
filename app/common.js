@@ -292,7 +292,7 @@ function SetOutput( e ) {		// Displays Goal specific information
 	InsStr("Info_Countdown", countdown(LastRoad[0]*1000,null,null,2).toString());
 
 	// Inform user / Log event
-	log( `${ _i( "Output Set" ) } : ${ e }` );
+	log( _i( "Output Set", e ) );
 }
 function CurDat( NeuObj ) {	// Return object for the currently displayed goal or replace it
 	// If NeuObj is
@@ -353,9 +353,7 @@ function DataRefresh_GoalGet( i, response ) {
 			delay( i )
 		);
 
-		log(
-			`${ _i( 'No Update' ) }, ${ i } ${ delay( i ) }`
-		);
+		log( _i( 'No Update', i, delay( i ) ) );
 	}
 
 	else if ( response.updated_at === CurDat().updated_at && i > 6 )
@@ -370,7 +368,7 @@ function DataRefresh_GoalGet( i, response ) {
 			{ GoalsData: NeuGoalsArray },
 			_ => log( _i( 'New goal data has been saved' ) )
 		);
-		log( `${ _i( 'Graph Refreshed' ) } ${ i } ${ CurDat().updated_at }` );
+		log( _i( 'Graph Refreshed', i, CurDat().updated_at ) );
 	}
 }
 function delay( i ) {
