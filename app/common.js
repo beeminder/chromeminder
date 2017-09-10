@@ -289,7 +289,7 @@ function SetOutput( e ) {		// Displays Goal specific information
 
 	// Set content in meta-data TODO: Something
 	var LastRoad = CurDat().fullroad[CurDat().fullroad.length-1];
-	insertString_i( "LastUpdateDate", 'LastUpdate',
+	insertString_i( 'LastUpdateDate', 'LastUpdate',
 		( new countdown( CurDat().updated_at, null, null, 1 ) ).toString()
 	);
 	InsStr("Info_Start", ISODate(CurDat().initday) +" - "+ CurDat().initval	);
@@ -410,11 +410,11 @@ function IniDisplay(){		// Initialise the display
 	}
 
 	// Populates text and RefreshAction listener in Menu Box
-	insertString_i( "ButtonGoal",		'GOTO'		);
-	insertString_i( "ButtonRefresh",	'Refresh'	);
-	insertString_i( "ButtonData",		'Data'		);
-	insertString_i( "ButtonSettings",	'Settings'	);
-	insertString_i( "OptLink",			'Options'	);
+	insertString_i( 'ButtonGoal',		'GOTO'		);
+	insertString_i( 'ButtonRefresh',	'Refresh'	);
+	insertString_i( 'ButtonData',		'Data'		);
+	insertString_i( 'ButtonSettings',	'Settings'	);
+	insertString_i( 'OptLink',			'Options'	);
 	document.getElementById( "ButtonRefresh" ).addEventListener(
 		"click", _ => DataRefresh()
 	);
@@ -439,9 +439,9 @@ function IniDisplay(){		// Initialise the display
 	ByID( "BareMin" ).appendChild( BoxBareMin );
 
 	// Populates meta-data
-	insertString_i( "Label_Start",	'Now'	);
-	insertString_i( "Label_Now",	'Start'	);
-	insertString_i( "Label_Target",	'Target');
+	insertString_i( 'Label_Start',	'Now'	);
+	insertString_i( 'Label_Now',	'Start'	);
+	insertString_i( 'Label_Target',	'Target');
 
 	// Load default goal
 	SetOutput( DefGoal.Loc );
@@ -524,7 +524,7 @@ function initialiseOptions(){
 	);
 
 	document.getElementById( "save" ).addEventListener(
-		"click", save_options
+		"click", saveOptions
 	);
 	document.getElementById( "clear" ).addEventListener(
 		"click", _ => chrome.storage.sync.clear()
@@ -553,7 +553,7 @@ function saveOptions_authSuccess( response ) {
 			DefGoal		:	DefGoal
 		},
 		_ => {
-			insertString_i( "status", 'Options saved.' );
+			insertString_i( 'status', 'Options saved.' );
 			setTimeout( _ => InsStr( "status", "" ), 2000 );
 		}
 	);
