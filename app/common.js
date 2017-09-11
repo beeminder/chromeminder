@@ -187,39 +187,35 @@ function initialisePopup(){			// Initialises Popup.html
 	}
 
 	function HandleResponse( response ) {
-		var WorkingResponse = JSON.parse( response ),
-			DefHolding = 0,
-			NoOfDefs, PastData, NeuData;
+		response = JSON.parse( response );
+
+		var defaultHolding = 0,
+			NoOfDefs = 0,
+			now = Date.now();
 
 		NeuGoalsArray = []; // Clear Array
 		// NOTE: This isn't needed here as no data has been added
 
-		for (var i = 0; i < WorkingResponse.length; i++){
-			NeuData = WorkingResponse[ i ];
-			PastData = KeyedGoalsArray[ NeuData.id ];
+		for ( var i = 0; i < response.length; i++ ) {
+			var goal = processGoal( response[ i ], now );
+			var id = goal.id;
 
-			if ( DefGoal.Name == WorkingResponse[ i ].slug ) DefHolding = i;
+			KeyedGoalsArray[ id ] = NeuGoalsArray[ i ] = goal;
 
-			NeuGoalsArray[ i ] = ReturnGoalElement( WorkingResponse[ i ] );
-
-			if ( PastData ) {
-				// If data has already been exist
-				// Nothing has changed, No need to do anything
-				// if ( NeuData.updated_at * 1000 === PastData.updated_at ) { } else {
-				KeyedGoalsArray[ NeuData.id ]
-					= ReturnGoalElement( NeuData, PastData );
-				// }
-				if ( PastData.Default ) {
-					DefHolding = NeuData.id;
-					NoOfDefs++;
-				}
+			if ( goal.Default || DefGoal.name == goal.slug ) {
+				defaultHolding = i;
+				NoOfDefs++;
 			}
-			else
-				KeyedGoalsArray[NeuData.id] = ReturnGoalElement(NeuData);
 		}
 
-		if ( NoOfDefs > 1 ) DefHolding = 0;
-		someVar.ArrayNo = DefGoal.Loc = DefHolding;
+		// TODO: test if this dead goal removing code works
+		var temp = KeyedGoalsArray;
+		for ( var key in temp )
+			if ( temp.hasOwnProperty( key ) && temp[ key ].now !== now )
+					delete KeyedGoalsArray[ key ];
+
+		if ( NoOfDefs > 1 ) defaultHolding = 0;
+		someVar.ArrayNo = DefGoal.Loc = defaultHolding;
 
 		// Store newly constructed data
 		chrome.storage.sync.set(
@@ -228,10 +224,10 @@ function initialisePopup(){			// Initialises Popup.html
 				KeyedData	: KeyedGoalsArray,
 				DefGoal		: DefGoal
 			},
-			_ => log( _i( "Data has been downloaded" ) )
+			_ => log( _i( "Goal data has been saved" ) )
 		);
 
-		log( _i( "Goal data has been saved" ) );
+		log( _i( "Data has been downloaded" ) );
 		IniDisplay();
 	}
 	function ItHasFailed() {
@@ -376,7 +372,7 @@ function DataRefresh_GoalGet( i, response ) {
 
 	else {
 		console.log( `Testing: What doesn't this do? ${ CurDat( null ) }` );
-		CurDat( ReturnGoalElement( response ) );
+		CurDat( processGoal( response ) );
 		SetOutput();
 
 		chrome.storage.sync.set(
@@ -635,53 +631,41 @@ function makeListLink( className, id, text, { slug, item } ) {
 	return elem;
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
-function ReturnGoalElement( object, old ) {
-	// TODO: Implement a Default options set
-	var DefaultArray = {
-		Notify		: true,
-		Show		: true
-	};
+function processGoal( goal, now ) {
+	var id = goal.id;
+	var old;
 
-	// If old parameter is not set return element with default settings
-	if ( !old ) {
-		old = DefaultArray;
-		console.log( "No Old" );
-	}
-	// If old parameter references keyed data
-	else if ( typeof old === "string" && KeyedGoalsArray[ old ] ) {
-		old = KeyedGoalsArray[ old ];
-		console.log( "String" );
-	}
-	// If old parameter is anexisitng object
-	else if ( typeof old === "object" && old.Notify && old.Show ) {
-		old = old;
-		console.log( "Object" );
-	}
-	// If old parameter isn't valid goal data
+	if ( id in KeyedGoalsArray )
+		old = KeyedGoalsArray[ id ];
+
 	else
-		return console.log( "Sommin Gone Wrong" );
+		old = { // TODO: Implement a Default options set
+			Notify: true,
+			Show: true
+		};
 
 	// Return object with local settings added and dates formated into UNIX integer
 	return {
-		"slug"			: object.slug,
-		"title"			: object.title,
-		"description"	: object.description,
-		"id"			: object.id,
-		"losedate"		: object.losedate	*1000,	// Date
-		"limsum"		: object.limsum,
+		"slug"			: goal.slug,
+		"title"			: goal.title,
+		"description"	: goal.description,
+		"id"			: goal.id,
+		"losedate"		: goal.losedate		*1000,	// Date
+		"limsum"		: goal.limsum,
 		"DataPoints"	: [],
-		"updated_at"	: object.updated_at	*1000,	// Date
-		"initday"		: object.initday	*1000,	// Date
-		"initval"		: object.initval,
-		"curday"		: object.curday		*1000,	// Date
-		"curval"		: object.curval,
-		"lastday"		: object.lastday	*1000,	// Date
-		"fullroad"		: object.fullroad,
-		"graph_url"		: object.graph_url,
-		"thumb_url"		: object.thumb_url,
+		"updated_at"	: goal.updated_at	*1000,	// Date
+		"initday"		: goal.initday		*1000,	// Date
+		"initval"		: goal.initval,
+		"curday"		: goal.curday		*1000,	// Date
+		"curval"		: goal.curval,
+		"lastday"		: goal.lastday		*1000,	// Date
+		"fullroad"		: goal.fullroad,
+		"graph_url"		: goal.graph_url,
+		"thumb_url"		: goal.thumb_url,
 		"Notify"		:	old.Notify,
 		"Show"			:	old.Show,
-		"autodata"		: object.autodata
+		"now"			:	now,
+		"autodata"		: goal.autodata
 	};
 }
 function DownloadDatapoints (){
