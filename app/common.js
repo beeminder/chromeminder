@@ -12,6 +12,7 @@ var
 		updated_at	: "",
 		ArrayNo		: ""
 	},
+	currentIndex,
 	DefGoal = {
 		Loc			: undefined,
 		Name		: ""
@@ -215,7 +216,7 @@ function initialisePopup(){			// Initialises Popup.html
 					delete KeyedGoalsArray[ key ];
 
 		if ( NoOfDefs > 1 ) defaultHolding = 0;
-		someVar.ArrayNo = DefGoal.Loc = defaultHolding;
+		currentIndex = DefGoal.Loc = defaultHolding;
 
 		// Store newly constructed data
 		chrome.storage.sync.set(
@@ -238,7 +239,7 @@ function initialisePopup(){			// Initialises Popup.html
 				NeuGoalsArray = items.GoalsData;
 
 				if ( items.GoalsData.length >= 1 ) {// If there is at least one goal
-					someVar.ArrayNo = DefGoal.Loc;
+					currentIndex = DefGoal.Loc;
 					IniDisplay();
 				}
 				else {// If there is no goal data
@@ -260,11 +261,11 @@ function SetOutput( e ) {		// Displays Goal specific information
 	if ( typeof e === "string" ) // TODO: Need to validate the goal exists
 		CurString = e;
 	else if ( Number.isInteger( e ) && e >= NeuGoalsArray.length ) {
-		someVar.ArrayNo = e;
+		currentIndex = e;
 		CurString = NeuGoalsArray[ e ].id;
 	}
 	else
-		e = someVar.ArrayNo;
+		e = currentIndex;
 
 	var goal = CurDat();
 
@@ -307,13 +308,13 @@ function setMetaData( goal ) {
 }
 function CurDat( NeuObj ) {	// Return object for the currently displayed goal or replace it
 	// If NeuObj is
-	if ( NeuObj && NeuGoalsArray[ someVar.ArrayNo ].id === NeuObj.id ) {
-		NeuGoalsArray[ someVar.ArrayNo ] = NeuObj;
+	if ( NeuObj && NeuGoalsArray[ currentIndex ].id === NeuObj.id ) {
+		NeuGoalsArray[ currentIndex ] = NeuObj;
 		KeyedGoalsArray[ NeuObj.id ] = NeuObj;
 	}
 
 	// If NeuObj is true
-	else if ( NeuObj && NeuGoalsArray[ someVar.ArrayNo ].id !== NeuObj.id )
+	else if ( NeuObj && NeuGoalsArray[ currentIndex ].id !== NeuObj.id )
 		return false;
 
 	// If there is a goal key return a KeyedGoalsArray item
@@ -323,7 +324,7 @@ function CurDat( NeuObj ) {	// Return object for the currently displayed goal or
 
 	// If CurString isn't set, set it
 	else {
-		CurString = NeuGoalsArray[ someVar.ArrayNo ].id;
+		CurString = NeuGoalsArray[ currentIndex ].id;
 		return KeyedGoalsArray[ CurString ];
 	}
 }
