@@ -633,13 +633,11 @@ function makeListLink( className, id, text, { slug, item } ) {
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
 function processGoal( goal, now ) {
 	var id = goal.id;
-	var old;
 
-	if ( id in KeyedGoalsArray )
-		old = KeyedGoalsArray[ id ];
-
-	else
-		old = { // TODO: Implement a Default options set
+	var old = id in KeyedGoalsArray
+		? KeyedGoalsArray[ id ]
+		: { // TODO: Implement a Default options set
+			"DataPoints": [],
 			Notify: true,
 			Show: true
 		};
@@ -652,7 +650,7 @@ function processGoal( goal, now ) {
 		"id"			: goal.id,
 		"losedate"		: goal.losedate		*1000,	// Date
 		"limsum"		: goal.limsum,
-		"DataPoints"	: [],
+		"DataPoints"	:	old.DataPoints,
 		"updated_at"	: goal.updated_at	*1000,	// Date
 		"initday"		: goal.initday		*1000,	// Date
 		"initval"		: goal.initval,
