@@ -143,6 +143,15 @@ function convertDeadlineToColour( losedate ) {
 
 	return "purple";
 }
+function clearBodyAppendLink( message, url ) {
+	var a = document.createElement( 'a' );
+		a.textContent = message;
+		a.href = url;
+		a.target = '_blank';
+
+	document.body.innerHTML = '';
+	document.body.appendChild( a );
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
 	chrome.storage.sync.get(
@@ -151,6 +160,7 @@ function initialisePopup(){			// Initialises Popup.html
 			token		: "",
 			DefGoal		: { Loc: 0 },
 			KeyedData	: {},
+			GoalsData	: [],
 			Lang		: navigator.languages
 		},
 		Retrieval
@@ -166,24 +176,20 @@ function initialisePopup(){			// Initialises Popup.html
 		PrefLangArray	= items.Lang;
 		KeyedGoalsArray	= items.KeyedData;
 
-		if ( !UName || !token ) { // TODO: Make this interface look better
-			var a = document.createElement( 'a' );
-				a.textContent = _i( 'You need to enter your details in the options page ' );
-				a.href = "/options.html";
-				a.target = "_blank";
-				a.id = "NoCredsLink";
 
-			document.body.innerHTML = "";
-			document.body.appendChild(a);
-		}
+		if ( !UName || !token ) // TODO: Make this interface look better
+			clearBodyAppendLink(
+				_i( 'You need to enter your details in the options page ' ),
+				'/options.html'
+			);
 
 		else // TODO else if (!last API req was too soon)
 			xhrHandler( {
 				name: "Handle Download",
 				url: "goals",
 				onSuccess: HandleResponse,
-				onFail: ItHasFailed,
-				onOffline: ItHasFailed
+				onFail: ItHasFailed.bind( null, 'Download has failed' ),
+				onOffline: ItHasFailed.bind( null, 'No connection available' )
 			} );
 	}
 
@@ -231,29 +237,18 @@ function initialisePopup(){			// Initialises Popup.html
 		log( _i( "Data has been downloaded" ) );
 		IniDisplay();
 	}
-	function ItHasFailed() {
-		log( "Download has failed, initalising from offline data" );
-		chrome.storage.sync.get(
-			{ GoalsData	:	[] },
-			function ( items ) {
-				NeuGoalsArray = items.GoalsData;
+	function ItHasFailed( message ) {
+		message = _i( message );
 
-				if ( items.GoalsData.length >= 1 ) {// If there is at least one goal
-					currentIndex = DefGoal.Loc;
-					IniDisplay();
-				}
-				else {// If there is no goal data
-					var a = document.createElement( "a" );
-						a.textContent = "No Goals Available";
-						// TODO lang( "You need to enter your details in the options page " ); ^^^^
-						a.href = "/options.html";
-						a.target = "_blank";
+		if ( NeuGoalsArray.length === 0 ) // If there is at least one goal
+			return clearBodyAppendLink(
+				`${ message }, ${ _i( 'No Goals Available' ) }`,
+				'/options.html'
+			);
 
-					document.body.innerHTML = "";
-					document.body.appendChild( a );
-				}
-			}
-		);
+		log( `${ message }, ${ _i( 'initalising from offline data' ) }` );
+
+		IniDisplay();
 	}
 }
 function SetOutput( e ) {		// Displays Goal specific information
