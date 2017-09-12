@@ -197,12 +197,16 @@ function initialisePopup(){			// Initialises Popup.html
 
 		NeuGoalsArray = []; // Clear Array
 		// NOTE: This isn't needed here as no data has been added
+		DisplayArray = [];
 
 		for ( var i = 0; i < response.length; i++ ) {
 			var goal = processGoal( response[ i ], now );
 			var id = goal.id;
 
 			goals[ id ] = NeuGoalsArray[ i ] = goal;
+
+			if ( goal.Show )
+				DisplayArray.push( goal );
 
 			if ( goal.Default || DefGoal.name == goal.slug ) {
 				defaultHolding = i;
