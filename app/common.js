@@ -278,6 +278,8 @@ function SetOutput( e ) {		// Displays Goal specific information
 	setCountdownColour();
 	setMetaData( goal );
 
+	getDatapoints( goal );
+
 	// Inform user / Log event
 	log( _i( "Output Set", e ) );
 }
@@ -683,61 +685,59 @@ function processGoal( goal, now ) {
 		"autodata"		: goal.autodata
 	};
 }
-function DownloadDatapoints (){
-	ByID("data-points").innerHTML = "";
+function getAllDatapoints() {
+	for ( var id of Object.keys( KeyedGoalsArray ) )
+		getDatapoints( KeyedGoalsArray[ id ], true );
+}
+function getDatapoints ( goal, dontDisplay ){
+	var display = !dontDisplay;
+	var slug = goal.slug;
 
 	// API requsest for all datapoints
-	for ( var Loc = 0; Loc < NeuGoalsArray.length; Loc++ ) {
-		var slug = NeuGoalsArray[ Loc ].slug;
+	xhrHandler( {
+		name: `DownloadDatapoints - ${ slug }`, // TODO String Localisation []
+		url: `goals/${ slug }/datapoints`,
+		onSuccess: res => getDatapoints_success( goal, display, res ),
+		onFail: _ => getDatapoints_fail( goal, display )
+	} );
+}
+function getDatapoints_success( goal, display, res ) {
+	goal.DataPoints = JSON.parse( res );
 
-		xhrHandler( {
-			name: `DownloadDatapoints - ${ slug }`,
-			// TODO String Localisation []
-			url: `goals/${ slug }/datapoints`,
-			onSuccess: success.bind( null, { ArrayLoc: Loc } ),
-			onFail: fail
-		} );
-	}
+	if ( display )
+		displayDatapoints( goal );
 
-	function success( QInfo, response ) {
-		if ( !response || !QInfo )
-			return false;
+	chrome.storage.sync.set( { KeyedGoalsArray } );
+}
+function getDatapoints_fail( goal, display ) {
+	if ( !display ) return;
 
-		var goalData = NeuGoalsArray[ QInfo.ArrayLoc ];
+	ByID( 'dataPointStats' ).innerHTML = '';
+	ByID( 'dataPoints' ).innerHTML = '';
 
-		// Convert response into object and place into variables
-		response = goalData.datapoints = JSON.parse( response );
+	var failbtn = document.createElement( 'DIV' );
+		failbtn.className = 'Button';
+		failbtn.appendChild( document.createTextNode( 'The Download has failed!' ) );
+		failbtn.appendChild( document.createElement( 'BR' ) );
+		failbtn.appendChild( document.createTextNode( 'Click here to try again!' ) );
+		failbtn.addEventListener( 'click', _ => getDatapoints( goal ) );
 
-		// Poulate frag with Statisitics
-		var frag = document.createDocumentFragment();
-			frag.appendChild( document.createTextNode( goalData.title ) );
-			frag.appendChild( document.createElement( "br" ) );
-			frag.appendChild( document.createTextNode( `Number of Datapoints : ${ response.length }` ) );
-			frag.appendChild( document.createElement( "br" ) );
+	// Clear data-points element and append message
+	ByID( 'data-points' ).appendChild( failbtn );
+}
+function displayDatapoints( goal ) {
+	var points = goal.DataPoints;
 
-		// Populate frag with datapoints
-		var	iCap = response.length <= 10 ? response.length : 10;
-		for ( var i = 0; i < iCap; i++ ) {
-			var span = frag.appendChild( document.createElement( "span" ) );
-				span.textContent = response[ i ].canonical;
+	ByID( 'dataPointStats' ).innerHTML = '';
+	ByID( 'dataPoints' ).innerHTML = '';
 
-			frag.appendChild( document.createElement( "br" ) );
-		}
+	// Populate frag with datapoints
+	var iCap = points.length <= 10 ? points.length : 10;
+	var str = '';
+	for ( var i = 0; i < iCap; i++ )
+		str += points[ i ].canonical + '</br>';
 
-		// Insert frag into document
-		ByID( "data-points" ).appendChild( frag );
-	}
-
-	function fail() {
-		var FailBtn = document.createElement( "DIV" );
-			FailBtn.className = "Button";
-			FailBtn.appendChild( document.createTextNode( "The Download has failed!" ) );
-			FailBtn.appendChild( document.createElement( "BR" ) );
-			FailBtn.appendChild( document.createTextNode( "Click here to try again!" ) );
-			FailBtn.addEventListener( "click", _ => DownloadDatapoints() );
-
-		// Clear data-points element and append message
-		ByID( "data-points" ).innerHTML = "";
-		ByID( "data-points" ).appendChild( FailBtn );
-	}
+	// Poulate frag with Statisitics
+	ByID( 'dataPointStats' ).textContent = `Number of Datapoints : ${ points.length }`; // TODO: Localisation
+	ByID( 'dataPoints' ).innerHTML = str;
 }
