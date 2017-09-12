@@ -20,7 +20,7 @@ var
 	RefreshTimeout = "empty",	//
 
 	KeyedGoalsArray = {},		// Goals array using IDs as key
-	KeyedImageArray = {},		//
+	KeyedImageArray,
 	DisplayArray = [];			//
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
@@ -270,7 +270,7 @@ function SetOutput( e ) {		// Displays Goal specific information
 	var goal = CurDat();
 
 	// Load Image
-	ImageLoader( goal.graph_url, goal.id );
+	imageLoader( goal );
 
 	// Set content in:
 	InsStr( "GoalLoc", goal.title );			// Menu
@@ -455,44 +455,78 @@ function updateDeadline(){
 
 	setCountdownColour();
 }
-function ImageLoader( url, key ) {	// Loads the image as string
-	// TODO insert into goal obj and save
-	// TODO: Implement offline detection
+function imageLoader( goal, dontSet ) {	// Loads the image as string
+	var url = goal.graph_url;
+	var key = goal.id;
+	var use = !dontSet;
 
-	// URL Checking
-	if (
-		typeof url !== 'string' ||
-		url.indexOf( "https://bmndr.s3.amazonaws.com/uploads/" ) !== 0
-	) return log( `Recieved invalid url: \n${ url }` ); // TODO String Localisation []
+	// Validation
+	if ( !( key in KeyedGoalsArray ) )
+		return log( _i( 'key is invalid', key ) );
+	if ( typeof url !== 'string' ) // TODO: Localisation
+		return log( `Recieved invalid url: \n${ url }` ); // TODO: Localisation
+	if ( url.indexOf( "https://bmndr.s3.amazonaws.com/uploads/" ) !== 0 )
+		return log( `Recieved invalid url: \n${ url }` ); // TODO: Localisation
 
 	// Offline detection
-	if ( !navigator.onLine ) return false;
-	// IDEA: should more me done?
-	//			on reconnect script
-	//			timer
-	//			custom callback
+	if ( !navigator.onLine ) {
+		window.addEventListener( 'online', _ => imageLoader( goal, !use ) );
+
+		if ( use )
+			loadImageFromMemory( key );
+
+		return;
+	}
 
 	var imgxhr = new XMLHttpRequest();
-		imgxhr.open( "GET", url + "?" + new Date().getTime() );
-		imgxhr.responseType = "blob";
-		imgxhr.onload = function () {
-			if ( imgxhr.status === 200 )
+		imgxhr.open( 'GET', `${ url }?${ new Date().getTime() }` );
+		imgxhr.responseType = 'blob';
+		imgxhr.onload = _ => {
+			var status = imgxhr.status;
+			if ( status === 200 )
 				reader.readAsDataURL( imgxhr.response );
-			else if ( imgxhr.status === 404 )
+
+			else if ( status === 404 )
 				console.log( _i( '404 expected' ) );
+
+			if ( status !== 200 && use )
+				loadImageFromMemory( key );
 		};
 	var reader = new FileReader();
-		reader.onloadend = function () {
-			ByID( "graph-img" ).src = reader.result;
-			console.log( reader.result.length );
+		reader.onloadend = _ => {
+			if ( use )
+				ByID( 'graph-img' ).src = reader.result;
 
-			if ( typeof key === "string" ) {
-				KeyedImageArray[ key ] = reader.result;
-				chrome.storage.local.set( { KeyedData: KeyedGoalsArray } );
-			}
+			accessImageArray(
+				_ => {
+					KeyedImageArray[ key ] = reader.result;
+
+					chrome.storage.local.set( { KeyedImageArray } );
+				}
+			);
 		};
 
 	imgxhr.send();
+}
+function loadImageFromMemory( key ) {
+	log( _i( 'This graph was loaded from offline storage' ) );
+	accessImageArray( _ => ByID( 'graph-img' ).src = KeyedImageArray[ key ] );
+}
+function accessImageArray( cb ) {
+	if ( KeyedImageArray )
+		cb( KeyedImageArray );
+	else
+		chrome.storage.local.get(
+			'KeyedImageArray',
+			items => {
+				KeyedImageArray = items.KeyedImageArray;
+
+				if (!KeyedImageArray)
+					KeyedImageArray = {};
+
+				cb( KeyedImageArray );
+			}
+		);
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function initialiseOptions(){
