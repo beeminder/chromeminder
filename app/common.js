@@ -117,12 +117,6 @@ function LinkBM( id, salt, slug ) {
 function ISODate( date ) {
 	return ( new Date( date ) ).toISOString().substring( 0, 10 );
 }
-function InsStr( id, string ) {
-	document.getElementById( id ).textContent = string;
-}
-function insertString_i( id, string, ...args ) {
-	document.getElementById( id ).textContent = _i( string, ...args );
-}
 function addClick( elem, func ) {
 	return elem.addEventListener( 'click', func );
 }
@@ -268,12 +262,12 @@ function SetOutput( e ) {		// Displays Goal specific information
 	imageLoader( goal );
 
 	// Set content in:
-	InsStr( "GoalLoc", goal.title );			// Menu
+	ByID( "GoalLoc" ).textContent = goal.title;		// Menu
 	LinkBM(	"ButtonGoal" 						);	// Menu
 	LinkBM(	"GraphLink"							);	// Menu
 	LinkBM(	"ButtonData",		"datapoints"	);	// Menu
 	LinkBM(	"ButtonSettings",	"settings"		);	// Menu
-	InsStr( "limsum", goal.limsum);				// Baremin
+	ByID( "limsum" ).textContent = goal.limsum;		// Baremin
 
 	// Stop the refresh recursion if it's set
 	clearTimeout( RefreshTimeout );
@@ -288,18 +282,17 @@ function SetOutput( e ) {		// Displays Goal specific information
 function setMetaData( goal ) {
 	var lastRoad = goal.fullroad[ goal.fullroad.length - 1 ];
 
-	var updated = countdown( goal.updated_at, null, null, 1 ).toString();
-	var start = `${ ISODate( goal.initday ) } - ${ goal.initval }`;
-	var now = `${ ISODate( goal.curday ) } - ${ goal.curval }`;
-	var target = `${ ISODate( lastRoad[ 0 ] * 1000 ) } - ${ lastRoad[ 1 ] }`;
-	var targetCD = countdown( lastRoad[ 0 ] * 1000, null, null, 2 ).toString();
+	var updated	= countdown( goal.updated_at, null, null, 1 ).toString();
+	var start	= `${ ISODate( goal.initday ) } - ${ goal.initval }`;
+	var now		= `${ ISODate( goal.curday ) } - ${ goal.curval }`;
+	var target	= `${ ISODate( lastRoad[ 0 ] * 1000 ) } - ${ lastRoad[ 1 ] }`;
+	var targetCD= countdown( lastRoad[ 0 ] * 1000, null, null, 2 ).toString();
 
-	insertString_i( 'LastUpdateDate', 'LastUpdate', updated );
-	InsStr( "Info_Start", start );
-	InsStr( "Info_Now", now );
-	InsStr( "Info_Target", target );
-	InsStr( "Info_Countdown", targetCD );
-
+	ByID( 'LastUpdateDate'	).textContent = _i( 'LastUpdate', updated );
+	ByID( 'Info_Start'		).textContent = start;
+	ByID( 'Info_Now'		).textContent = now;
+	ByID( 'Info_Target'		).textContent = target;
+	ByID( 'Info_Countdown'	).textContent = targetCD;
 }
 function CurDat( NeuObj ) {	// Return object for the currently displayed goal or replace it
 	// If NeuObj is
@@ -388,26 +381,24 @@ function IniDisplay(){		// Initialise the display
 		createGoalSelector();
 
 	// Populates text and RefreshAction listener in Menu Box
-	insertString_i( 'ButtonGoal',		'GOTO'		);
-	insertString_i( 'ButtonRefresh',	'Refresh'	);
-	insertString_i( 'ButtonData',		'Data'		);
-	insertString_i( 'ButtonSettings',	'Settings'	);
-	insertString_i( 'OptLink',			'Options'	);
-	document.getElementById( "ButtonRefresh" ).addEventListener(
-		"click", _ => DataRefresh()
-	);
+	ByID( 'ButtonGoal'		).textContent = _i( 'GOTO' );
+	ByID( 'ButtonRefresh'	).textContent = _i( 'Refresh' );
+	ByID( 'ButtonData'		).textContent = _i( 'Data' );
+	ByID( 'ButtonSettings'	).textContent = _i( 'Settings' );
+	ByID( 'OptLink'			).textContent = _i( 'Options' );
+	ByID( 'ButtonRefresh'	).addEventListener( 'click', _ => DataRefresh() );
 
 	// Headings
-	ByID( 'countdownHeading' ).textContent = _i( 'Deadline' );
-	ByID( 'bareMinHeading' ).textContent = _i( 'Deadline' );
+	ByID( 'countdownHeading'	).textContent = _i( 'Deadline' );
+	ByID( 'bareMinHeading'		).textContent = _i( 'Deadline' );
 
 	// Dealine Updater
 	setInterval( updateDeadline, 1000 );
 
 	// Populates meta-data
-	insertString_i( 'Label_Start',	'Now'	);
-	insertString_i( 'Label_Now',	'Start'	);
-	insertString_i( 'Label_Target',	'Target');
+	ByID( 'Label_Start'		).textContent = _i( 'Now' );
+	ByID( 'Label_Now'		).textContent = _i( 'Start' );
+	ByID( 'Label_Target'	).textContent = _i( 'Target' );
 
 	// Load default goal
 	SetOutput( DefGoal.Loc );
@@ -573,8 +564,8 @@ function saveOptions_authSuccess( response ) {
 			DefGoal		:	DefGoal
 		},
 		_ => {
-			insertString_i( 'status', 'Options saved.' );
-			setTimeout( _ => InsStr( "status", "" ), 2000 );
+			ByID( 'status' ).textContent = _i( 'Options saved.' );
+			setTimeout( _ => ByID( 'status' ).textContent = '', 2000 );
 		}
 	);
 	// if (NeuGoalsArray.length === 0){
