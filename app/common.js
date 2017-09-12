@@ -103,17 +103,6 @@ function log( text, time ){	// informs user and logs event
 function ByID( item ) {
 	return document.getElementById( item );
 }
-function LinkBM( id, salt, slug ) {
-	// Validation and Houskeeping
-	if ( !id ) return false;
-
-	salt = salt ? salt : "";
-	slug = slug ? slug : CurDat().slug;
-
-	// Set Link
-	document.getElementById( id ).href =
-		`https://www.beeminder.com/${ UName }/${ slug }/${ salt }`;
-}
 function ISODate( date ) {
 	return ( new Date( date ) ).toISOString().substring( 0, 10 );
 }
@@ -169,7 +158,9 @@ function initialisePopup(){			// Initialises Popup.html
 		DefGoal			= items.DefGoal;
 		PrefLangArray	= items.Lang;
 		KeyedGoalsArray	= items.KeyedData;
+		NeuGoalsArray	= items.GoalsData;
 
+		currentIndex = DefGoal.Loc;
 
 		if ( !UName || !token ) // TODO: Make this interface look better
 			clearBodyAppendLink(
@@ -261,17 +252,24 @@ function SetOutput( e ) {		// Displays Goal specific information
 		e = currentIndex;
 
 	var goal = CurDat();
+	var urlroot = `https://www.beeminder.com/${ UName }/${ goal.slug }`;
 
 	// Load Image
 	imageLoader( goal );
 
-	// Set content in:
-	ByID( "GoalLoc" ).textContent = goal.title;		// Menu
-	LinkBM(	"ButtonGoal" 						);	// Menu
-	LinkBM(	"GraphLink"							);	// Menu
-	LinkBM(	"ButtonData",		"datapoints"	);	// Menu
-	LinkBM(	"ButtonSettings",	"settings"		);	// Menu
-	ByID( "limsum" ).textContent = goal.limsum;		// Baremin
+	// Populate content
+	ByID( 'GoalLoc'	).textContent = goal.title;
+	ByID( 'limsum'	).textContent = goal.limsum;
+
+	// Set Links
+	ByID( 'ButtonGoal'		).href = urlroot;
+	ByID( 'GraphLink'		).href = urlroot;
+	ByID( 'ButtonData'		).href = `${ urlroot }#data`;
+	ByID( 'ButtonSettings'	).href = `${ urlroot }#settings`;
+	// TODO: Add links to the following : #statistics, #stop, #commitment
+	// ByID( 'SOME_ID_YET_TO_BE_MADE' ).href = `${ urlroot }#statistics`;
+	// ByID( 'SOME_ID_YET_TO_BE_MADE' ).href = `${ urlroot }#stop`;
+	// ByID( 'SOME_ID_YET_TO_BE_MADE' ).href = `${ urlroot }#commitment`;
 
 	// Stop the refresh recursion if it's set
 	clearTimeout( RefreshTimeout );
