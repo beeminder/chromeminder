@@ -383,32 +383,9 @@ function delay( i ) {
 	return 2500 * Math.pow( 2, ( i - 1 ) );
 }
 function IniDisplay(){		// Initialise the display
-	var frag, key; // TODO: No longer in use???
-
 	// Goal Selector
-	var keys = Object.keys( KeyedGoalsArray );
-	if ( keys.length > 1 ) {
-		frag = document.createDocumentFragment();
-
-		for ( var i = 0; i < NeuGoalsArray.length; i++ ) {
-			key = keys[ i ];
-			var obj = KeyedGoalsArray[ key ];
-
-			if ( obj.Show === true ) {
-				var a = frag.appendChild( document.createElement( 'a' ) );
-					a.className = 'GoalIDBtn';
-					a.id = obj.slug;
-					a.textContent = obj.title;
-
-				( function ( _i ) {
-					a.addEventListener( "click", _ => SetOutput( _i ) );
-				} )( obj.id );// TODO: Add an additonal goto link w/ each Selector
-			}
-		}
-
-		ByID( "TheContent" ).innerHTML = "";
-		ByID( "TheContent" ).appendChild( frag );
-	}
+	if ( DisplayArray.length > 1 )
+		createGoalSelector();
 
 	// Populates text and RefreshAction listener in Menu Box
 	insertString_i( 'ButtonGoal',		'GOTO'		);
@@ -434,6 +411,23 @@ function IniDisplay(){		// Initialise the display
 
 	// Load default goal
 	SetOutput( DefGoal.Loc );
+}
+function createGoalSelector( params ) {
+	var frag = document.createDocumentFragment();
+
+	for ( var goal of DisplayArray )
+		frag.appendChild( createGoalSelctorLink( goal ) );
+
+	ByID( 'TheContent' ).appendChild( frag );
+}
+function createGoalSelctorLink( goal ) {
+	var a = document.createElement( 'a' );
+		a.className = 'GoalIDBtn';
+		a.textContent = goal.title;
+		a.addEventListener( 'click', _ => SetOutput( goal.id ) );
+		// TODO: Add an additonal goto link w/ each Selector
+
+	return a;
 }
 function updateDeadline(){
 	/**
