@@ -190,7 +190,8 @@ function initialisePopup(){			// Initialises Popup.html
 	function HandleResponse( response ) {
 		response = JSON.parse( response );
 
-		var defaultHolding = 0,
+		var goals = KeyedGoalsArray,
+			defaultHolding = 0,
 			NoOfDefs = 0,
 			now = Date.now();
 
@@ -201,7 +202,7 @@ function initialisePopup(){			// Initialises Popup.html
 			var goal = processGoal( response[ i ], now );
 			var id = goal.id;
 
-			KeyedGoalsArray[ id ] = NeuGoalsArray[ i ] = goal;
+			goals[ id ] = NeuGoalsArray[ i ] = goal;
 
 			if ( goal.Default || DefGoal.name == goal.slug ) {
 				defaultHolding = i;
@@ -210,10 +211,9 @@ function initialisePopup(){			// Initialises Popup.html
 		}
 
 		// TODO: test if this dead goal removing code works
-		var temp = KeyedGoalsArray;
-		for ( var key in temp )
-			if ( temp.hasOwnProperty( key ) && temp[ key ].now !== now )
-					delete KeyedGoalsArray[ key ];
+		for ( var key in goals )
+			if ( goals.hasOwnProperty( key ) && goals[ key ].now !== now )
+					delete goals[ key ];
 
 		if ( NoOfDefs > 1 ) defaultHolding = 0;
 		currentIndex = DefGoal.Loc = defaultHolding;
@@ -222,7 +222,7 @@ function initialisePopup(){			// Initialises Popup.html
 		chrome.storage.sync.set(
 			{
 				GoalsData	: NeuGoalsArray,
-				KeyedData	: KeyedGoalsArray,
+				KeyedData	: goals,
 				DefGoal		: DefGoal
 			},
 			_ => log( _i( "Goal data has been saved" ) )
