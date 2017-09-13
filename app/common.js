@@ -135,6 +135,13 @@ function clearBodyAppendLink( message, url ) {
 	document.body.innerHTML = '';
 	document.body.appendChild( a );
 }
+function once( target, type, func ) {
+	target.addEventListener( type, function listener( e ) {
+		target.removeEventListener( type, listener );
+
+		func( e );
+	} );
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
 	chrome.storage.sync.get(
@@ -454,12 +461,10 @@ function imageLoader( goal, dontSet ) {	// Loads the image as string
 
 	// Offline detection
 	if ( !navigator.onLine ) {
-		window.addEventListener( 'online', _ => imageLoader( goal, !use ) );
-
 		if ( use )
 			loadImageFromMemory( key );
 
-		return;
+		return once( window, 'online', _ => imageLoader( goal, !use ) );
 	}
 
 	var imgxhr = new XMLHttpRequest();
