@@ -18,6 +18,7 @@ var
 		Name		: ""
 	},
 	RefreshTimeout = "empty",	//
+	dpRetryOnConnect,
 
 	KeyedGoalsArray = {},		// Goals array using IDs as key
 	KeyedImageArray,
@@ -410,6 +411,10 @@ function IniDisplay(){		// Initialise the display
 	ByID( 'Label_Start'		).textContent = _i( 'Now' );
 	ByID( 'Label_Now'		).textContent = _i( 'Start' );
 	ByID( 'Label_Target'	).textContent = _i( 'Target' );
+
+	ByID( 'datapointRetry'	).addEventListener(
+		'click', _ => getDatapoints( CurDat() )
+	);
 
 	// Load default goal
 	SetOutput( DefGoal.Loc );

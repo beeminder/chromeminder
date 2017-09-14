@@ -88,3 +88,7 @@ img {
 .TheContent a:hover {background-color: #f1f1f1}
 .TheContainer:hover .TheContent {display: block;}
 .TheContainer:hover #GoalLoc {background-color: Orange;}
+
+.hide {
+	display: none;
+}
