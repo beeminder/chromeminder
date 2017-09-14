@@ -694,55 +694,62 @@ function getAllDatapoints() {
 	for ( var id of Object.keys( KeyedGoalsArray ) )
 		getDatapoints( KeyedGoalsArray[ id ], true );
 }
-function getDatapoints ( goal, dontDisplay ){
+function getDatapoints( goal, dontDisplay ) {
 	var display = !dontDisplay;
 	var slug = goal.slug;
 
-	// API requsest for all datapoints
-	xhrHandler( {
-		name: `DownloadDatapoints - ${ slug }`, // TODO String Localisation []
-		url: `goals/${ slug }/datapoints`,
-		onSuccess: res => getDatapoints_success( goal, display, res ),
-		onFail: _ => getDatapoints_fail( goal, display )
-	} );
+	var request = {};
+		request.name = `DownloadDatapoints - ${ slug }`; // TODO Localisation
+		request.url = `goals/${ slug }/datapoints`;
+		request.onSuccess = res => {
+			goal.DataPoints = JSON.parse( res );
+
+			if ( display )
+				displayDatapoints( goal );
+
+			chrome.storage.sync.set( { KeyedData: KeyedGoalsArray } );
+		};
+
+	if ( display ) {
+		request.onFail = _ => displayDatapoints( goal, 'The Download has failed!</br>Click here to try again!' );
+
+		request.onOffline = _ => {
+			displayDatapoints( goal, 'The Download has failed!</br>Click here to try again!' );
+
+			if ( !dpRetryOnConnect ) {
+				once( window, 'online', _ => {
+					dpRetryOnConnect = false;
+					getDatapoints( goal );
+				} );
+
+				dpRetryOnConnect = true;
+			}
+		};
+	}
+
+	// API requsest for datapoints
+	xhrHandler( request );
 }
-function getDatapoints_success( goal, display, res ) {
-	goal.DataPoints = JSON.parse( res );
-
-	if ( display )
-		displayDatapoints( goal );
-
-	chrome.storage.sync.set( { KeyedGoalsArray } );
-}
-function getDatapoints_fail( goal, display ) {
-	if ( !display ) return;
-
-	ByID( 'dataPointStats' ).innerHTML = '';
-	ByID( 'dataPoints' ).innerHTML = '';
-
-	var failbtn = document.createElement( 'DIV' );
-		failbtn.className = 'Button';
-		failbtn.appendChild( document.createTextNode( 'The Download has failed!' ) );
-		failbtn.appendChild( document.createElement( 'BR' ) );
-		failbtn.appendChild( document.createTextNode( 'Click here to try again!' ) );
-		failbtn.addEventListener( 'click', _ => getDatapoints( goal ) );
-
-	// Clear data-points element and append message
-	ByID( 'data-points' ).appendChild( failbtn );
-}
-function displayDatapoints( goal ) {
+function displayDatapoints( goal, error ) {
 	var points = goal.DataPoints;
 
-	ByID( 'dataPointStats' ).innerHTML = '';
-	ByID( 'dataPoints' ).innerHTML = '';
-
-	// Populate frag with datapoints
+	// Create datapoints list
 	var iCap = points.length <= 10 ? points.length : 10;
 	var str = '';
 	for ( var i = 0; i < iCap; i++ )
 		str += points[ i ].canonical + '</br>';
 
-	// Poulate frag with Statisitics
-	ByID( 'dataPointStats' ).textContent = `Number of Datapoints : ${ points.length }`; // TODO: Localisation
+	// Poulate datapoints section // TODO: Localisation
+	ByID( 'dataPointStats'	).innerHTML = `Number of Datapoints : ${ points.length }`;
 	ByID( 'dataPoints' ).innerHTML = str;
+
+	var retry = ByID( 'datapointRetry' );
+
+	if ( error ) {
+		retry.innerHTML = error;
+		retry.classList.remove( 'hide' );
+	}
+	else
+		retry.innerHTML = '';
+		retry.classList.add( 'hide' );
 }
