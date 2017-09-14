@@ -1,26 +1,19 @@
 var
-	IUTimeout = "empty",		// Info update timeout
-	RefreshTimeout = "empty",	// Refresh Timeout
+	timeoutLog,					// Info update timeout
+	timeoutRefresh,				// Refresh Timeout
 	UName,						// Username
-	updated_at,					//
 	token,						// API Token
-	PrefLangArray,				//
-	CurString,					// The KeyedGoalsArray key of current goal
-	ElementsList = [],			//
-	NeuGoalsArray = [],			// Simple goals data array
-	someVar = {// TODO Depreciate someVar
-		updated_at	: "",
-		ArrayNo		: ""
-	},
+	currentGoalId,				// The KeyedGoalsArray key of current goal
+	elementList = [],			//
+	goalArray = [],				// Simple goals data array
 	currentIndex,
 	DefGoal = {
 		Loc			: undefined,
 		Name		: ""
 	},
-	RefreshTimeout = "empty",	//
 	dpRetryOnConnect,
 
-	KeyedGoalsArray = {},		// Goals array using IDs as key
+	goalsObject = {},		// Goals array using IDs as key
 	KeyedImageArray,
 	DisplayArray = [];			//
 
@@ -85,23 +78,23 @@ function isFunc( func ){
 function log( text, time ){	// informs user and logs event
 	// Validation and housekeeping
 	if ( !text ) return false;
-	if ( IUTimeout ) clearTimeout( IUTimeout );
+	if ( timeoutLog ) clearTimeout( timeoutLog );
 
 	// Displaying and logging message
-	ByID( "SeverStatus" ).textContent = text;
+	byid( "SeverStatus" ).textContent = text;
 	console.log( text );
 
 	// Timout to blank out display
-	IUTimeout = setTimeout(
+	timeoutLog = setTimeout(
 		_ => {
-			ByID( "SeverStatus" ).textContent = "";
-			IUTimeout = undefined;
+			byid( "SeverStatus" ).textContent = "";
+			timeoutLog = undefined;
 		},
 		time ? time : 5000
 	);
 }
 /* --- --- --- ---		Helper Functions			--- --- --- --- */
-function ByID( item ) {
+function byid( item ) {
 	return document.getElementById( item );
 }
 function ISODate( date ) {
@@ -111,7 +104,7 @@ function addClick( elem, func ) {
 	return elem.addEventListener( 'click', func );
 }
 function setCountdownColour() {
-	var colour = convertDeadlineToColour( CurDat().losedate );
+	var colour = convertDeadlineToColour( currentGoal().losedate );
 	var display = document.querySelector( ".CountdownDisplay" );
 
 	display.style.backgroundColor = colour;
@@ -154,10 +147,10 @@ function initialisePopup(){			// Initialises Popup.html
 			GoalsData	: [],
 			Lang		: navigator.languages
 		},
-		Retrieval
+		popup_onStorageRetrieval
 	);
 
-	function Retrieval( items ) {
+	function popup_onStorageRetrieval( items ) {
 		if ( !items ) return false;
 
 		// IDEA: Make a UData object to handle user data instead of multiple variables
@@ -165,8 +158,8 @@ function initialisePopup(){			// Initialises Popup.html
 		token			= items.token;
 		DefGoal			= items.DefGoal;
 		PrefLangArray	= items.Lang;
-		KeyedGoalsArray	= items.KeyedData;
-		NeuGoalsArray	= items.GoalsData;
+		goalsObject		= items.KeyedData;
+		goalArray		= items.GoalsData;
 
 		currentIndex = DefGoal.Loc;
 
@@ -178,23 +171,23 @@ function initialisePopup(){			// Initialises Popup.html
 
 		else // TODO else if (!last API req was too soon)
 			xhrHandler( {
-				name: "Handle Download",
+				name: "Getting goals data",
 				url: "goals",
-				onSuccess: HandleResponse,
-				onFail: ItHasFailed.bind( null, 'Download has failed' ),
-				onOffline: ItHasFailed.bind( null, 'No connection available' )
+				onSuccess: getGoals_onSuccess,
+				onFail: getGoals_onFail.bind( null, 'Download has failed' ),
+				onOffline: getGoals_onFail.bind( null, 'No connection available' )
 			} );
 	}
 
-	function HandleResponse( response ) {
+	function getGoals_onSuccess( response ) {
 		response = JSON.parse( response );
 
-		var goals = KeyedGoalsArray,
+		var goals = goalsObject,
 			defaultHolding = 0,
 			NoOfDefs = 0,
 			now = Date.now();
 
-		NeuGoalsArray = []; // Clear Array
+		goalArray = []; // Clear Array
 		// NOTE: This isn't needed here as no data has been added
 		DisplayArray = [];
 
@@ -202,7 +195,7 @@ function initialisePopup(){			// Initialises Popup.html
 			var goal = processGoal( response[ i ], now );
 			var id = goal.id;
 
-			goals[ id ] = NeuGoalsArray[ i ] = goal;
+			goals[ id ] = goalArray[ i ] = goal;
 
 			if ( goal.Show )
 				DisplayArray.push( goal );
@@ -224,7 +217,7 @@ function initialisePopup(){			// Initialises Popup.html
 		// Store newly constructed data
 		chrome.storage.sync.set(
 			{
-				GoalsData	: NeuGoalsArray,
+				GoalsData	: goalArray,
 				KeyedData	: goals,
 				DefGoal		: DefGoal
 			},
@@ -232,12 +225,12 @@ function initialisePopup(){			// Initialises Popup.html
 		);
 
 		log( _i( "Data has been downloaded" ) );
-		IniDisplay();
+		initialiseView();
 	}
-	function ItHasFailed( message ) {
+	function getGoals_onFail( message ) {
 		message = _i( message );
 
-		if ( NeuGoalsArray.length === 0 ) // If there is at least one goal
+		if ( goalArray.length === 0 ) // If there is at least one goal
 			return clearBodyAppendLink(
 				`${ message }, ${ _i( 'No Goals Available' ) }`,
 				'/options.html'
@@ -245,42 +238,42 @@ function initialisePopup(){			// Initialises Popup.html
 
 		log( `${ message }, ${ _i( 'initalising from offline data' ) }` );
 
-		IniDisplay();
+		initialiseView();
 	}
 }
-function SetOutput( e ) {		// Displays Goal specific information
+function displayGoal( e ) {		// Displays Goal specific information
 	// If e is not satisfied or valid, use the current goal
 	if ( typeof e === "string" ) // TODO: Need to validate the goal exists
-		CurString = e;
-	else if ( Number.isInteger( e ) && e >= NeuGoalsArray.length ) {
+		currentGoalId = e;
+	else if ( Number.isInteger( e ) && e >= goalArray.length ) {
 		currentIndex = e;
-		CurString = NeuGoalsArray[ e ].id;
+		currentGoalId = goalArray[ e ].id;
 	}
 	else
 		e = currentIndex;
 
-	var goal = CurDat();
+	var goal = currentGoal();
 	var urlroot = `https://www.beeminder.com/${ UName }/${ goal.slug }`;
 
 	// Load Image
 	imageLoader( goal );
 
 	// Populate content
-	ByID( 'GoalLoc'	).textContent = goal.title;
-	ByID( 'limsum'	).textContent = goal.limsum;
+	byid( 'GoalLoc'	).textContent = goal.title;
+	byid( 'limsum'	).textContent = goal.limsum;
 
 	// Set Links
-	ByID( 'ButtonGoal'		).href = urlroot;
-	ByID( 'GraphLink'		).href = urlroot;
-	ByID( 'ButtonData'		).href = `${ urlroot }#data`;
-	ByID( 'ButtonSettings'	).href = `${ urlroot }#settings`;
+	byid( 'ButtonGoal'		).href = urlroot;
+	byid( 'GraphLink'		).href = urlroot;
+	byid( 'ButtonData'		).href = `${ urlroot }#data`;
+	byid( 'ButtonSettings'	).href = `${ urlroot }#settings`;
 	// TODO: Add links to the following : #statistics, #stop, #commitment
 	// ByID( 'SOME_ID_YET_TO_BE_MADE' ).href = `${ urlroot }#statistics`;
 	// ByID( 'SOME_ID_YET_TO_BE_MADE' ).href = `${ urlroot }#stop`;
 	// ByID( 'SOME_ID_YET_TO_BE_MADE' ).href = `${ urlroot }#commitment`;
 
 	// Stop the refresh recursion if it's set
-	clearTimeout( RefreshTimeout );
+	clearTimeout( timeoutRefresh );
 
 	// Set the deadline colour TODO move to DisplayDeadline()
 	setCountdownColour();
@@ -300,124 +293,124 @@ function setMetaData( goal ) {
 	var target	= `${ ISODate( lastRoad[ 0 ] * 1000 ) } - ${ lastRoad[ 1 ] }`;
 	var targetCD= countdown( lastRoad[ 0 ] * 1000, null, null, 2 ).toString();
 
-	ByID( 'LastUpdateDate'	).textContent = _i( 'LastUpdate', updated );
-	ByID( 'Info_Start'		).textContent = start;
-	ByID( 'Info_Now'		).textContent = now;
-	ByID( 'Info_Target'		).textContent = target;
-	ByID( 'Info_Countdown'	).textContent = targetCD;
+	byid( 'LastUpdateDate'	).textContent = _i( 'LastUpdate', updated );
+	byid( 'Info_Start'		).textContent = start;
+	byid( 'Info_Now'		).textContent = now;
+	byid( 'Info_Target'		).textContent = target;
+	byid( 'Info_Countdown'	).textContent = targetCD;
 }
-function CurDat( NeuObj ) {	// Return object for the currently displayed goal or replace it
+function currentGoal( replacement ) {	// Return object for the currently displayed goal or replace it
 	// If NeuObj is
-	if ( NeuObj && NeuGoalsArray[ currentIndex ].id === NeuObj.id ) {
-		NeuGoalsArray[ currentIndex ] = NeuObj;
-		KeyedGoalsArray[ NeuObj.id ] = NeuObj;
+	if ( replacement && goalArray[ currentIndex ].id === replacement.id ) {
+		goalArray[ currentIndex ] = replacement;
+		goalsObject[ replacement.id ] = replacement;
 	}
 
 	// If NeuObj is true
-	else if ( NeuObj && NeuGoalsArray[ currentIndex ].id !== NeuObj.id )
+	else if ( replacement && goalArray[ currentIndex ].id !== replacement.id )
 		return false;
 
 	// If there is a goal key return a KeyedGoalsArray item
 	// TODO:
-	else if ( CurString )
-		return KeyedGoalsArray[ CurString ];
+	else if ( currentGoalId )
+		return goalsObject[ currentGoalId ];
 
 	// If CurString isn't set, set it
 	else {
-		CurString = NeuGoalsArray[ currentIndex ].id;
-		return KeyedGoalsArray[ CurString ];
+		currentGoalId = goalArray[ currentIndex ].id;
+		return goalsObject[ currentGoalId ];
 	}
 }
-function DataRefresh( i ) {	// Refresh the current goals data
+function refreshGoal( i ) {	// Refresh the current goals data
 	var req = {};
 
 	// no i arg => call refresh endpoint
 	if ( !i ) {
-		req.url = `goals/${ CurDat().slug }/refresh_graph`;
+		req.url = `goals/${ currentGoal().slug }/refresh_graph`;
 		req.name = _i( 'Refresh ' );
-		req.onSuccess = DataRefresh_RefreshCall;
+		req.onSuccess = refreshGoal_RefreshCall;
 	}
 
 	// Check for new data in goals endpoint
 	else {
-		req.url = `goals/${ CurDat().slug }`;
+		req.url = `goals/${ currentGoal().slug }`;
 		req.name = _i( 'Refresh - Goal Update' );
-		req.onSuccess = DataRefresh_GoalGet.bind( null, i );
+		req.onSuccess = refreshGoal_GoalGet.bind( null, i );
 	}
 
 	xhrHandler( req );
 }
-function DataRefresh_RefreshCall( response ) {
+function refreshGoal_RefreshCall( response ) {
 	if ( response === "true" ) {
 		log( _i( 'Waiting for Graph to refresh' ) );
-		RefreshTimeout = setTimeout( _ => DataRefresh( 1 ), 2500 );
+		timeoutRefresh = setTimeout( _ => refreshGoal( 1 ), 2500 );
 	}
 	else
 		log( _i( 'Beeminder Sever Says no' ) );
 }
-function DataRefresh_GoalGet( i, response ) {
+function refreshGoal_GoalGet( i, response ) {
 	log( `iteration ${ i }` );
 	response = JSON.parse( response );
 
-	if ( response.updated_at === CurDat().updated_at && i <= 6 ) {
-		RefreshTimeout = setTimeout(
-			_ => DataRefresh( i + 1 ),
+	if ( response.updated_at === currentGoal().updated_at && i <= 6 ) {
+		timeoutRefresh = setTimeout(
+			_ => refreshGoal( i + 1 ),
 			delay( i )
 		);
 
 		log( _i( 'No Update', i, delay( i ) ) );
 	}
 
-	else if ( response.updated_at === CurDat().updated_at && i > 6 )
+	else if ( response.updated_at === currentGoal().updated_at && i > 6 )
 		log( _i( 'The goal seems not to have updated, aborting refresh' ) );
 
 	else {
-		console.log( `Testing: What doesn't this do? ${ CurDat( null ) }` );
-		CurDat( processGoal( response ) );
-		SetOutput();
+		console.log( `Testing: What doesn't this do? ${ currentGoal( null ) }` );
+		currentGoal( processGoal( response ) );
+		displayGoal();
 
 		chrome.storage.sync.set(
-			{ GoalsData: NeuGoalsArray },
+			{ GoalsData: goalArray },
 			_ => log( _i( 'New goal data has been saved' ) )
 		);
-		log( _i( 'Graph Refreshed', i, CurDat().updated_at ) );
+		log( _i( 'Graph Refreshed', i, currentGoal().updated_at ) );
 	}
 }
 function delay( i ) {
 	if ( !i ) return false;
 	return 2500 * Math.pow( 2, ( i - 1 ) );
 }
-function IniDisplay(){		// Initialise the display
+function initialiseView(){		// Initialise the display
 	// Goal Selector
 	if ( DisplayArray.length > 1 )
 		createGoalSelector();
 
 	// Populates text and RefreshAction listener in Menu Box
-	ByID( 'ButtonGoal'		).textContent = _i( 'GOTO' );
-	ByID( 'ButtonRefresh'	).textContent = _i( 'Refresh' );
-	ByID( 'ButtonData'		).textContent = _i( 'Data' );
-	ByID( 'ButtonSettings'	).textContent = _i( 'Settings' );
-	ByID( 'OptLink'			).textContent = _i( 'Options' );
-	ByID( 'ButtonRefresh'	).addEventListener( 'click', _ => DataRefresh() );
+	byid( 'ButtonGoal'		).textContent = _i( 'GOTO' );
+	byid( 'ButtonRefresh'	).textContent = _i( 'Refresh' );
+	byid( 'ButtonData'		).textContent = _i( 'Data' );
+	byid( 'ButtonSettings'	).textContent = _i( 'Settings' );
+	byid( 'OptLink'			).textContent = _i( 'Options' );
+	byid( 'ButtonRefresh'	).addEventListener( 'click', _ => refreshGoal() );
 
 	// Headings
-	ByID( 'countdownHeading'	).textContent = _i( 'Deadline' );
-	ByID( 'bareMinHeading'		).textContent = _i( 'Deadline' );
+	byid( 'countdownHeading'	).textContent = _i( 'Deadline' );
+	byid( 'bareMinHeading'		).textContent = _i( 'Deadline' );
 
 	// Dealine Updater
 	setInterval( updateDeadline, 1000 );
 
 	// Populates meta-data
-	ByID( 'Label_Start'		).textContent = _i( 'Now' );
-	ByID( 'Label_Now'		).textContent = _i( 'Start' );
-	ByID( 'Label_Target'	).textContent = _i( 'Target' );
+	byid( 'Label_Start'		).textContent = _i( 'Now' );
+	byid( 'Label_Now'		).textContent = _i( 'Start' );
+	byid( 'Label_Target'	).textContent = _i( 'Target' );
 
-	ByID( 'datapointRetry'	).addEventListener(
-		'click', _ => getDatapoints( CurDat() )
+	byid( 'datapointRetry'	).addEventListener(
+		'click', _ => getDatapoints( currentGoal() )
 	);
 
 	// Load default goal
-	SetOutput( DefGoal.Loc );
+	displayGoal( DefGoal.Loc );
 }
 function createGoalSelector( params ) {
 	var frag = document.createDocumentFragment();
@@ -425,13 +418,13 @@ function createGoalSelector( params ) {
 	for ( var goal of DisplayArray )
 		frag.appendChild( createGoalSelctorLink( goal ) );
 
-	ByID( 'TheContent' ).appendChild( frag );
+	byid( 'TheContent' ).appendChild( frag );
 }
 function createGoalSelctorLink( goal ) {
 	var a = document.createElement( 'a' );
 		a.className = 'GoalIDBtn';
 		a.textContent = goal.title;
-		a.addEventListener( 'click', _ => SetOutput( goal.id ) );
+		a.addEventListener( 'click', _ => displayGoal( goal.id ) );
 		// TODO: Add an additonal goto link w/ each Selector
 
 	return a;
@@ -442,12 +435,12 @@ function updateDeadline(){
 	 * called by 1 second interval that upadates the deadline countdown
 	 */
 
-	var losedate = CurDat().losedate;
+	var losedate = currentGoal().losedate;
 
-	ByID( 'countdownValue' ).innerHTML = countdown( losedate ).toString();
+	byid( 'countdownValue' ).innerHTML = countdown( losedate ).toString();
 
 	if ( new Date() > losedate )
-		ByID( 'countdownFailed' ).textContent = _i( 'Past Deadline!' );
+		byid( 'countdownFailed' ).textContent = _i( 'Past Deadline!' );
 
 	setCountdownColour();
 }
@@ -457,7 +450,7 @@ function imageLoader( goal, dontSet ) {	// Loads the image as string
 	var use = !dontSet;
 
 	// Validation
-	if ( !( key in KeyedGoalsArray ) )
+	if ( !( key in goalsObject ) )
 		return log( _i( 'key is invalid', key ) );
 	if ( typeof url !== 'string' ) // TODO: Localisation
 		return log( `Recieved invalid url: \n${ url }` ); // TODO: Localisation
@@ -489,7 +482,7 @@ function imageLoader( goal, dontSet ) {	// Loads the image as string
 	var reader = new FileReader();
 		reader.onloadend = _ => {
 			if ( use )
-				ByID( 'graph-img' ).src = reader.result;
+				byid( 'graph-img' ).src = reader.result;
 
 			accessImageArray(
 				_ => {
@@ -504,7 +497,7 @@ function imageLoader( goal, dontSet ) {	// Loads the image as string
 }
 function loadImageFromMemory( key ) {
 	log( _i( 'This graph was loaded from offline storage' ) );
-	accessImageArray( _ => ByID( 'graph-img' ).src = KeyedImageArray[ key ] );
+	accessImageArray( _ => byid( 'graph-img' ).src = KeyedImageArray[ key ] );
 }
 function accessImageArray( cb ) {
 	if ( KeyedImageArray )
@@ -533,15 +526,15 @@ function initialiseOptions(){
 			GoalsData	:	[]
 		},
 		function(items) {
-			ByID( "username"	).value = UName = items.username;
-			ByID( "token"		).value = token = items.token;
+			byid( "username"	).value = UName = items.username;
+			byid( "token"		).value = token = items.token;
 			updated_at		= items.updated_at;
 			DefGoal			= items.DefGoal;
-			NeuGoalsArray	= items.GoalsData;
+			goalArray	= items.GoalsData;
 
 			if ( items.username === "" || items.token === "" )
 				log( _i( 'There be no data' ) );
-			else if ( NeuGoalsArray.length >= 1 )
+			else if ( goalArray.length >= 1 )
 				drawList();
 			else
 				log( _i( 'There be no data' ) );
@@ -578,8 +571,8 @@ function saveOptions_authSuccess( response ) {
 			DefGoal		:	DefGoal
 		},
 		_ => {
-			ByID( 'status' ).textContent = _i( 'Options saved.' );
-			setTimeout( _ => ByID( 'status' ).textContent = '', 2000 );
+			byid( 'status' ).textContent = _i( 'Options saved.' );
+			setTimeout( _ => byid( 'status' ).textContent = '', 2000 );
 		}
 	);
 	// if (NeuGoalsArray.length === 0){
@@ -592,7 +585,7 @@ function saveOptions_authSuccess( response ) {
 		} );
 	// }
 }
-function ClearData () {
+function clearChromeData () {
 	//
 	chrome.storage.sync.clear();
 
@@ -600,33 +593,33 @@ function ClearData () {
 	// document.getElementById( "token"	).value = "";
 	// ^^^^ commented out for development reasons
 }
-function DefaultHandle( i ) {
-	ElementsList[ DefGoal.Loc ].defa.textContent = "-";
+function changeDefault( i ) {
+	elementList[ DefGoal.Loc ].defa.textContent = "-";
 	DefGoal.Loc = i;
-	DefGoal.Name = NeuGoalsArray[ i ].slug;
-	ElementsList[ DefGoal.Loc ].defa.textContent = _i( 'Default' );
+	DefGoal.Name = goalArray[ i ].slug;
+	elementList[ DefGoal.Loc ].defa.textContent = _i( 'Default' );
 }
 function drawList() {
 	var frag = document.createDocumentFragment();
 
-	for ( var i = 0; i < NeuGoalsArray.length; i++ ) {
+	for ( var i = 0; i < goalArray.length; i++ ) {
 		var listItem = makeListItem( i );
 
 		frag.appendChild( listItem.item );
 	}
 
-	ByID( 'TheList' ).appendChild( frag );
+	byid( 'TheList' ).appendChild( frag );
 
 	if ( Number.isInteger( DefGoal.Loc ) )
-		ElementsList[ DefGoal.Loc ].default.innerHTML = _i( 'Default' );
+		elementList[ DefGoal.Loc ].default.innerHTML = _i( 'Default' );
 
 	else {
 		DefGoal.Loc = 0;
-		ElementsList[ 0 ].default.innerHTML = _i( 'Default' );
+		elementList[ 0 ].default.innerHTML = _i( 'Default' );
 	}
 }
 function makeListItem( i ) {
-	var goal = NeuGoalsArray[ i ];
+	var goal = goalArray[ i ];
 	var slug = goal.slug;
 
 	var item = document.createElement( 'li' );
@@ -641,13 +634,13 @@ function makeListItem( i ) {
 	var hide = makeListLink( 'hide', `HideBtn`, goal.Notify, pack );
 	var notify = makeListLink( 'notify', `NotifyBtn`, goal.Show, pack );
 
-	addClick( defa, _ => DefaultHandle( i ) );
+	addClick( defa, _ => changeDefault( i ) );
 	// addClick( hide, MakeGoalsArray );
 	// addClick( notify, _ => NotifyHandle( i ) );
 
 	if ( goal.slug === DefGoal.Name ) DefGoal.Loc = i;
 
-	return ElementsList[ i ] = { item, title, defa, hide, notify, };
+	return elementList[ i ] = { item, title, defa, hide, notify, };
 }
 function makeListLink( className, id, text, { slug, item } ) {
 	var elem = document.createElement( 'a' );
@@ -663,8 +656,8 @@ function makeListLink( className, id, text, { slug, item } ) {
 function processGoal( goal, now ) {
 	var id = goal.id;
 
-	var old = id in KeyedGoalsArray
-		? KeyedGoalsArray[ id ]
+	var old = id in goalsObject
+		? goalsObject[ id ]
 		: { // TODO: Implement a Default options set
 			"DataPoints": [],
 			Notify: true,
@@ -696,8 +689,8 @@ function processGoal( goal, now ) {
 	};
 }
 function getAllDatapoints() {
-	for ( var id of Object.keys( KeyedGoalsArray ) )
-		getDatapoints( KeyedGoalsArray[ id ], true );
+	for ( var id of Object.keys( goalsObject ) )
+		getDatapoints( goalsObject[ id ], true );
 }
 function getDatapoints( goal, dontDisplay ) {
 	var display = !dontDisplay;
@@ -712,7 +705,7 @@ function getDatapoints( goal, dontDisplay ) {
 			if ( display )
 				displayDatapoints( goal );
 
-			chrome.storage.sync.set( { KeyedData: KeyedGoalsArray } );
+			chrome.storage.sync.set( { KeyedData: goalsObject } );
 		};
 
 	if ( display ) {
@@ -745,10 +738,10 @@ function displayDatapoints( goal, error ) {
 		str += points[ i ].canonical + '</br>';
 
 	// Poulate datapoints section // TODO: Localisation
-	ByID( 'dataPointStats'	).innerHTML = `Number of Datapoints : ${ points.length }`;
-	ByID( 'dataPoints' ).innerHTML = str;
+	byid( 'dataPointStats'	).innerHTML = `Number of Datapoints : ${ points.length }`;
+	byid( 'dataPoints' ).innerHTML = str;
 
-	var retry = ByID( 'datapointRetry' );
+	var retry = byid( 'datapointRetry' );
 
 	if ( error ) {
 		retry.innerHTML = error;
