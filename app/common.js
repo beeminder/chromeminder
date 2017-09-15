@@ -167,6 +167,18 @@ function findNewewstGoal( key ) {
 
 	throw new Error( `The goal key is invalid ${ key }` );
 }
+function currentGoal() {
+	return goalsObject[ currentGoalId ];
+}
+function replaceCurrentGoal( replacement ) {
+	var newID = replacement.id;
+	var oldID = currentGoal().id;
+
+	if ( newID === oldID )
+		return goalsObject[ currentGoalId ] = processGoal( replacement );
+
+	throw new Error( `Trying to replace a goal with a non matching goal` );
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
 	loadFromSettings( function( items ) {
@@ -285,19 +297,6 @@ function setMetaData( goal ) {
 	byid( 'Info_Target'		).textContent = target;
 	byid( 'Info_Countdown'	).textContent = targetCD;
 }
-function currentGoal( replacement ) {	// Return object for the currently displayed goal or replace it
-	if ( replacement ) {
-		// If NeuObj is
-		if ( goalsObject[ currentGoalId ].id === replacement.id )
-			goalsObject[ currentGoalId ] = replacement;
-
-		// If NeuObj is true
-		else if ( goalsObject[ currentGoalId ].id !== replacement.id )
-			throw new Error( `huh, replacment does not match current` );
-	}
-
-	return goalsObject[ currentGoalId ];
-}
 function refreshGoal( i ) {	// Refresh the current goals data
 	var req = {};
 
@@ -343,7 +342,8 @@ function refreshGoal_GoalGet( i, response ) {
 
 	else {
 		console.log( `Testing: What doesn't this do? ${ currentGoal( null ) }` );
-		currentGoal( processGoal( response ) );
+		replaceCurrentGoal( response );
+
 		displayGoal( currentGoalId );
 
 		chrome.storage.sync.set(
