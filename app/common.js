@@ -89,6 +89,26 @@ function log( text, time ){	// informs user and logs event
 		time ? time : 5000
 	);
 }
+function loadFromSettings( cb ) {
+	chrome.storage.sync.get(
+		{ // Data to retrieve
+			username	: '',
+			token		: '',
+			KeyedData	: {},
+			GoalsData	: [],
+			keyOfDefault: '',
+		},
+		items => {
+			UName			= items.username;
+			token			= items.token;
+			goalsObject		= items.KeyedData;
+			goalArray		= items.GoalsData;
+			keyOfDefault	= items.keyOfDefault;
+
+			cb( items );
+		}
+	);
+}
 /* --- --- --- ---		Helper Functions			--- --- --- --- */
 function byid( item ) {
 	return document.getElementById( item );
@@ -151,30 +171,8 @@ function findNewewstGoal( key ) {
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
-	chrome.storage.sync.get(
-		{ // Data to retrieve
-			username	: "",
-			token		: "",
-			KeyedData	: {},
-			GoalsData	: [],
-			keyOfDefault: '',
-			Lang		: navigator.languages
-		},
-		popup_onStorageRetrieval
-	);
-
-	function popup_onStorageRetrieval( items ) {
-		if ( !items ) return false;
-
-		// IDEA: Make a UData object to handle user data instead of multiple variables
-		UName			= items.username;
-		token			= items.token;
-		goalsObject		= items.KeyedData;
-		goalArray		= items.GoalsData;
-
-		keyOfDefault	= items.keyOfDefault;
-
-		if ( !UName || !token ) // TODO: Make this interface look better
+	loadFromSettings( function( items ) {
+		if ( !UName || !token )
 			clearBodyAppendLink(
 				_i( 'You need to enter your details in the options page ' ),
 				'/options.html'
@@ -188,7 +186,7 @@ function initialisePopup(){			// Initialises Popup.html
 				onFail: getGoals_onFail.bind( null, 'Download has failed' ),
 				onOffline: getGoals_onFail.bind( null, 'No connection available' )
 			} );
-	}
+	} );
 
 	function getGoals_onSuccess( response ) {
 		response = JSON.parse( response );
@@ -501,32 +499,17 @@ function accessImageArray( cb ) {
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function initialiseOptions(){
-	chrome.storage.sync.get(
-		{
-			username	: 	"",
-			token		: 	"",
-			updated_at	:	"",
-			KeyedData	:	{},
-			GoalsData	:	[],
-			keyOfDefault:	'',
-		},
-		function(items) {
-			console.log( items );
-			byid( "username"	).value = UName = items.username;
-			byid( "token"		).value = token = items.token;
-			goalsObject		= items.KeyedData;
-			goalArray		= items.GoalsData;
+	loadFromSettings( function ( items ) {
+		byid( "username" ).value = UName;
+		byid( "token" ).value = token;
 
-			keyOfDefault	= items.keyOfDefault;
-
-			if ( items.username === "" || items.token === "" )
-				log( _i( 'There be no data' ) );
-			else if ( goalArray.length >= 1 )
-				drawList();
-			else
-				log( _i( 'There be no data' ) );
-		}
-	);
+		if ( !UName || !token )
+			log( _i( 'There be no data' ) );
+		else if ( Object.values( goalsObject ).length > 0 )
+			drawList();
+		else
+			log( _i( 'There be no data' ) );
+	} );
 
 	document.getElementById( "save" ).addEventListener(
 		"click", saveOptions
