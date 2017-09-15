@@ -6,11 +6,7 @@ var
 	currentGoalId,				// The KeyedGoalsArray key of current goal
 	elementList = [],			//
 	goalArray = [],				// Simple goals data array
-	currentIndex,
-	DefGoal = {
-		Loc			: undefined,
-		Name		: ""
-	},
+	keyOfDefault,
 	dpRetryOnConnect,
 
 	goalsObject = {},		// Goals array using IDs as key
@@ -136,15 +132,32 @@ function once( target, type, func ) {
 		func( e );
 	} );
 }
+function findNewewstGoal( key ) {
+	var latestUpdate = 0;
+
+	if ( key in goalsObject )
+		return key;
+	else
+		for ( var goal of Object.values( goalsObject ) )
+			if ( latestUpdate < goal.updated_at ) {
+				latestUpdate = goal.updated_at;
+				key = goal.id;
+			}
+
+	if ( key in goalsObject )
+		return key;
+
+	throw new Error( `The goal key is invalid ${ key }` );
+}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
 	chrome.storage.sync.get(
 		{ // Data to retrieve
 			username	: "",
 			token		: "",
-			DefGoal		: { Loc: 0 },
 			KeyedData	: {},
 			GoalsData	: [],
+			keyOfDefault: '',
 			Lang		: navigator.languages
 		},
 		popup_onStorageRetrieval
@@ -156,12 +169,10 @@ function initialisePopup(){			// Initialises Popup.html
 		// IDEA: Make a UData object to handle user data instead of multiple variables
 		UName			= items.username;
 		token			= items.token;
-		DefGoal			= items.DefGoal;
-		PrefLangArray	= items.Lang;
 		goalsObject		= items.KeyedData;
 		goalArray		= items.GoalsData;
 
-		currentIndex = DefGoal.Loc;
+		keyOfDefault	= items.keyOfDefault;
 
 		if ( !UName || !token ) // TODO: Make this interface look better
 			clearBodyAppendLink(
@@ -183,8 +194,6 @@ function initialisePopup(){			// Initialises Popup.html
 		response = JSON.parse( response );
 
 		var goals = goalsObject,
-			defaultHolding = 0,
-			NoOfDefs = 0,
 			now = Date.now();
 
 		goalArray = []; // Clear Array
@@ -199,11 +208,6 @@ function initialisePopup(){			// Initialises Popup.html
 
 			if ( goal.Show )
 				DisplayArray.push( goal );
-
-			if ( goal.Default || DefGoal.name == goal.slug ) {
-				defaultHolding = i;
-				NoOfDefs++;
-			}
 		}
 
 		// TODO: test if this dead goal removing code works
@@ -211,26 +215,22 @@ function initialisePopup(){			// Initialises Popup.html
 			if ( goals.hasOwnProperty( key ) && goals[ key ].now !== now )
 					delete goals[ key ];
 
-		if ( NoOfDefs > 1 ) defaultHolding = 0;
-		currentIndex = DefGoal.Loc = defaultHolding;
-
 		// Store newly constructed data
 		chrome.storage.sync.set(
 			{
 				GoalsData	: goalArray,
 				KeyedData	: goals,
-				DefGoal		: DefGoal
 			},
 			_ => log( _i( "Goal data has been saved" ) )
 		);
 
 		log( _i( "Data has been downloaded" ) );
-		initialiseView();
+		initialiseView( keyOfDefault );
 	}
 	function getGoals_onFail( message ) {
 		message = _i( message );
 
-		if ( goalArray.length === 0 ) // If there is at least one goal
+		if ( Object.values( goalsObject ).length === 0 ) // If there is at least one goal
 			return clearBodyAppendLink(
 				`${ message }, ${ _i( 'No Goals Available' ) }`,
 				'/options.html'
@@ -241,18 +241,11 @@ function initialisePopup(){			// Initialises Popup.html
 		initialiseView();
 	}
 }
-function displayGoal( e ) {		// Displays Goal specific information
+function displayGoal( key ) {		// Displays Goal specific information
 	// If e is not satisfied or valid, use the current goal
-	if ( typeof e === "string" ) // TODO: Need to validate the goal exists
-		currentGoalId = e;
-	else if ( Number.isInteger( e ) && e >= goalArray.length ) {
-		currentIndex = e;
-		currentGoalId = goalArray[ e ].id;
-	}
-	else
-		e = currentIndex;
+	currentGoalId = key = findNewewstGoal();
 
-	var goal = currentGoal();
+	var goal = goalsObject[ key ];
 	var urlroot = `https://www.beeminder.com/${ UName }/${ goal.slug }`;
 
 	// Load Image
@@ -282,7 +275,7 @@ function displayGoal( e ) {		// Displays Goal specific information
 	getDatapoints( goal );
 
 	// Inform user / Log event
-	log( _i( "Output Set", e ) );
+	log( _i( "Output Set", key ) );
 }
 function setMetaData( goal ) {
 	var lastRoad = goal.fullroad[ goal.fullroad.length - 1 ];
@@ -300,26 +293,17 @@ function setMetaData( goal ) {
 	byid( 'Info_Countdown'	).textContent = targetCD;
 }
 function currentGoal( replacement ) {	// Return object for the currently displayed goal or replace it
-	// If NeuObj is
-	if ( replacement && goalArray[ currentIndex ].id === replacement.id ) {
-		goalArray[ currentIndex ] = replacement;
-		goalsObject[ replacement.id ] = replacement;
+	if ( replacement ) {
+		// If NeuObj is
+		if ( goalsObject[ currentGoalId ].id === replacement.id )
+			goalsObject[ currentGoalId ] = replacement;
+
+		// If NeuObj is true
+		else if ( goalsObject[ currentGoalId ].id !== replacement.id )
+			throw new Error( `huh, replacment does not match current` );
 	}
 
-	// If NeuObj is true
-	else if ( replacement && goalArray[ currentIndex ].id !== replacement.id )
-		return false;
-
-	// If there is a goal key return a KeyedGoalsArray item
-	// TODO:
-	else if ( currentGoalId )
-		return goalsObject[ currentGoalId ];
-
-	// If CurString isn't set, set it
-	else {
-		currentGoalId = goalArray[ currentIndex ].id;
-		return goalsObject[ currentGoalId ];
-	}
+	return goalsObject[ currentGoalId ];
 }
 function refreshGoal( i ) {	// Refresh the current goals data
 	var req = {};
@@ -367,7 +351,7 @@ function refreshGoal_GoalGet( i, response ) {
 	else {
 		console.log( `Testing: What doesn't this do? ${ currentGoal( null ) }` );
 		currentGoal( processGoal( response ) );
-		displayGoal();
+		displayGoal( currentGoalId );
 
 		chrome.storage.sync.set(
 			{ GoalsData: goalArray },
@@ -380,7 +364,7 @@ function delay( i ) {
 	if ( !i ) return false;
 	return 2500 * Math.pow( 2, ( i - 1 ) );
 }
-function initialiseView(){		// Initialise the display
+function initialiseView( keyToUse ){		// Initialise the display
 	// Goal Selector
 	if ( DisplayArray.length > 1 )
 		createGoalSelector();
@@ -410,7 +394,7 @@ function initialiseView(){		// Initialise the display
 	);
 
 	// Load default goal
-	displayGoal( DefGoal.Loc );
+	displayGoal( keyToUse );
 }
 function createGoalSelector( params ) {
 	var frag = document.createDocumentFragment();
@@ -522,15 +506,18 @@ function initialiseOptions(){
 			username	: 	"",
 			token		: 	"",
 			updated_at	:	"",
-			DefGoal 	:	"",
-			GoalsData	:	[]
+			KeyedData	:	{},
+			GoalsData	:	[],
+			keyOfDefault:	'',
 		},
 		function(items) {
+			console.log( items );
 			byid( "username"	).value = UName = items.username;
 			byid( "token"		).value = token = items.token;
-			updated_at		= items.updated_at;
-			DefGoal			= items.DefGoal;
-			goalArray	= items.GoalsData;
+			goalsObject		= items.KeyedData;
+			goalArray		= items.GoalsData;
+
+			keyOfDefault	= items.keyOfDefault;
 
 			if ( items.username === "" || items.token === "" )
 				log( _i( 'There be no data' ) );
@@ -552,9 +539,6 @@ function saveOptions() {
 	UName = document.getElementById( "username"	).value;
 	token = document.getElementById( "token"	).value;
 
-	if ( !DefGoal )
-		DefGoal = { Loc: 0 };
-
 	// Authenticate the credentials are valid
 	// TODO: offline handeler - if offline set conection listener
 	xhrHandler( {
@@ -568,7 +552,7 @@ function saveOptions_authSuccess( response ) {
 		{
 			username	:	UName,
 			token		:	token,
-			DefGoal		:	DefGoal
+			keyOfDefault,
 		},
 		_ => {
 			byid( 'status' ).textContent = _i( 'Options saved.' );
@@ -593,11 +577,17 @@ function clearChromeData () {
 	// document.getElementById( "token"	).value = "";
 	// ^^^^ commented out for development reasons
 }
-function changeDefault( i ) {
-	elementList[ DefGoal.Loc ].defa.textContent = "-";
-	DefGoal.Loc = i;
-	DefGoal.Name = goalArray[ i ].slug;
-	elementList[ DefGoal.Loc ].defa.textContent = _i( 'Default' );
+function changeDefaultKey( key ) {
+	if ( keyOfDefault in goalsObject )
+		elementList[ keyOfDefault ].defa.textContent = "-";
+
+	keyOfDefault = key;
+	elementList[ keyOfDefault ].defa.textContent = _i( 'Default' );
+
+	chrome.storage.sync.set(
+		{ keyOfDefault },
+		_ => log( 'Default Saved' )
+	);
 }
 function drawList() {
 	var frag = document.createDocumentFragment();
@@ -610,17 +600,17 @@ function drawList() {
 
 	byid( 'TheList' ).appendChild( frag );
 
-	if ( Number.isInteger( DefGoal.Loc ) )
-		elementList[ DefGoal.Loc ].default.innerHTML = _i( 'Default' );
+	if ( keyOfDefault in goalsObject )
+		elementList[ keyOfDefault ].defa.innerHTML = _i( 'Default' );
 
 	else {
-		DefGoal.Loc = 0;
-		elementList[ 0 ].default.innerHTML = _i( 'Default' );
+		// TODO: No default code
 	}
 }
 function makeListItem( i ) {
 	var goal = goalArray[ i ];
 	var slug = goal.slug;
+	var id = goal.id;
 
 	var item = document.createElement( 'li' );
 		item.className = 'item';
@@ -634,13 +624,11 @@ function makeListItem( i ) {
 	var hide = makeListLink( 'hide', `HideBtn`, goal.Notify, pack );
 	var notify = makeListLink( 'notify', `NotifyBtn`, goal.Show, pack );
 
-	addClick( defa, _ => changeDefault( i ) );
+	addClick( defa, _ => changeDefaultKey( id ) );
 	// addClick( hide, MakeGoalsArray );
 	// addClick( notify, _ => NotifyHandle( i ) );
 
-	if ( goal.slug === DefGoal.Name ) DefGoal.Loc = i;
-
-	return elementList[ i ] = { item, title, defa, hide, notify, };
+	return elementList[ id ] = { item, title, defa, hide, notify, };
 }
 function makeListLink( className, id, text, { slug, item } ) {
 	var elem = document.createElement( 'a' );
