@@ -201,8 +201,7 @@ function initialisePopup(){			// Initialises Popup.html
 	function getGoals_onSuccess( response ) {
 		response = JSON.parse( response );
 
-		var goals = goalsObject,
-			now = Date.now();
+		var now = Date.now();
 
 		DisplayArray = [];
 
@@ -210,22 +209,20 @@ function initialisePopup(){			// Initialises Popup.html
 			var goal = processGoal( response[ i ], now );
 			var id = goal.id;
 
-			goals[ id ] = goal;
+			goalsObject[ id ] = goal;
 
 			if ( goal.Show )
 				DisplayArray.push( goal );
 		}
 
 		// TODO: test if this dead goal removing code works
-		for ( var key in goals )
-			if ( goals.hasOwnProperty( key ) && goals[ key ].now !== now )
-					delete goals[ key ];
+		for ( var key in goalsObject )
+			if ( goalsObject.hasOwnProperty( key ) && goalsObject[ key ].now !== now )
+					delete goalsObject[ key ];
 
 		// Store newly constructed data
 		chrome.storage.sync.set(
-			{
-				KeyedData	: goals,
-			},
+			{ KeyedData	: goalsObject, },
 			_ => log( _i( "Goal data has been saved" ) )
 		);
 
@@ -299,17 +296,18 @@ function setMetaData( goal ) {
 }
 function refreshGoal( i ) {	// Refresh the current goals data
 	var req = {};
+	var goal = currentGoal();
 
 	// no i arg => call refresh endpoint
 	if ( !i ) {
-		req.url = `goals/${ currentGoal().slug }/refresh_graph`;
+		req.url = `goals/${ goal.slug }/refresh_graph`;
 		req.name = _i( 'Refresh ' );
 		req.onSuccess = refreshGoal_RefreshCall;
 	}
 
 	// Check for new data in goals endpoint
 	else {
-		req.url = `goals/${ currentGoal().slug }`;
+		req.url = `goals/${ goal.slug }`;
 		req.name = _i( 'Refresh - Goal Update' );
 		req.onSuccess = refreshGoal_GoalGet.bind( null, i );
 	}
@@ -328,20 +326,21 @@ function refreshGoal_GoalGet( i, response ) {
 	log( `iteration ${ i }` );
 	response = JSON.parse( response );
 
-	if ( response.updated_at === currentGoal().updated_at && i <= 6 ) {
-		timeoutRefresh = setTimeout(
-			_ => refreshGoal( i + 1 ),
-			delay( i )
-		);
+	if ( response.updated_at === currentGoal().updated_at ) {
+		if ( i <= 6 ) {
+			var nextDelay = delay( i );
+			var nextI = i + 1;
 
-		log( _i( 'No Update', i, delay( i ) ) );
+			timeoutRefresh = setTimeout( _ => refreshGoal( nextI ), nextDelay );
+
+			log( _i( 'No Update', i, nextDelay ) );
+		}
+
+		else
+			log( _i( 'The goal seems not to have updated, aborting refresh' ) );
 	}
 
-	else if ( response.updated_at === currentGoal().updated_at && i > 6 )
-		log( _i( 'The goal seems not to have updated, aborting refresh' ) );
-
 	else {
-		console.log( `Testing: What doesn't this do? ${ currentGoal( null ) }` );
 		replaceCurrentGoal( response );
 
 		displayGoal( currentGoalId );
@@ -350,6 +349,7 @@ function refreshGoal_GoalGet( i, response ) {
 			{ KeyedData: goalsObject },
 			_ => log( _i( 'New goal data has been saved' ) )
 		);
+
 		log( _i( 'Graph Refreshed', i, currentGoal().updated_at ) );
 	}
 }
@@ -382,9 +382,7 @@ function initialiseView( keyToUse ){		// Initialise the display
 	byid( 'Label_Now'		).textContent = _i( 'Start' );
 	byid( 'Label_Target'	).textContent = _i( 'Target' );
 
-	byid( 'datapointRetry'	).addEventListener(
-		'click', _ => getDatapoints( currentGoal() )
-	);
+	addClick( 'datapointRetry', _ => getDatapoints( currentGoal() ) );
 
 	// Load default goal
 	displayGoal( keyToUse );
@@ -506,12 +504,8 @@ function initialiseOptions(){
 			log( _i( 'There be no data' ) );
 	} );
 
-	document.getElementById( "save" ).addEventListener(
-		"click", saveOptions
-	);
-	document.getElementById( "clear" ).addEventListener(
-		"click", _ => chrome.storage.sync.clear()
-	);
+	addClick( 'save', saveOptions );
+	addClick( 'clear', _ => chrome.storage.sync.clear() );
 }
 function saveOptions() {
 	UName = document.getElementById( "username"	).value;
@@ -546,14 +540,6 @@ function saveOptions_authSuccess( response ) {
 			// onOffline: ItHasFailed
 		} );
 	// }
-}
-function clearChromeData () {
-	//
-	chrome.storage.sync.clear();
-
-	// document.getElementById( "username"	).value = "";
-	// document.getElementById( "token"	).value = "";
-	// ^^^^ commented out for development reasons
 }
 function changeDefaultKey( key ) {
 	if ( keyOfDefault in goalsObject )
@@ -654,8 +640,8 @@ function processGoal( goal, now ) {
 	};
 }
 function getAllDatapoints() {
-	for ( var id of Object.keys( goalsObject ) )
-		getDatapoints( goalsObject[ id ], true );
+	for ( var goal of Object.values( goalsObject ) )
+		getDatapoints( goal, true );
 }
 function getDatapoints( goal, dontDisplay ) {
 	var display = !dontDisplay;

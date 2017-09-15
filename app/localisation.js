@@ -1,5 +1,6 @@
 var languages = {
 	"en": {
+		META: { key: 'en' },
 		"404 expected": "404 above is expected and normal ... silly chrome",
 		"404: Check details try again" : "404: \nThere has been an error with the provided information. \nThe details have not been saved. \nPlease check of the details and try again.",
 		"BareMin": "BareMin",
@@ -14,6 +15,7 @@ var languages = {
 		"Goal data has been saved": "Goal data has been saved",
 		"Graph Refreshed": ( i, u ) => `Graph Refreshed ${ i } ${ u }`,
 		"New goal data has been saved": "New goal data has been saved",
+		"No Goals Available": "No Goals Available",
 		"No Difference ": "No Difference ",
 		"No Update,": ( i, d ) => `No Updated difference, giving it another swing, ${ i } ${ d }`,
 		"Now": "Now",
@@ -86,7 +88,7 @@ function _i( key, ...args ) {
 	}
 
 	if ( !( key in userLanguage ) ) {
-		console.warn( `${ key } is not present` );
+		console.warn( `${ key }\nis not present in ${ userLanguage.META.key }` );
 
 		return key;
 	}
