@@ -5,7 +5,6 @@ var
 	token,						// API Token
 	currentGoalId,				// The KeyedGoalsArray key of current goal
 	elementList = [],			//
-	goalArray = [],				// Simple goals data array
 	keyOfDefault,
 	dpRetryOnConnect,
 
@@ -102,7 +101,6 @@ function loadFromSettings( cb ) {
 			UName			= items.username;
 			token			= items.token;
 			goalsObject		= items.KeyedData;
-			goalArray		= items.GoalsData;
 			keyOfDefault	= items.keyOfDefault;
 
 			cb( items );
@@ -194,15 +192,13 @@ function initialisePopup(){			// Initialises Popup.html
 		var goals = goalsObject,
 			now = Date.now();
 
-		goalArray = []; // Clear Array
-		// NOTE: This isn't needed here as no data has been added
 		DisplayArray = [];
 
 		for ( var i = 0; i < response.length; i++ ) {
 			var goal = processGoal( response[ i ], now );
 			var id = goal.id;
 
-			goals[ id ] = goalArray[ i ] = goal;
+			goals[ id ] = goal;
 
 			if ( goal.Show )
 				DisplayArray.push( goal );
@@ -216,7 +212,6 @@ function initialisePopup(){			// Initialises Popup.html
 		// Store newly constructed data
 		chrome.storage.sync.set(
 			{
-				GoalsData	: goalArray,
 				KeyedData	: goals,
 			},
 			_ => log( _i( "Goal data has been saved" ) )
@@ -352,7 +347,7 @@ function refreshGoal_GoalGet( i, response ) {
 		displayGoal( currentGoalId );
 
 		chrome.storage.sync.set(
-			{ GoalsData: goalArray },
+			{ KeyedData: goalsObject },
 			_ => log( _i( 'New goal data has been saved' ) )
 		);
 		log( _i( 'Graph Refreshed', i, currentGoal().updated_at ) );
@@ -575,8 +570,8 @@ function changeDefaultKey( key ) {
 function drawList() {
 	var frag = document.createDocumentFragment();
 
-	for ( var i = 0; i < goalArray.length; i++ ) {
-		var listItem = makeListItem( i );
+	for ( var goal of Object.values( goalsObject ) ) {
+		var listItem = makeListItem( goal );
 
 		frag.appendChild( listItem.item );
 	}
@@ -590,8 +585,7 @@ function drawList() {
 		// TODO: No default code
 	}
 }
-function makeListItem( i ) {
-	var goal = goalArray[ i ];
+function makeListItem( goal ) {
 	var slug = goal.slug;
 	var id = goal.id;
 
