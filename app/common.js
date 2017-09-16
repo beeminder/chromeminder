@@ -209,46 +209,46 @@ function initialisePopup(){			// Initialises Popup.html
 			} );
 	} );
 
-	function getGoals_onSuccess( response ) {
-		var now = Date.now();
+}
+function getGoals_onSuccess( response ) {
+	var now = Date.now();
 
-		if ( response.length === 0 )
-			return clearBodyAppendLink( 'There are no goals available' ); // TODO: localisation
+	if ( response.length === 0 )
+		return clearBodyAppendLink( 'There are no goals available' ); // TODO: localisation
 
-		DisplayArray = [];
+	DisplayArray = [];
 
-		for ( var goal of response) {
-			goal = processGoal( goal, now );
+	for ( var goal of response) {
+		goal = processGoal( goal, now );
 
-			var id = goal.id;
+		var id = goal.id;
 
-			goalsObject[ id ] = goal;
+		goalsObject[ id ] = goal;
 
-			if ( goal.Show )
-				DisplayArray.push( goal );
-		}
-
-		deleteDeadGoals( goalsObject, now );
-
-		// Store newly constructed data
-		saveGoals( _i( "Goal data has been saved" ) );
-
-		log( _i( "Data has been downloaded" ) );
-		initialiseView( keyOfDefault );
+		if ( goal.Show )
+			DisplayArray.push( goal );
 	}
-	function getGoals_onFail( message ) {
-		message = _i( message );
 
-		if ( Object.values( goalsObject ).length === 0 ) // If there is at least one goal
-			return clearBodyAppendLink(
-				`${ message }, ${ _i( 'No Goals Available' ) }`,
-				'/options.html'
-			);
+	deleteDeadGoals( goalsObject, now );
 
-		log( `${ message }, ${ _i( 'initalising from offline data' ) }` );
+	// Store newly constructed data
+	saveGoals( _i( "Goal data has been saved" ) );
 
-		initialiseView();
-	}
+	log( _i( "Data has been downloaded" ) );
+	initialiseView( keyOfDefault );
+}
+function getGoals_onFail( message ) {
+	message = _i( message );
+
+	if ( Object.values( goalsObject ).length === 0 ) // If there is at least one goal
+		return clearBodyAppendLink(
+			`${ message }, ${ _i( 'No Goals Available' ) }`,
+			'/options.html'
+		);
+
+	log( `${ message }, ${ _i( 'initalising from offline data' ) }` );
+
+	initialiseView();
 }
 function displayGoal( key ) {
 	currentGoalId = find_Default_Or_Newewst_Goal( key );
