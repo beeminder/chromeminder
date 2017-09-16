@@ -1,29 +1,36 @@
-var
-	timeoutLog,					// Info update timeout
-	timeoutRefresh,				// Refresh Timeout
-	UName,						// Username
-	token,						// API Token
-	currentGoalId,				// The KeyedGoalsArray key of current goal
-	elementList = [],			//
-	keyOfDefault,
-	dpRetryOnConnect,
+// Globally Used Variables
+var UName;
+var token;
+var goalsObject = {};
+var keyOfDefault;
 
-	goalsObject = {},		// Goals array using IDs as key
-	KeyedImageArray,
-	DisplayArray = [];			//
+const beeURL = 'https://www.beeminder.com/';
+const ms = 1000;
+
+// Timeout
+var timeoutRefresh;
+
+// Popup Variables
+var currentGoalId;
+var dpRetryOnConnect;
+var KeyedImageArray;
+var DisplayArray = [];
+
+// Options Variables
+var elementList = [];
 
 /* --- --- --- ---		Global Functions			--- --- --- --- */
+/**
+ * Handles xhr requests
+ * @function xhrHandler
+ * @param {object} args - Object containing instructions
+ * @param {string} args.name - Develper readable name for debugging
+ * @param {string} args.url - Salt for specific API calls
+ * @param {function} args.onSuccess - What to do when successful request has been made
+ * @param {function} args.onOffline - What to do when offline
+ * @param {function} args.onFail - What to do when a 404 has been given
+ */
 function xhrHandler( args ) {
-	/**
-	 * Handles xhr requests
-	 * @function xhrHandler
-	 * @param {object} args - Object containing instructions
-	 * @param {string} args.name - Develper readable name for debugging
-	 * @param {string} args.url - Salt for specific API calls
-	 * @param {function} args.onSuccess - What to do when successful request has been made
-	 * @param {function} args.onOffline - What to do when offline
-	 * @param {function} args.onFail - What to do when a 404 has been given
-	 */
 	if ( !args )
 		throw new Error( 'No `args` obj passed to xhr handler' );
 	if ( !isFunc( args.onSuccess ) )
@@ -60,32 +67,25 @@ function xhrHandler( args ) {
 			args.onSuccess( xhr.response );
 	}
 }
-function get_apiurl( salt ) {
-	var augment = salt ? `/${ salt }` : '';
 
-	var url = `https://www.beeminder.com/api/v1/users/${ UName }${ augment }.json?auth_token=${ token }`;
-
-	return url;
+		if ( xhr.status === 200 )
+			args.onSuccess( response );
+	}
 }
-function isFunc( func ){
-	return typeof func === 'function';
-}
-function log( text, time ){	// informs user and logs event
-	// Validation and housekeeping
+function log( text, time ){
 	if ( !text ) return false;
-	if ( timeoutLog ) clearTimeout( timeoutLog );
 
 	// Displaying and logging message
-	byid( "SeverStatus" ).textContent = text;
+	var span = document.createElement( 'div' );
+		span.textContent = text;
+
+	byid( "SeverStatus" ).appendChild( span );
 	console.log( text );
 
 	// Timout to blank out display
-	timeoutLog = setTimeout(
-		_ => {
-			byid( "SeverStatus" ).textContent = "";
-			timeoutLog = undefined;
-		},
-		time ? time : 5000
+	setTimeout(
+		_ => span.remove(),
+		time ? time : 10 * ms
 	);
 }
 function loadFromSettings( cb ) {
@@ -94,7 +94,6 @@ function loadFromSettings( cb ) {
 			username	: '',
 			token		: '',
 			KeyedData	: {},
-			GoalsData	: [],
 			keyOfDefault: '',
 		},
 		items => {
@@ -108,13 +107,28 @@ function loadFromSettings( cb ) {
 	);
 }
 /* --- --- --- ---		Helper Functions			--- --- --- --- */
-function byid( item ) {
-	return document.getElementById( item );
-}
-function ISODate( date ) {
-	return ( new Date( date ) ).toISOString().substring( 0, 10 );
-}
+var byid = item => document.getElementById( item );
+var ISODate = date => ( new Date( date ) ).toISOString().substring( 0, 10 );
+var currentGoal = _ => goalsObject[ currentGoalId ];
+var isFunc = func => typeof func === 'function';
+var once = ( target, type, func ) =>
+	target.addEventListener( type, function listener( e ) {
+		target.removeEventListener( type, listener );
+
+		func( e );
+	} );
+var saveGoals = message =>
+	chrome.storage.sync.set(
+		{ KeyedData: goalsObject },
+		_ => { if ( message ) log( message ); }
+	);
+var get_apiurl = salt =>
+	`${ beeURL }api/v1/users/${ UName }${ salt ? `/${ salt }` : '' }.json?auth_token=${ token }`;
+
 function addClick( elem, func ) {
+	if ( typeof elem === 'string' )
+		elem = byid( elem );
+
 	return elem.addEventListener( 'click', func );
 }
 function setCountdownColour() {
@@ -126,31 +140,26 @@ function setCountdownColour() {
 function convertDeadlineToColour( losedate ) {
 	var daysleft = new countdown( losedate ).days;
 
-	if ( daysleft > 2 ) return "#39b44a";
+	if		( daysleft  >  2 ) return "#39b44a";
 	else if ( daysleft === 2 ) return "#325fac";
 	else if ( daysleft === 1 ) return "#f7941d";
 	else if ( daysleft === 0 ) return "#c92026";
-	else if ( daysleft < 0 ) return "#c92026";
+	else if ( daysleft  <  0 ) return "#c92026";
 
 	return "purple";
 }
 function clearBodyAppendLink( message, url ) {
 	var a = document.createElement( 'a' );
 		a.textContent = message;
-		a.href = url;
 		a.target = '_blank';
+
+	if ( url )
+		a.href = url;
 
 	document.body.innerHTML = '';
 	document.body.appendChild( a );
 }
-function once( target, type, func ) {
-	target.addEventListener( type, function listener( e ) {
-		target.removeEventListener( type, listener );
-
-		func( e );
-	} );
-}
-function findNewewstGoal( key ) {
+function find_Default_Or_Newewst_Goal( key ) {
 	var latestUpdate = 0;
 
 	if ( key in goalsObject )
@@ -167,9 +176,6 @@ function findNewewstGoal( key ) {
 
 	throw new Error( `The goal key is invalid ${ key }` );
 }
-function currentGoal() {
-	return goalsObject[ currentGoalId ];
-}
 function replaceCurrentGoal( replacement ) {
 	var newID = replacement.id;
 	var oldID = currentGoal().id;
@@ -178,6 +184,12 @@ function replaceCurrentGoal( replacement ) {
 		return goalsObject[ currentGoalId ] = processGoal( replacement );
 
 	throw new Error( `Trying to replace a goal with a non matching goal` );
+}
+function deleteDeadGoals( goals, now ) {
+	// TODO: test if this dead goal removing code works
+	for ( var key in goals )
+		if ( goals.hasOwnProperty( key ) && goals[ key ].now !== now )
+			delete goals[ key ];
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
@@ -203,10 +215,14 @@ function initialisePopup(){			// Initialises Popup.html
 
 		var now = Date.now();
 
+		if ( response.length === 0 )
+			return clearBodyAppendLink( 'There are no goals available' ); // TODO: localisation
+
 		DisplayArray = [];
 
-		for ( var i = 0; i < response.length; i++ ) {
-			var goal = processGoal( response[ i ], now );
+		for ( var goal of response) {
+			goal = processGoal( goal, now );
+
 			var id = goal.id;
 
 			goalsObject[ id ] = goal;
@@ -215,16 +231,10 @@ function initialisePopup(){			// Initialises Popup.html
 				DisplayArray.push( goal );
 		}
 
-		// TODO: test if this dead goal removing code works
-		for ( var key in goalsObject )
-			if ( goalsObject.hasOwnProperty( key ) && goalsObject[ key ].now !== now )
-					delete goalsObject[ key ];
+		deleteDeadGoals( goalsObject, now );
 
 		// Store newly constructed data
-		chrome.storage.sync.set(
-			{ KeyedData	: goalsObject, },
-			_ => log( _i( "Goal data has been saved" ) )
-		);
+		saveGoals( _i( "Goal data has been saved" ) );
 
 		log( _i( "Data has been downloaded" ) );
 		initialiseView( keyOfDefault );
@@ -243,14 +253,14 @@ function initialisePopup(){			// Initialises Popup.html
 		initialiseView();
 	}
 }
-function displayGoal( key ) {		// Displays Goal specific information
-	// If e is not satisfied or valid, use the current goal
-	currentGoalId = key = findNewewstGoal();
+function displayGoal( key ) {
+	currentGoalId = find_Default_Or_Newewst_Goal( key );
 
-	var goal = goalsObject[ key ];
-	var urlroot = `https://www.beeminder.com/${ UName }/${ goal.slug }`;
+	var goal = currentGoal();
+	var urlroot = `${ beeURL }${ UName }/${ goal.slug }`;
 
 	// Load Image
+	loadImageFromMemory( goal.id );
 	imageLoader( goal );
 
 	// Populate content
@@ -277,7 +287,7 @@ function displayGoal( key ) {		// Displays Goal specific information
 	getDatapoints( goal );
 
 	// Inform user / Log event
-	log( _i( "Output Set", key ) );
+	log( _i( "Output Set", currentGoalId ) );
 }
 function setMetaData( goal ) {
 	var lastRoad = goal.fullroad[ goal.fullroad.length - 1 ];
@@ -285,8 +295,8 @@ function setMetaData( goal ) {
 	var updated	= countdown( goal.updated_at, null, null, 1 ).toString();
 	var start	= `${ ISODate( goal.initday ) } - ${ goal.initval }`;
 	var now		= `${ ISODate( goal.curday ) } - ${ goal.curval }`;
-	var target	= `${ ISODate( lastRoad[ 0 ] * 1000 ) } - ${ lastRoad[ 1 ] }`;
-	var targetCD= countdown( lastRoad[ 0 ] * 1000, null, null, 2 ).toString();
+	var target	= `${ ISODate( lastRoad[ 0 ] * ms ) } - ${ lastRoad[ 1 ] }`;
+	var targetCD= countdown( lastRoad[ 0 ] * ms, null, null, 2 ).toString();
 
 	byid( 'LastUpdateDate'	).textContent = _i( 'LastUpdate', updated );
 	byid( 'Info_Start'		).textContent = start;
@@ -309,7 +319,7 @@ function refreshGoal( i ) {	// Refresh the current goals data
 	else {
 		req.url = `goals/${ goal.slug }`;
 		req.name = _i( 'Refresh - Goal Update' );
-		req.onSuccess = refreshGoal_GoalGet.bind( null, i );
+		req.onSuccess = _ => refreshGoal_GoalGet( i );
 	}
 
 	xhrHandler( req );
@@ -345,10 +355,7 @@ function refreshGoal_GoalGet( i, response ) {
 
 		displayGoal( currentGoalId );
 
-		chrome.storage.sync.set(
-			{ KeyedData: goalsObject },
-			_ => log( _i( 'New goal data has been saved' ) )
-		);
+		saveGoals( _i( 'New goal data has been saved' ) );
 
 		log( _i( 'Graph Refreshed', i, currentGoal().updated_at ) );
 	}
@@ -375,7 +382,7 @@ function initialiseView( keyToUse ){		// Initialise the display
 	byid( 'bareMinHeading'		).textContent = _i( 'Deadline' );
 
 	// Dealine Updater
-	setInterval( updateDeadline, 1000 );
+	setInterval( updateDeadline, ms );
 
 	// Populates meta-data
 	byid( 'Label_Start'		).textContent = _i( 'Now' );
@@ -516,7 +523,7 @@ function saveOptions() {
 	xhrHandler( {
 		name: _i( 'Credential Check' ),
 		onSuccess: saveOptions_authSuccess,
-		onFail: _ => log( _i( '404: Check details try again' ), 60000 )
+		onFail: _ => log( _i( '404: Check details try again' ), 60 * ms )
 	} );
 }
 function saveOptions_authSuccess( response ) {
@@ -524,12 +531,8 @@ function saveOptions_authSuccess( response ) {
 		{
 			username	:	UName,
 			token		:	token,
-			keyOfDefault,
 		},
-		_ => {
-			byid( 'status' ).textContent = _i( 'Options saved.' );
-			setTimeout( _ => byid( 'status' ).textContent = '', 2000 );
-		}
+		_ => log( _i( 'Options saved.' ) )
 	);
 	// if (NeuGoalsArray.length === 0){
 		xhrHandler( {
@@ -550,7 +553,7 @@ function changeDefaultKey( key ) {
 
 	chrome.storage.sync.set(
 		{ keyOfDefault },
-		_ => log( 'Default Saved' )
+		_ => log( 'Default Saved' ) // TODO: Localisation
 	);
 }
 function drawList() {
@@ -582,7 +585,7 @@ function makeListItem( goal ) {
 	var pack = { slug, item };
 
 	var title = makeListLink( 'title', `title`, goal.title, pack );
-		title.href = `https://www.beeminder.com/${ UName }/${ slug }/`;
+		title.href = `${ beeURL }${ UName }/${ slug }/`;
 	var defa = makeListLink( 'default', `defaultBtn`, '-', pack );
 	var hide = makeListLink( 'hide', `HideBtn`, goal.Notify, pack );
 	var notify = makeListLink( 'notify', `NotifyBtn`, goal.Show, pack );
@@ -621,15 +624,15 @@ function processGoal( goal, now ) {
 		"title"			: goal.title,
 		"description"	: goal.description,
 		"id"			: goal.id,
-		"losedate"		: goal.losedate		*1000,	// Date
+		"losedate"		: goal.losedate		* ms,	// Date
 		"limsum"		: goal.limsum,
 		"DataPoints"	:	old.DataPoints,
-		"updated_at"	: goal.updated_at	*1000,	// Date
-		"initday"		: goal.initday		*1000,	// Date
+		"updated_at"	: goal.updated_at	* ms,	// Date
+		"initday"		: goal.initday		* ms,	// Date
 		"initval"		: goal.initval,
-		"curday"		: goal.curday		*1000,	// Date
+		"curday"		: goal.curday		* ms,	// Date
 		"curval"		: goal.curval,
-		"lastday"		: goal.lastday		*1000,	// Date
+		"lastday"		: goal.lastday		* ms,	// Date
 		"fullroad"		: goal.fullroad,
 		"graph_url"		: goal.graph_url,
 		"thumb_url"		: goal.thumb_url,
@@ -656,7 +659,7 @@ function getDatapoints( goal, dontDisplay ) {
 			if ( display )
 				displayDatapoints( goal );
 
-			chrome.storage.sync.set( { KeyedData: goalsObject } );
+			saveGoals();
 		};
 
 	if ( display ) {
