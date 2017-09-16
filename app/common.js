@@ -119,23 +119,6 @@ function addClick( elem, func ) {
 
 	return elem.addEventListener( 'click', func );
 }
-function setCountdownColour() {
-	var colour = convertDeadlineToColour( currentGoal().losedate );
-	var display = document.querySelector( ".CountdownDisplay" );
-
-	display.style.backgroundColor = colour;
-}
-function convertDeadlineToColour( losedate ) {
-	var daysleft = new countdown( losedate ).days;
-
-	if		( daysleft  >  2 ) return "#39b44a";
-	else if ( daysleft === 2 ) return "#325fac";
-	else if ( daysleft === 1 ) return "#f7941d";
-	else if ( daysleft === 0 ) return "#c92026";
-	else if ( daysleft  <  0 ) return "#c92026";
-
-	return "purple";
-}
 function clearBodyAppendLink( message, url ) {
 	var a = document.createElement( 'a' );
 		a.textContent = message;
@@ -257,6 +240,7 @@ function initialiseView( keyToUse ){		// Initialise the display
 	byid( 'bareMinHeading'		).textContent = _i( 'Deadline' );
 
 	// Dealine Updater
+	// TODO: Dynamically set Interval rate based on Deadline duration
 	setInterval( updateDeadline, ms );
 
 	// Populates meta-data
@@ -297,7 +281,6 @@ function displayGoal( key ) {
 	clearTimeout( timeoutRefresh );
 
 	// Set the deadline colour TODO move to DisplayDeadline()
-	setCountdownColour();
 	setMetaData( goal );
 
 	getDatapoints( goal );
@@ -393,20 +376,29 @@ function createGoalSelctorLink( goal ) {
 
 	return a;
 }
+/**
+ * called by 1 second interval that upadates the deadline countdown
+ */
 function updateDeadline(){
-	/**
-	 * @function updateDeadline
-	 * called by 1 second interval that upadates the deadline countdown
-	 */
-
 	var losedate = currentGoal().losedate;
+	var cd = countdown( losedate, null, null, 2 );
+	var daysleft = cd.days;
+	var colour;
+	var countdownDisplay = document.querySelector( ".CountdownDisplay" );
 
-	byid( 'countdownValue' ).innerHTML = countdown( losedate ).toString();
+	byid( 'countdownValue' ).innerHTML = cd.toString();
 
 	if ( new Date() > losedate )
 		byid( 'countdownFailed' ).textContent = _i( 'Past Deadline!' );
 
-	setCountdownColour();
+	if		( daysleft  >  2 )	colour = "#39b44a";
+	else if ( daysleft === 2 )	colour = "#325fac";
+	else if ( daysleft === 1 )	colour = "#f7941d";
+	else if ( daysleft === 0 )	colour = "#c92026";
+	else if ( daysleft  <  0 )	colour = "#c92026";
+	else 						colour = "purple";
+
+	countdownDisplay.style.backgroundColor = colour;
 }
 function imageLoader( goal, dontSet ) {	// Loads the image as string
 	var url = goal.graph_url;
