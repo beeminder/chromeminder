@@ -4,6 +4,7 @@ var token;
 var goalsObject = {};
 var keyOfDefault;
 
+// Constants
 const beeURL = 'https://www.beeminder.com/';
 const ms = 1000;
 
@@ -48,25 +49,23 @@ function xhrHandler( args ) {
 
 	// HTTP request
 	var xhr = new XMLHttpRequest();
-		// xhr.onreadystatechange = StateChange;
 		xhr.onload = LoadEvent;
 		xhr.open( "GET", get_apiurl( args.url ) );
 		xhr.send();
 
 	function LoadEvent() {
+		var response = JSON.parse( xhr.response );
+
 		if ( xhr.status === 404 ) {
 			log( `${ name }${ _i( 'Server 404 error' ) }` );
+
 			if ( isFunc( args.onFail ) )
-				args.onFail( xhr.response );
-			xhr.abort();
-			return;
+				args.onFail( response );
+
+			return xhr.abort();
 		}
 
 		log( `${ name }${ _i( 'xhr Handler ' ) }` );
-		if ( xhr.status === 200 && xhr.readyState === 4 )
-			args.onSuccess( xhr.response );
-	}
-}
 
 		if ( xhr.status === 200 )
 			args.onSuccess( response );
@@ -211,8 +210,6 @@ function initialisePopup(){			// Initialises Popup.html
 	} );
 
 	function getGoals_onSuccess( response ) {
-		response = JSON.parse( response );
-
 		var now = Date.now();
 
 		if ( response.length === 0 )
@@ -324,8 +321,11 @@ function refreshGoal( i ) {	// Refresh the current goals data
 
 	xhrHandler( req );
 }
+/**
+ * @param {boolean} response
+ */
 function refreshGoal_RefreshCall( response ) {
-	if ( response === "true" ) {
+	if ( response ) {
 		log( _i( 'Waiting for Graph to refresh' ) );
 		timeoutRefresh = setTimeout( _ => refreshGoal( 1 ), 2500 );
 	}
@@ -334,7 +334,6 @@ function refreshGoal_RefreshCall( response ) {
 }
 function refreshGoal_GoalGet( i, response ) {
 	log( `iteration ${ i }` );
-	response = JSON.parse( response );
 
 	if ( response.updated_at === currentGoal().updated_at ) {
 		if ( i <= 6 ) {
@@ -538,7 +537,7 @@ function saveOptions_authSuccess( response ) {
 		xhrHandler( {
 			name: "Handle Download",
 			url: "goals",
-			onSuccess: _ => console.log( JSON.parse( response ) )//,
+			onSuccess: _ => console.log( response ),
 			// onFail	: ItHasFailed,
 			// onOffline: ItHasFailed
 		} );
@@ -654,7 +653,7 @@ function getDatapoints( goal, dontDisplay ) {
 		request.name = `DownloadDatapoints - ${ slug }`; // TODO Localisation
 		request.url = `goals/${ slug }/datapoints`;
 		request.onSuccess = res => {
-			goal.DataPoints = JSON.parse( res );
+			goal.DataPoints = res;
 
 			if ( display )
 				displayDatapoints( goal );
