@@ -25,26 +25,18 @@ var elementList = [];
  * Handles xhr requests
  * @function xhrHandler
  * @param {object} args - Object containing instructions
- * @param {string} args.name - Develper readable name for debugging
  * @param {string} args.url - Salt for specific API calls
  * @param {function} args.onSuccess - What to do when successful request has been made
  * @param {function} args.onOffline - What to do when offline
  * @param {function} args.onFail - What to do when a 404 has been given
  */
 function xhrHandler( args ) {
-	if ( !args )
-		throw new Error( 'No `args` obj passed to xhr handler' );
-	if ( !isFunc( args.onSuccess ) )
-		throw new Error( '`args.onSuccess` is not a function' );
-
-	var name = args.name ? `${ args.name } - ` : '';
-
 	// Offline detection
 	if ( !navigator.onLine ) {
 		if ( isFunc( args.onOffline ) )
-			return args.onOffline();
-		else
-			return log( name + "Currently Offline" );
+			args.onOffline();
+
+		return;
 	}
 
 	// HTTP request
@@ -57,15 +49,11 @@ function xhrHandler( args ) {
 		var response = JSON.parse( xhr.response );
 
 		if ( xhr.status === 404 ) {
-			log( `${ name }${ _i( 'Server 404 error' ) }` );
-
 			if ( isFunc( args.onFail ) )
 				args.onFail( response );
 
 			return xhr.abort();
 		}
-
-		log( `${ name }${ _i( 'xhr Handler ' ) }` );
 
 		if ( xhr.status === 200 )
 			args.onSuccess( response );
@@ -110,6 +98,7 @@ var byid = item => document.getElementById( item );
 var ISODate = date => ( new Date( date ) ).toISOString().substring( 0, 10 );
 var currentGoal = _ => goalsObject[ currentGoalId ];
 var isFunc = func => typeof func === 'function';
+var delay = i => 2500 * Math.pow( 2, ( i - 1 ) );
 var once = ( target, type, func ) =>
 	target.addEventListener( type, function listener( e ) {
 		target.removeEventListener( type, listener );
@@ -250,6 +239,36 @@ function getGoals_onFail( message ) {
 
 	initialiseView();
 }
+function initialiseView( keyToUse ){		// Initialise the display
+	// Goal Selector
+	if ( DisplayArray.length > 1 )
+		createGoalSelector();
+
+	// Populates text and RefreshAction listener in Menu Box
+	byid( 'ButtonGoal'		).textContent = _i( 'GOTO' );
+	byid( 'ButtonRefresh'	).textContent = _i( 'Refresh' );
+	byid( 'ButtonData'		).textContent = _i( 'Data' );
+	byid( 'ButtonSettings'	).textContent = _i( 'Settings' );
+	byid( 'OptLink'			).textContent = _i( 'Options' );
+	byid( 'ButtonRefresh'	).addEventListener( 'click', _ => refreshGoal() );
+
+	// Headings
+	byid( 'countdownHeading'	).textContent = _i( 'Deadline' );
+	byid( 'bareMinHeading'		).textContent = _i( 'Deadline' );
+
+	// Dealine Updater
+	setInterval( updateDeadline, ms );
+
+	// Populates meta-data
+	byid( 'Label_Start'		).textContent = _i( 'Now' );
+	byid( 'Label_Now'		).textContent = _i( 'Start' );
+	byid( 'Label_Target'	).textContent = _i( 'Target' );
+
+	addClick( 'datapointRetry', _ => getDatapoints( currentGoal() ) );
+
+	// Load default goal
+	displayGoal( keyToUse );
+}
 function displayGoal( key ) {
 	currentGoalId = find_Default_Or_Newewst_Goal( key );
 
@@ -341,8 +360,6 @@ function refreshGoal_GoalGet( i, response ) {
 			var nextI = i + 1;
 
 			timeoutRefresh = setTimeout( _ => refreshGoal( nextI ), nextDelay );
-
-			log( _i( 'No Update', i, nextDelay ) );
 		}
 
 		else
@@ -358,40 +375,6 @@ function refreshGoal_GoalGet( i, response ) {
 
 		log( _i( 'Graph Refreshed', i, currentGoal().updated_at ) );
 	}
-}
-function delay( i ) {
-	if ( !i ) return false;
-	return 2500 * Math.pow( 2, ( i - 1 ) );
-}
-function initialiseView( keyToUse ){		// Initialise the display
-	// Goal Selector
-	if ( DisplayArray.length > 1 )
-		createGoalSelector();
-
-	// Populates text and RefreshAction listener in Menu Box
-	byid( 'ButtonGoal'		).textContent = _i( 'GOTO' );
-	byid( 'ButtonRefresh'	).textContent = _i( 'Refresh' );
-	byid( 'ButtonData'		).textContent = _i( 'Data' );
-	byid( 'ButtonSettings'	).textContent = _i( 'Settings' );
-	byid( 'OptLink'			).textContent = _i( 'Options' );
-	byid( 'ButtonRefresh'	).addEventListener( 'click', _ => refreshGoal() );
-
-	// Headings
-	byid( 'countdownHeading'	).textContent = _i( 'Deadline' );
-	byid( 'bareMinHeading'		).textContent = _i( 'Deadline' );
-
-	// Dealine Updater
-	setInterval( updateDeadline, ms );
-
-	// Populates meta-data
-	byid( 'Label_Start'		).textContent = _i( 'Now' );
-	byid( 'Label_Now'		).textContent = _i( 'Start' );
-	byid( 'Label_Target'	).textContent = _i( 'Target' );
-
-	addClick( 'datapointRetry', _ => getDatapoints( currentGoal() ) );
-
-	// Load default goal
-	displayGoal( keyToUse );
 }
 function createGoalSelector( params ) {
 	var frag = document.createDocumentFragment();
@@ -495,6 +478,65 @@ function accessImageArray( cb ) {
 				cb( KeyedImageArray );
 			}
 		);
+}
+function getDatapoints( goal, dontDisplay ) {
+	var display = !dontDisplay;
+	var slug = goal.slug;
+
+	var request = {};
+		request.name = `DownloadDatapoints - ${ slug }`; // TODO Localisation
+		request.url = `goals/${ slug }/datapoints`;
+		request.onSuccess = res => {
+			goal.DataPoints = res;
+
+			if ( display )
+				displayDatapoints( goal );
+
+			saveGoals();
+		};
+
+	if ( display ) {
+		request.onFail = _ => displayDatapoints( goal, 'The Download has failed!</br>Click here to try again!' );
+
+		request.onOffline = _ => {
+			displayDatapoints( goal, 'The Download has failed!</br>Click here to try again!' );
+
+			if ( !dpRetryOnConnect ) {
+				once( window, 'online', _ => {
+					dpRetryOnConnect = false;
+					getDatapoints( goal );
+				} );
+
+				dpRetryOnConnect = true;
+			}
+		};
+	}
+
+	// API requsest for datapoints
+	xhrHandler( request );
+}
+function displayDatapoints( goal, error ) {
+	var points = goal.DataPoints;
+
+	// Create datapoints list
+	var iCap = points.length <= 10 ? points.length : 10;
+	var str = '';
+	for ( var i = 0; i < iCap; i++ )
+		str += points[ i ].canonical + '</br>';
+
+	// Poulate datapoints section // TODO: Localisation
+	byid( 'dataPointStats'	).innerHTML = `Number of Datapoints : ${ points.length }`;
+	byid( 'dataPoints' ).innerHTML = str;
+
+	var retry = byid( 'datapointRetry' );
+
+	if ( error ) {
+		retry.innerHTML = error;
+		retry.classList.remove( 'hide' );
+	}
+	else
+		retry.innerHTML = '';
+		retry.classList.add( 'hide' );
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
 function initialiseOptions(){
@@ -640,67 +682,4 @@ function processGoal( goal, now ) {
 		"now"			:	now,
 		"autodata"		: goal.autodata
 	};
-}
-function getAllDatapoints() {
-	for ( var goal of Object.values( goalsObject ) )
-		getDatapoints( goal, true );
-}
-function getDatapoints( goal, dontDisplay ) {
-	var display = !dontDisplay;
-	var slug = goal.slug;
-
-	var request = {};
-		request.name = `DownloadDatapoints - ${ slug }`; // TODO Localisation
-		request.url = `goals/${ slug }/datapoints`;
-		request.onSuccess = res => {
-			goal.DataPoints = res;
-
-			if ( display )
-				displayDatapoints( goal );
-
-			saveGoals();
-		};
-
-	if ( display ) {
-		request.onFail = _ => displayDatapoints( goal, 'The Download has failed!</br>Click here to try again!' );
-
-		request.onOffline = _ => {
-			displayDatapoints( goal, 'The Download has failed!</br>Click here to try again!' );
-
-			if ( !dpRetryOnConnect ) {
-				once( window, 'online', _ => {
-					dpRetryOnConnect = false;
-					getDatapoints( goal );
-				} );
-
-				dpRetryOnConnect = true;
-			}
-		};
-	}
-
-	// API requsest for datapoints
-	xhrHandler( request );
-}
-function displayDatapoints( goal, error ) {
-	var points = goal.DataPoints;
-
-	// Create datapoints list
-	var iCap = points.length <= 10 ? points.length : 10;
-	var str = '';
-	for ( var i = 0; i < iCap; i++ )
-		str += points[ i ].canonical + '</br>';
-
-	// Poulate datapoints section // TODO: Localisation
-	byid( 'dataPointStats'	).innerHTML = `Number of Datapoints : ${ points.length }`;
-	byid( 'dataPoints' ).innerHTML = str;
-
-	var retry = byid( 'datapointRetry' );
-
-	if ( error ) {
-		retry.innerHTML = error;
-		retry.classList.remove( 'hide' );
-	}
-	else
-		retry.innerHTML = '';
-		retry.classList.add( 'hide' );
 }
