@@ -171,6 +171,47 @@ function replaceCurrentGoal( replacement, message ) {
 	displayGoal( currentGoalId );
 	saveGoals( message );
 }
+function processRawGoals( array, object ) {
+	var now = Date.now();
+
+	for ( var goal of array )
+		object[ goal.id ] = processGoal( goal, now );
+
+	// TODO: test if this dead goal removing code works
+	for ( var key in object ) {
+		if ( object.hasOwnProperty( key ) && object[ key ].now !== now )
+			delete object[ key ];
+		else
+			delete object[ key ].now;
+	}
+
+	saveGoals( _i( "Goal data has been saved" ) );
+}
+function getShowable() {
+	var goals = Object.values( goalsObject );
+		goals.sort( ( a, b ) => {
+			var x = a.title.toUpperCase();
+			var y = b.title.toUpperCase();
+
+			if ( x < y ) return -1;
+			if ( x > y ) return  1;
+
+			return 0;
+		} );
+
+	var showable = goals.filter( g => g.show || g.id === keyOfDefault );
+
+	if ( showable.length !== 0 )
+		return showable;
+
+	if ( goals.length !== 0 )
+		return goals;
+
+	// TODO: ????
+	console.log( 'there are no goals' );
+
+	return goals;
+}
 function deleteDeadGoals( goals, now ) {
 	// TODO: test if this dead goal removing code works
 	for ( var key in goals )
