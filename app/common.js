@@ -220,22 +220,8 @@ function deleteDeadGoals( goals, now ) {
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
-	loadFromSettings( function( items ) {
-		if ( !UName || !token )
-			clearBodyAppendLink(
-				_i( 'You need to enter your details in the options page ' ),
-				'/options.html'
-			);
+	loadFromSettings( popupStorageCallback );
 
-		else // TODO else if (!last API req was too soon)
-			xhrHandler( {
-				name: "Getting goals data",
-				url: "goals",
-				onSuccess: getGoals_onSuccess,
-				onFail: getGoals_onFail.bind( null, 'Download has failed' ),
-				onOffline: getGoals_onFail.bind( null, 'No connection available' )
-			} );
-	} );
 	// Populates text and RefreshAction listener in Menu Box
 	byid( 'ButtonGoal'		).textContent = _i( 'GOTO' );
 	byid( 'ButtonRefresh'	).textContent = _i( 'Refresh' );
@@ -253,6 +239,22 @@ function initialisePopup(){			// Initialises Popup.html
 	// Dealine Updater
 	// TODO: Dynamically set Interval rate based on Deadline duration
 	setInterval( updateDeadline, ms );
+}
+function popupStorageCallback( items ) {
+	if ( !UName || !token )
+		return clearBodyAppendLink(
+			_i( 'You need to enter your details in the options page ' ),
+			'/options.html'
+		);
+
+	// TODO: else if (!last API req was too soon)
+	var req = {};
+		req.url = "goals";
+		req.onSuccess = getGoals_onSuccess;
+		req.onFail = _ => getGoals_onFail( 'Download has failed' );
+		req.onOffline = _ => getGoals_onFail( 'No connection available' );
+
+	xhrHandler( req );
 }
 function getGoals_onSuccess( response ) {
 	var now = Date.now();
