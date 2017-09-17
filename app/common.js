@@ -255,6 +255,9 @@ function popupStorageCallback( items ) {
 		req.onOffline = _ => getGoals_onFail( 'No connection available' );
 
 	xhrHandler( req );
+
+	displayGoal();
+	createGoalSelector( getShowable() );
 }
 function getGoals_onSuccess( response ) {
 	if ( response.length === 0 )
@@ -268,15 +271,15 @@ function getGoals_onSuccess( response ) {
 function getGoals_onFail( message ) {
 	message = _i( message );
 
-	if ( Object.values( goalsObject ).length === 0 ) // If there is at least one goal
+	var toDisplay = getShowable();
+
+	if ( toDisplay.length === 0 )
 		return clearBodyAppendLink(
 			`${ message }, ${ _i( 'No Goals Available' ) }`,
 			'/options.html'
 		);
 
-	log( `${ message }, ${ _i( 'initalising from offline data' ) }` );
-
-	initialiseView();
+	log( `${ message }. ${ _i( 'Using offline data oly' ) }` );
 }
 function initialiseView( keyToUse ){		// Initialise the display
 	// Goal Selector
