@@ -7,6 +7,7 @@ var keyOfDefault;
 // Constants
 const beeURL = 'https://www.beeminder.com/';
 const ms = 1000;
+const MAX_POINTS = 10;
 
 // Timeout
 var timeoutRefresh;
@@ -15,7 +16,6 @@ var timeoutRefresh;
 var currentGoalId;
 var dpRetryOnConnect;
 var KeyedImageArray;
-var DisplayArray = [];
 
 // Options Variables
 var elementList = [];
@@ -70,6 +70,9 @@ function xhrHandler( args ) {
 			args.onSuccess( response );
 	}
 }
+/**
+ * Logs informations to the view and console
+ */
 function log( text, time ){
 	if ( !text ) return false;
 
@@ -146,6 +149,8 @@ function find_Default_Or_Newewst_Goal( key ) {
 
 	if ( key in goalsObject )
 		return key;
+	else if ( keyOfDefault in goalsObject )
+		return keyOfDefault;
 	else
 		for ( var goal of Object.values( goalsObject ) )
 			if ( latestUpdate < goal.updated_at ) {
@@ -158,14 +163,13 @@ function find_Default_Or_Newewst_Goal( key ) {
 
 	throw new Error( `The goal key is invalid ${ key }` );
 }
-function replaceCurrentGoal( replacement ) {
-	var newID = replacement.id;
-	var oldID = currentGoal().id;
+function replaceCurrentGoal( replacement, message ) {
+	if ( replacement.id !== currentGoalId )
+		throw new Error( `Trying to replace a goal with a non matching goal` );
 
-	if ( newID === oldID )
-		return goalsObject[ currentGoalId ] = processGoal( replacement );
-
-	throw new Error( `Trying to replace a goal with a non matching goal` );
+	goalsObject[ currentGoalId ] = processGoal( replacement );
+	displayGoal( currentGoalId );
+	saveGoals( message );
 }
 function deleteDeadGoals( goals, now ) {
 	// TODO: test if this dead goal removing code works
@@ -321,15 +325,13 @@ function refreshGoal( i ) {	// Refresh the current goals data
 	// no i arg => call refresh endpoint
 	if ( !i ) {
 		req.url = `goals/${ goal.slug }/refresh_graph`;
-		req.name = _i( 'Refresh ' );
 		req.onSuccess = refreshGoal_RefreshCall;
 	}
 
 	// Check for new data in goals endpoint
 	else {
 		req.url = `goals/${ goal.slug }`;
-		req.name = _i( 'Refresh - Goal Update' );
-		req.onSuccess = _ => refreshGoal_GoalGet( i );
+		req.onSuccess = res => refreshGoal_GoalGet( i, res );
 	}
 
 	xhrHandler( req );
@@ -345,10 +347,10 @@ function refreshGoal_RefreshCall( response ) {
 	else
 		log( _i( 'Beeminder Sever Says no' ) );
 }
-function refreshGoal_GoalGet( i, response ) {
+function refreshGoal_GoalGet( i, goal ) {
 	log( `iteration ${ i }` );
 
-	if ( response.updated_at === currentGoal().updated_at ) {
+	if ( goal.updated_at === currentGoal().updated_at ) {
 		if ( i <= 6 ) {
 			var nextDelay = delay( i );
 			var nextI = i + 1;
@@ -360,20 +362,16 @@ function refreshGoal_GoalGet( i, response ) {
 			log( _i( 'The goal seems not to have updated, aborting refresh' ) );
 	}
 
-	else {
-		replaceCurrentGoal( response );
-
-		displayGoal( currentGoalId );
-
-		saveGoals( _i( 'New goal data has been saved' ) );
-
-		log( _i( 'Graph Refreshed', i, currentGoal().updated_at ) );
-	}
+	else
+		replaceCurrentGoal(
+			goal,
+			_i( 'Graph Refreshed', i, currentGoal().updated_at )
+		);
 }
-function createGoalSelector( params ) {
+function createGoalSelector( toDisplay ) {
 	var frag = document.createDocumentFragment();
 
-	for ( var goal of DisplayArray )
+	for ( var goal of toDisplay )
 		frag.appendChild( createGoalSelctorLink( goal ) );
 
 	byid( 'TheContent' ).appendChild( frag );
@@ -391,7 +389,11 @@ function createGoalSelctorLink( goal ) {
  * called by 1 second interval that upadates the deadline countdown
  */
 function updateDeadline(){
-	var losedate = currentGoal().losedate;
+	var goal = currentGoal();
+
+	if ( !goal ) return
+
+	var losedate = goal.losedate;
 	var cd = countdown( losedate, null, null, 2 );
 	var daysleft = cd.days;
 	var colour;
@@ -487,10 +489,9 @@ function getDatapoints( goal, dontDisplay ) {
 	var slug = goal.slug;
 
 	var request = {};
-		request.name = `DownloadDatapoints - ${ slug }`; // TODO Localisation
 		request.url = `goals/${ slug }/datapoints`;
 		request.onSuccess = res => {
-			goal.DataPoints = res;
+			goal.dataPoints = res;
 
 			if ( display )
 				displayDatapoints( goal );
@@ -519,10 +520,10 @@ function getDatapoints( goal, dontDisplay ) {
 	xhrHandler( request );
 }
 function displayDatapoints( goal, error ) {
-	var points = goal.DataPoints;
+	var points = goal.dataPoints;
 
 	// Create datapoints list
-	var iCap = points.length <= 10 ? points.length : 10;
+	var iCap = points.length <= MAX_POINTS ? points.length : MAX_POINTS;
 	var str = '';
 	for ( var i = 0; i < iCap; i++ )
 		str += points[ i ].canonical + '</br>';
@@ -563,11 +564,10 @@ function saveOptions() {
 	token = document.getElementById( "token"	).value;
 
 	// Authenticate the credentials are valid
-	// TODO: offline handeler - if offline set conection listener
 	xhrHandler( {
-		name: _i( 'Credential Check' ),
 		onSuccess: saveOptions_authSuccess,
 		onFail: _ => log( _i( '404: Check details try again' ), 60 * ms )
+		onOffline: _ => log( 'Currently offline, You need to be onlie to save yur details' ), // TODO: localisation
 	} );
 }
 function saveOptions_authSuccess( response ) {
@@ -580,7 +580,6 @@ function saveOptions_authSuccess( response ) {
 	);
 	// if (NeuGoalsArray.length === 0){
 		xhrHandler( {
-			name: "Handle Download",
 			url: "goals",
 			onSuccess: _ => console.log( response ),
 			// onFail	: ItHasFailed,
@@ -666,38 +665,49 @@ function logStorageInfo( value, sa ) {
 	console.log( `Which is ${ ( value / sa.QUOTA_BYTES ) * 100 }% of storage` );
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
+/**
+ * Returns a goal-object optimsed for limited storage space
+ * Preseving existing options
+ */
 function processGoal( goal, now ) {
 	var id = goal.id;
 
 	var old = id in goalsObject
 		? goalsObject[ id ]
 		: { // TODO: Implement a Default options set
-			"DataPoints": [],
-			Notify: true,
-			Show: true
+			dataPoints: [],
+			notify: true,
+			show: true
 		};
 
-	// Return object with local settings added and dates formated into UNIX integer
-	return {
-		"slug"			: goal.slug,
-		"title"			: goal.title,
-		"description"	: goal.description,
-		"id"			: goal.id,
-		"losedate"		: goal.losedate		* ms,	// Date
-		"limsum"		: goal.limsum,
-		"DataPoints"	:	old.DataPoints,
-		"updated_at"	: goal.updated_at	* ms,	// Date
-		"initday"		: goal.initday		* ms,	// Date
-		"initval"		: goal.initval,
-		"curday"		: goal.curday		* ms,	// Date
-		"curval"		: goal.curval,
-		"lastday"		: goal.lastday		* ms,	// Date
-		"fullroad"		: goal.fullroad,
-		"graph_url"		: goal.graph_url,
-		"thumb_url"		: goal.thumb_url,
-		"Notify"		:	old.Notify,
-		"Show"			:	old.Show,
-		"now"			:	now,
-		"autodata"		: goal.autodata
+	var points = goal.dataPoints ? goal.dataPoints : old.dataPoints;
+
+	var ret = {
+		slug		: goal.slug,
+		title		: goal.title,
+		description	: goal.description,
+		id			: goal.id,
+		limsum		: goal.limsum,
+		initval		: goal.initval,
+		curval		: goal.curval,
+		fullroad	: goal.fullroad,
+		graph_url	: goal.graph_url,
+		thumb_url	: goal.thumb_url,
+		autodata	: goal.autodata,
+
+		losedate	: goal.losedate		* MS,
+		updated_at	: goal.updated_at	* MS,
+		initday		: goal.initday		* MS,
+		curday		: goal.curday		* MS,
+		lastday		: goal.lastday		* MS,
+
+		dataPoints	: points,
+
+		notify		:	old.notify,
+		show		:	old.show,
 	};
+
+	if ( now ) ret.now = now;
+
+	return ret;
 }
