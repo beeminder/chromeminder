@@ -257,31 +257,13 @@ function popupStorageCallback( items ) {
 	xhrHandler( req );
 }
 function getGoals_onSuccess( response ) {
-	var now = Date.now();
-
 	if ( response.length === 0 )
 		return clearBodyAppendLink( 'There are no goals available' ); // TODO: localisation
 
-	DisplayArray = [];
+	processRawGoals( response, goalsObject );
 
-	for ( var goal of response) {
-		goal = processGoal( goal, now );
-
-		var id = goal.id;
-
-		goalsObject[ id ] = goal;
-
-		if ( goal.Show )
-			DisplayArray.push( goal );
-	}
-
-	deleteDeadGoals( goalsObject, now );
-
-	// Store newly constructed data
-	saveGoals( _i( "Goal data has been saved" ) );
-
-	log( _i( "Data has been downloaded" ) );
-	initialiseView( keyOfDefault );
+	displayGoal();
+	createGoalSelector( getShowable() );
 }
 function getGoals_onFail( message ) {
 	message = _i( message );
@@ -406,12 +388,18 @@ function refreshGoal_GoalGet( i, goal ) {
 		);
 }
 function createGoalSelector( toDisplay ) {
+	if ( toDisplay.length < 1 )
+		return;
+
+	var target = byid( 'TheContent' );
+		target.innerHTML = '';
+
 	var frag = document.createDocumentFragment();
 
 	for ( var goal of toDisplay )
 		frag.appendChild( createGoalSelctorLink( goal ) );
 
-	byid( 'TheContent' ).appendChild( frag );
+	target.appendChild( frag );
 }
 function createGoalSelctorLink( goal ) {
 	var a = document.createElement( 'a' );
