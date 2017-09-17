@@ -5,8 +5,8 @@ var goalsObject = {};
 var keyOfDefault;
 
 // Constants
-const beeURL = 'https://www.beeminder.com/';
-const ms = 1000;
+const BEE_URL = 'https://www.beeminder.com/';
+const MS = 1000;
 const MAX_POINTS = 10;
 
 // Timeout
@@ -86,7 +86,7 @@ function log( text, time ){
 	// Timout to blank out display
 	setTimeout(
 		_ => span.remove(),
-		time ? time : 10 * ms
+		time ? time : 10 * MS
 	);
 }
 function loadFromSettings( cb ) {
@@ -112,7 +112,7 @@ var byid = item => document.getElementById( item );
 var ISODate = date => ( new Date( date ) ).toISOString().substring( 0, 10 );
 var currentGoal = _ => goalsObject[ currentGoalId ];
 var isFunc = func => typeof func === 'function';
-var delay = i => 2500 * Math.pow( 2, ( i - 1 ) );
+var delay = i => 2.5 * MS * Math.pow( 2, ( i - 1 ) );
 var once = ( target, type, func ) =>
 	target.addEventListener( type, function listener( e ) {
 		target.removeEventListener( type, listener );
@@ -125,7 +125,7 @@ var saveGoals = message =>
 		_ => { if ( message ) log( message ); }
 	);
 var get_apiurl = salt =>
-	`${ beeURL }api/v1/users/${ UName }${ salt ? `/${ salt }` : '' }.json?auth_token=${ token }`;
+	`${ BEE_URL }api/v1/users/${ UName }${ salt ? `/${ salt }` : '' }.json?auth_token=${ token }`;
 
 function addClick( elem, func ) {
 	if ( typeof elem === 'string' )
@@ -145,6 +145,7 @@ function clearBodyAppendLink( message, url ) {
 	document.body.appendChild( a );
 }
 function find_Default_Or_Newewst_Goal( key ) {
+	var toDisplay = getShowable();
 	var latestUpdate = 0;
 
 	if ( key in goalsObject )
@@ -152,7 +153,7 @@ function find_Default_Or_Newewst_Goal( key ) {
 	else if ( keyOfDefault in goalsObject )
 		return keyOfDefault;
 	else
-		for ( var goal of Object.values( goalsObject ) )
+		for ( var goal of toDisplay )
 			if ( latestUpdate < goal.updated_at ) {
 				latestUpdate = goal.updated_at;
 				key = goal.id;
@@ -212,12 +213,6 @@ function getShowable() {
 
 	return goals;
 }
-function deleteDeadGoals( goals, now ) {
-	// TODO: test if this dead goal removing code works
-	for ( var key in goals )
-		if ( goals.hasOwnProperty( key ) && goals[ key ].now !== now )
-			delete goals[ key ];
-}
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
 function initialisePopup(){			// Initialises Popup.html
 	loadFromSettings( popupStorageCallback );
@@ -238,7 +233,7 @@ function initialisePopup(){			// Initialises Popup.html
 
 	// Dealine Updater
 	// TODO: Dynamically set Interval rate based on Deadline duration
-	setInterval( updateDeadline, ms );
+	setInterval( updateDeadline, MS );
 }
 function popupStorageCallback( items ) {
 	if ( !UName || !token )
@@ -281,20 +276,11 @@ function getGoals_onFail( message ) {
 
 	log( `${ message }. ${ _i( 'Using offline data oly' ) }` );
 }
-function initialiseView( keyToUse ){		// Initialise the display
-	// Goal Selector
-	if ( DisplayArray.length > 1 )
-		createGoalSelector();
-
-
-	// Load default goal
-	displayGoal( keyToUse );
-}
 function displayGoal( key ) {
 	currentGoalId = find_Default_Or_Newewst_Goal( key );
 
 	var goal = currentGoal();
-	var urlroot = `${ beeURL }${ UName }/${ goal.slug }`;
+	var urlroot = `${ BEE_URL }${ UName }/${ goal.slug }`;
 
 	// Load Image
 	loadImageFromMemory( goal.id );
@@ -331,8 +317,8 @@ function setMetaData( goal ) {
 	var updated	= countdown( goal.updated_at, null, null, 1 ).toString();
 	var start	= `${ ISODate( goal.initday ) } - ${ goal.initval }`;
 	var now		= `${ ISODate( goal.curday ) } - ${ goal.curval }`;
-	var target	= `${ ISODate( lastRoad[ 0 ] * ms ) } - ${ lastRoad[ 1 ] }`;
-	var targetCD= countdown( lastRoad[ 0 ] * ms, null, null, 2 ).toString();
+	var target	= `${ ISODate( lastRoad[ 0 ] * MS ) } - ${ lastRoad[ 1 ] }`;
+	var targetCD= countdown( lastRoad[ 0 ] * MS, null, null, 2 ).toString();
 
 	byid( 'LastUpdateDate'	).textContent = _i( 'LastUpdate', updated );
 	byid( 'Info_Start'		).textContent = start;
@@ -594,7 +580,7 @@ function saveOptions() {
 	// Authenticate the credentials are valid
 	xhrHandler( {
 		onSuccess: saveOptions_authSuccess,
-		onFail: _ => log( _i( '404: Check details try again' ), 60 * ms )
+		onFail: _ => log( _i( '404: Check details try again' ), 60 * MS ),
 		onOffline: _ => log( 'Currently offline, You need to be onlie to save yur details' ), // TODO: localisation
 	} );
 }
@@ -656,7 +642,7 @@ function makeListItem( goal ) {
 	var pack = { slug, item };
 
 	var title = makeListLink( 'title', `title`, goal.title, pack );
-		title.href = `${ beeURL }${ UName }/${ slug }/`;
+		title.href = `${ BEE_URL }${ UName }/${ slug }/`;
 	var defa = makeListLink( 'default', `defaultBtn`, '-', pack );
 	var hide = makeListLink( 'hide', `HideBtn`, goal.Notify, pack );
 	var notify = makeListLink( 'notify', `NotifyBtn`, goal.Show, pack );
