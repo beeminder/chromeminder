@@ -26,6 +26,7 @@ var elementList = [];
  * @function xhrHandler
  * @param {object} args - Object containing instructions
  * @param {string} args.url - Salt for specific API calls
+ * @param {array} args.parameters - An array of objects that represent API parameters
  * @param {function} args.onSuccess - What to do when successful request has been made
  * @param {function} args.onOffline - What to do when offline
  * @param {function} args.onFail - What to do when a 404 has been given
@@ -39,10 +40,20 @@ function xhrHandler( args ) {
 		return;
 	}
 
+	var url = get_apiurl( args.url );
+
+	if ( args.parameters )
+		url = args.parameters.reduce(
+			( str, tuple ) => `${ str }&${ tuple[ 0 ] }=${ tuple[ 1 ] }`,
+			url
+		);
+
+	console.log( url );
+
 	// HTTP request
 	var xhr = new XMLHttpRequest();
 		xhr.onload = LoadEvent;
-		xhr.open( "GET", get_apiurl( args.url ) );
+		xhr.open( "GET", url );
 		xhr.send();
 
 	function LoadEvent() {
@@ -55,7 +66,7 @@ function xhrHandler( args ) {
 			return xhr.abort();
 		}
 
-		if ( xhr.status === 200 )
+		if ( xhr.status === 200 && isFunc( args.onSuccess ) )
 			args.onSuccess( response );
 	}
 }
