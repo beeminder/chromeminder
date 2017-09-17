@@ -236,7 +236,23 @@ function initialisePopup(){			// Initialises Popup.html
 				onOffline: getGoals_onFail.bind( null, 'No connection available' )
 			} );
 	} );
+	// Populates text and RefreshAction listener in Menu Box
+	byid( 'ButtonGoal'		).textContent = _i( 'GOTO' );
+	byid( 'ButtonRefresh'	).textContent = _i( 'Refresh' );
+	byid( 'ButtonData'		).textContent = _i( 'Data' );
+	byid( 'ButtonSettings'	).textContent = _i( 'Settings' );
+	byid( 'OptLink'			).textContent = _i( 'Options' );
+	byid( 'countdownHeading').textContent = _i( 'Deadline' );
+	byid( 'bareMinHeading'	).textContent = _i( 'Deadline' );
+	byid( 'Label_Start'		).textContent = _i( 'Now' );
+	byid( 'Label_Now'		).textContent = _i( 'Start' );
+	byid( 'Label_Target'	).textContent = _i( 'Target' );
+	addClick( 'ButtonRefresh', _ => refreshGoal() );
+	addClick( 'datapointRetry', _ => getDatapoints( currentGoal() ) );
 
+	// Dealine Updater
+	// TODO: Dynamically set Interval rate based on Deadline duration
+	setInterval( updateDeadline, ms );
 }
 function getGoals_onSuccess( response ) {
 	var now = Date.now();
@@ -283,28 +299,6 @@ function initialiseView( keyToUse ){		// Initialise the display
 	if ( DisplayArray.length > 1 )
 		createGoalSelector();
 
-	// Populates text and RefreshAction listener in Menu Box
-	byid( 'ButtonGoal'		).textContent = _i( 'GOTO' );
-	byid( 'ButtonRefresh'	).textContent = _i( 'Refresh' );
-	byid( 'ButtonData'		).textContent = _i( 'Data' );
-	byid( 'ButtonSettings'	).textContent = _i( 'Settings' );
-	byid( 'OptLink'			).textContent = _i( 'Options' );
-	byid( 'ButtonRefresh'	).addEventListener( 'click', _ => refreshGoal() );
-
-	// Headings
-	byid( 'countdownHeading'	).textContent = _i( 'Deadline' );
-	byid( 'bareMinHeading'		).textContent = _i( 'Deadline' );
-
-	// Dealine Updater
-	// TODO: Dynamically set Interval rate based on Deadline duration
-	setInterval( updateDeadline, ms );
-
-	// Populates meta-data
-	byid( 'Label_Start'		).textContent = _i( 'Now' );
-	byid( 'Label_Now'		).textContent = _i( 'Start' );
-	byid( 'Label_Target'	).textContent = _i( 'Target' );
-
-	addClick( 'datapointRetry', _ => getDatapoints( currentGoal() ) );
 
 	// Load default goal
 	displayGoal( keyToUse );
