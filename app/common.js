@@ -639,6 +639,21 @@ function makeListLink( className, id, text, { slug, item } ) {
 
 	return elem;
 }
+/* --- --- --- ---		Developer Functions			--- --- --- --- */
+function developerInfo() {
+	chrome.storage.sync.getBytesInUse(
+		[ 'username', 'token', 'KeyedData', 'keyOfDefault', ],
+		value => logStorageInfo( value, chrome.storage.sync )
+	);
+	chrome.storage.local.getBytesInUse(
+		[ 'KeyedImageArray', ],
+		value => logStorageInfo( value, chrome.storage.local )
+	);
+}
+function logStorageInfo( value, sa ) {
+	console.log( 'Bytes in use in sync storage area : ' + value );
+	console.log( `Which is ${ ( value / sa.QUOTA_BYTES ) * 100 }% of storage` );
+}
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
 function processGoal( goal, now ) {
 	var id = goal.id;
