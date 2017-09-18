@@ -16,7 +16,7 @@
 		"no-unused-vars": [
 			"warn",
 			{
-				"varsIgnorePattern" : "initialisePopup|initialiseOptions|ClearData|_i",
+				"varsIgnorePattern" : "initialisePopup|initialiseOptions|developerInfo|_i",
 				"args" : "none",
 				"vars" : "local"
 			}

@@ -113,6 +113,8 @@ var ISODate = date => ( new Date( date ) ).toISOString().substring( 0, 10 );
 var currentGoal = _ => goalsObject[ currentGoalId ];
 var isFunc = func => typeof func === 'function';
 var delay = i => 2.5 * MS * Math.pow( 2, ( i - 1 ) );
+var roadTransform = ([ time, goal, rate ]) => ({ time: time * MS, goal, rate });
+var countdownUnits = ( value, units ) => countdown( value, null, null, units );
 var once = ( target, type, func ) =>
 	target.addEventListener( type, function listener( e ) {
 		target.removeEventListener( type, listener );
@@ -312,13 +314,13 @@ function displayGoal( key ) {
 	log( _i( "Output Set", currentGoalId ) );
 }
 function setMetaData( goal ) {
-	var lastRoad = goal.fullroad[ goal.fullroad.length - 1 ];
+	var lastRoad = roadTransform( goal.fullroad[ goal.fullroad.length - 1 ] );
 
-	var updated	= countdown( goal.updated_at, null, null, 1 ).toString();
+	var updated	= countdownUnits( goal.updated_at, 1 ).toString();
 	var start	= `${ ISODate( goal.initday ) } - ${ goal.initval }`;
 	var now		= `${ ISODate( goal.curday ) } - ${ goal.curval }`;
-	var target	= `${ ISODate( lastRoad[ 0 ] * MS ) } - ${ lastRoad[ 1 ] }`;
-	var targetCD= countdown( lastRoad[ 0 ] * MS, null, null, 2 ).toString();
+	var target	= `${ ISODate( lastRoad.time ) } - ${ lastRoad.goal }`;
+	var targetCD= countdownUnits( lastRoad.time, 2 ).toString();
 
 	byid( 'LastUpdateDate'	).textContent = _i( 'LastUpdate', updated );
 	byid( 'Info_Start'		).textContent = start;
