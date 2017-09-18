@@ -190,6 +190,48 @@ function processRawGoals( array, object ) {
 
 	saveGoals( _i( "Goal data has been saved" ) );
 }
+function processGoal( goal, now ) {
+	var id = goal.id;
+
+	var old = id in goalsObject
+		? goalsObject[ id ]
+		: { // TODO: Implement a Default options set
+			dataPoints: [],
+			notify: true,
+			show: true
+		};
+
+	var points = goal.dataPoints ? goal.dataPoints : old.dataPoints;
+
+	var ret = {
+		slug		: goal.slug,
+		title		: goal.title,
+		description	: goal.description,
+		id			: goal.id,
+		limsum		: goal.limsum,
+		initval		: goal.initval,
+		curval		: goal.curval,
+		fullroad	: goal.fullroad,
+		graph_url	: goal.graph_url,
+		thumb_url	: goal.thumb_url,
+		autodata	: goal.autodata,
+
+		losedate	: goal.losedate		* MS,
+		updated_at	: goal.updated_at	* MS,
+		initday		: goal.initday		* MS,
+		curday		: goal.curday		* MS,
+		lastday		: goal.lastday		* MS,
+
+		dataPoints	: points,
+
+		notify		:	old.notify,
+		show		:	old.show,
+	};
+
+	if ( now ) ret.now = now;
+
+	return ret;
+}
 function getShowable() {
 	var goals = Object.values( goalsObject );
 		goals.sort( ( a, b ) => {
@@ -283,14 +325,26 @@ function displayGoal( key ) {
 
 	var goal = currentGoal();
 	var urlroot = `${ BEE_URL }${ UName }/${ goal.slug }`;
+	var lastRoad = roadTransform( goal.fullroad[ goal.fullroad.length - 1 ] );
+
+	var updated	= countdownUnits( goal.updated_at, 1 ).toString();
+	var start	= `${ ISODate( goal.initday ) } - ${ goal.initval }`;
+	var now		= `${ ISODate( goal.curday ) } - ${ goal.curval }`;
+	var target	= `${ ISODate( lastRoad.time ) } - ${ lastRoad.goal }`;
+	var targetCD= countdownUnits( lastRoad.time, 2 ).toString();
 
 	// Load Image
 	loadImageFromMemory( goal.id );
 	imageLoader( goal );
 
 	// Populate content
-	byid( 'GoalLoc'	).textContent = goal.title;
-	byid( 'limsum'	).textContent = goal.limsum;
+	byid( 'GoalLoc'			).textContent = goal.title;
+	byid( 'limsum'			).textContent = goal.limsum;
+	byid( 'LastUpdateDate'	).textContent = _i( 'LastUpdate', updated );
+	byid( 'Info_Start'		).textContent = start;
+	byid( 'Info_Now'		).textContent = now;
+	byid( 'Info_Target'		).textContent = target;
+	byid( 'Info_Countdown'	).textContent = targetCD;
 
 	// Set Links
 	byid( 'ButtonGoal'		).href = urlroot;
@@ -304,29 +358,10 @@ function displayGoal( key ) {
 
 	// Stop the refresh recursion if it's set
 	clearTimeout( timeoutRefresh );
-
-	// Set the deadline colour TODO move to DisplayDeadline()
-	setMetaData( goal );
-
 	getDatapoints( goal );
 
 	// Inform user / Log event
 	log( _i( "Output Set", currentGoalId ) );
-}
-function setMetaData( goal ) {
-	var lastRoad = roadTransform( goal.fullroad[ goal.fullroad.length - 1 ] );
-
-	var updated	= countdownUnits( goal.updated_at, 1 ).toString();
-	var start	= `${ ISODate( goal.initday ) } - ${ goal.initval }`;
-	var now		= `${ ISODate( goal.curday ) } - ${ goal.curval }`;
-	var target	= `${ ISODate( lastRoad.time ) } - ${ lastRoad.goal }`;
-	var targetCD= countdownUnits( lastRoad.time, 2 ).toString();
-
-	byid( 'LastUpdateDate'	).textContent = _i( 'LastUpdate', updated );
-	byid( 'Info_Start'		).textContent = start;
-	byid( 'Info_Now'		).textContent = now;
-	byid( 'Info_Target'		).textContent = target;
-	byid( 'Info_Countdown'	).textContent = targetCD;
 }
 function refreshGoal( i ) {	// Refresh the current goals data
 	var req = {};
