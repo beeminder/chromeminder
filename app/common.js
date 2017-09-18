@@ -89,6 +89,9 @@ function log( text, time ){
 		time ? time : 10 * MS
 	);
 }
+/**
+ * Loads settings and cahced data, populates volatile memory then callsback
+ */
 function loadFromSettings( cb ) {
 	chrome.storage.sync.get(
 		{ // Data to retrieve
@@ -115,20 +118,26 @@ var isFunc = func => typeof func === 'function';
 var delay = i => 2.5 * MS * Math.pow( 2, ( i - 1 ) );
 var roadTransform = ([ time, goal, rate ]) => ({ time: time * MS, goal, rate });
 var countdownUnits = ( value, units ) => countdown( value, null, null, units );
+/** One time event lister */
 var once = ( target, type, func ) =>
 	target.addEventListener( type, function listener( e ) {
 		target.removeEventListener( type, listener );
 
 		func( e );
 	} );
+/** Saves goal data and informs user of success */
 var saveGoals = message =>
 	chrome.storage.sync.set(
 		{ KeyedData: goalsObject },
 		_ => { if ( message ) log( message ); }
 	);
+/** Returns API URL */
 var get_apiurl = salt =>
 	`${ BEE_URL }api/v1/users/${ UName }${ salt ? `/${ salt }` : '' }.json?auth_token=${ token }`;
 
+/**
+ * Abstraction that ataches click enent listener
+ */
 function addClick( elem, func ) {
 	if ( typeof elem === 'string' )
 		elem = byid( elem );
@@ -146,6 +155,9 @@ function clearBodyAppendLink( message, url ) {
 	document.body.innerHTML = '';
 	document.body.appendChild( a );
 }
+/**
+ * Returns string that represents a is used to access goals object, depending on if argument is valid, default key is valid, else the newest key will be returned
+ */
 function find_Default_Or_Newewst_Goal( key ) {
 	var toDisplay = getShowable();
 	var latestUpdate = 0;
@@ -166,6 +178,9 @@ function find_Default_Or_Newewst_Goal( key ) {
 
 	throw new Error( `The goal key is invalid ${ key }` );
 }
+/**
+ * Replacase current goal with leaner object, then disaplys and saves
+ */
 function replaceCurrentGoal( replacement, message ) {
 	if ( replacement.id !== currentGoalId )
 		throw new Error( `Trying to replace a goal with a non matching goal` );
@@ -174,6 +189,9 @@ function replaceCurrentGoal( replacement, message ) {
 	displayGoal( currentGoalId );
 	saveGoals( message );
 }
+/**
+ * Processes an array of goals into a leaner object of goals, then saves
+ */
 function processRawGoals( array, object ) {
 	var now = Date.now();
 
@@ -190,6 +208,10 @@ function processRawGoals( array, object ) {
 
 	saveGoals( _i( "Goal data has been saved" ) );
 }
+/**
+ * Returns a goal-object optimsed for limited storage space
+ * Preseving existing options
+ */
 function processGoal( goal, now ) {
 	var id = goal.id;
 
@@ -232,6 +254,9 @@ function processGoal( goal, now ) {
 
 	return ret;
 }
+/**
+ * Returns array of goals to display
+ */
 function getShowable() {
 	var goals = Object.values( goalsObject );
 		goals.sort( ( a, b ) => {
@@ -258,7 +283,10 @@ function getShowable() {
 	return goals;
 }
 /* --- --- --- ---		Popup Functions				--- --- --- --- */
-function initialisePopup(){			// Initialises Popup.html
+/**
+ * Calls storage loader and populates DOM with stateless text
+ */
+function initialisePopup(){
 	loadFromSettings( popupStorageCallback );
 
 	// Populates text and RefreshAction listener in Menu Box
@@ -279,6 +307,9 @@ function initialisePopup(){			// Initialises Popup.html
 	// TODO: Dynamically set Interval rate based on Deadline duration
 	setInterval( updateDeadline, MS );
 }
+/**
+ * Validates username, makes API request and displays cached goals
+ */
 function popupStorageCallback( items ) {
 	if ( !UName || !token )
 		return clearBodyAppendLink(
@@ -298,6 +329,9 @@ function popupStorageCallback( items ) {
 	displayGoal();
 	createGoalSelector( getShowable() );
 }
+/**
+ * API goal endpoint handler
+ */
 function getGoals_onSuccess( response ) {
 	if ( response.length === 0 )
 		return clearBodyAppendLink( 'There are no goals available' ); // TODO: localisation
@@ -307,6 +341,9 @@ function getGoals_onSuccess( response ) {
 	displayGoal();
 	createGoalSelector( getShowable() );
 }
+/**
+ * Notifies user of inabilty to contact API
+ */
 function getGoals_onFail( message ) {
 	message = _i( message );
 
@@ -320,6 +357,10 @@ function getGoals_onFail( message ) {
 
 	log( `${ message }. ${ _i( 'Using offline data oly' ) }` );
 }
+/**
+ * Populates DOM with goal specific information.
+ * Also cancles any Refresh calls for current goal
+ */
 function displayGoal( key ) {
 	currentGoalId = find_Default_Or_Newewst_Goal( key );
 
@@ -363,6 +404,9 @@ function displayGoal( key ) {
 	// Inform user / Log event
 	log( _i( "Output Set", currentGoalId ) );
 }
+/**
+ * Recursive function initally calling calling Refresh enpoint, then calling goal enpoint
+ */
 function refreshGoal( i ) {	// Refresh the current goals data
 	var req = {};
 	var goal = currentGoal();
@@ -382,6 +426,7 @@ function refreshGoal( i ) {	// Refresh the current goals data
 	xhrHandler( req );
 }
 /**
+ * Handler for refresh call that on successful response watches for new data
  * @param {boolean} response
  */
 function refreshGoal_RefreshCall( response ) {
@@ -392,6 +437,11 @@ function refreshGoal_RefreshCall( response ) {
 	else
 		log( _i( 'Beeminder Sever Says no' ) );
 }
+/**
+ * Handler looking for change in goal data enpoint.
+ * Updating goal data and notifying user.
+ * Or, Failing aftere too many requests
+ */
 function refreshGoal_GoalGet( i, goal ) {
 	log( `iteration ${ i }` );
 
@@ -413,6 +463,9 @@ function refreshGoal_GoalGet( i, goal ) {
 			_i( 'Graph Refreshed', i, currentGoal().updated_at )
 		);
 }
+/**
+ * Creates goal selector dropdown
+ */
 function createGoalSelector( toDisplay ) {
 	if ( toDisplay.length < 1 )
 		return;
@@ -427,6 +480,10 @@ function createGoalSelector( toDisplay ) {
 
 	target.appendChild( frag );
 }
+/**
+ * Creates indiviual element used to select goals
+ */
+
 function createGoalSelctorLink( goal ) {
 	var a = document.createElement( 'a' );
 		a.className = 'GoalIDBtn';
@@ -464,6 +521,10 @@ function updateDeadline(){
 
 	countdownDisplay.style.backgroundColor = colour;
 }
+/**
+ * Loads image as string, to diplay to user and to store in local stoarage
+ * ... raw images cannot be stored in storage areas
+ */
 function imageLoader( goal, dontSet ) {	// Loads the image as string
 	var url = goal.graph_url;
 	var key = goal.id;
@@ -515,10 +576,16 @@ function imageLoader( goal, dontSet ) {	// Loads the image as string
 
 	imgxhr.send();
 }
+/**
+ * Loads image data from storage
+ */
 function loadImageFromMemory( key ) {
 	log( _i( 'This graph was loaded from offline storage' ) );
 	accessImageArray( _ => byid( 'graph-img' ).src = KeyedImageArray[ key ] );
 }
+/**
+ * Wrapper for: ___chrome.storage.local.get___. That passes KeyedImageArray to callback
+ */
 function accessImageArray( cb ) {
 	if ( KeyedImageArray )
 		cb( KeyedImageArray );
@@ -535,6 +602,12 @@ function accessImageArray( cb ) {
 			}
 		);
 }
+/**
+ * Calls API endpoint for datapoints.
+ * Inserts response into goal object,
+ * saves data to storage
+ * and defaults to displaying new data to user
+ */
 function getDatapoints( goal, dontDisplay ) {
 	var display = !dontDisplay;
 	var slug = goal.slug;
@@ -570,6 +643,9 @@ function getDatapoints( goal, dontDisplay ) {
 	// API requsest for datapoints
 	xhrHandler( request );
 }
+/**
+ * Populates DOM with datapoint information
+ */
 function displayDatapoints( goal, error ) {
 	var points = goal.dataPoints;
 
@@ -594,6 +670,9 @@ function displayDatapoints( goal, error ) {
 		retry.classList.add( 'hide' );
 }
 /* --- --- --- ---		Options Functions			--- --- --- --- */
+/**
+ * Initialisation function used for options
+ */
 function initialiseOptions(){
 	loadFromSettings( function ( items ) {
 		byid( "username" ).value = UName;
@@ -610,6 +689,9 @@ function initialiseOptions(){
 	addClick( 'save', saveOptions );
 	addClick( 'clear', _ => chrome.storage.sync.clear() );
 }
+/**
+ * Listener function that call API to authenticate user details
+ */
 function saveOptions() {
 	UName = document.getElementById( "username"	).value;
 	token = document.getElementById( "token"	).value;
@@ -621,6 +703,9 @@ function saveOptions() {
 		onOffline: _ => log( 'Currently offline, You need to be onlie to save yur details' ), // TODO: localisation
 	} );
 }
+/**
+ * If saveOptions authentication is successful, save options and notify user
+ */
 function saveOptions_authSuccess( response ) {
 	chrome.storage.sync.set(
 		{
@@ -638,6 +723,9 @@ function saveOptions_authSuccess( response ) {
 		} );
 	// }
 }
+/**
+ * Listener that changes which goal is displayed first
+ */
 function changeDefaultKey( key ) {
 	if ( keyOfDefault in goalsObject )
 		elementList[ keyOfDefault ].defa.textContent = "-";
@@ -650,6 +738,9 @@ function changeDefaultKey( key ) {
 		_ => log( 'Default Saved' ) // TODO: Localisation
 	);
 }
+/**
+ * Creates a list
+ */
 function drawList() {
 	var frag = document.createDocumentFragment();
 
@@ -668,6 +759,9 @@ function drawList() {
 		// TODO: No default code
 	}
 }
+/**
+ * Creates a row in the list
+ */
 function makeListItem( goal ) {
 	var slug = goal.slug;
 	var id = goal.id;
@@ -690,6 +784,9 @@ function makeListItem( goal ) {
 
 	return elementList[ id ] = { item, title, defa, hide, notify, };
 }
+/**
+ * Creates singular element for use in list row
+ */
 function makeListLink( className, id, text, { slug, item } ) {
 	var elem = document.createElement( 'a' );
 		elem.className = className;
@@ -701,6 +798,9 @@ function makeListLink( className, id, text, { slug, item } ) {
 	return elem;
 }
 /* --- --- --- ---		Developer Functions			--- --- --- --- */
+/**
+ * Used to assess extensions footprint
+ */
 function developerInfo() {
 	chrome.storage.sync.getBytesInUse(
 		[ 'username', 'token', 'KeyedData', 'keyOfDefault', ],
