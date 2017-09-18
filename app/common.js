@@ -443,15 +443,12 @@ function refreshGoal_RefreshCall( response ) {
  * Or, Failing aftere too many requests
  */
 function refreshGoal_GoalGet( i, goal ) {
-	log( `iteration ${ i }` );
+	var nextDelay = delay( i );
+	var nextI = i + 1;
 
 	if ( goal.updated_at === currentGoal().updated_at ) {
-		if ( i <= 6 ) {
-			var nextDelay = delay( i );
-			var nextI = i + 1;
-
+		if ( i <= 6 )
 			timeoutRefresh = setTimeout( _ => refreshGoal( nextI ), nextDelay );
-		}
 
 		else
 			log( _i( 'The goal seems not to have updated, aborting refresh' ) );
@@ -499,7 +496,7 @@ function createGoalSelctorLink( goal ) {
 function updateDeadline(){
 	var goal = currentGoal();
 
-	if ( !goal ) return
+	if ( !goal ) return;
 
 	var losedate = goal.losedate;
 	var cd = countdown( losedate, null, null, 2 );
@@ -595,7 +592,7 @@ function accessImageArray( cb ) {
 			items => {
 				KeyedImageArray = items.KeyedImageArray;
 
-				if (!KeyedImageArray)
+				if ( !KeyedImageArray )
 					KeyedImageArray = {};
 
 				cb( KeyedImageArray );
@@ -816,49 +813,3 @@ function logStorageInfo( value, sa ) {
 	console.log( `Which is ${ ( value / sa.QUOTA_BYTES ) * 100 }% of storage` );
 }
 /* --- --- --- ---		Unsorted Functions			--- --- --- --- */
-/**
- * Returns a goal-object optimsed for limited storage space
- * Preseving existing options
- */
-function processGoal( goal, now ) {
-	var id = goal.id;
-
-	var old = id in goalsObject
-		? goalsObject[ id ]
-		: { // TODO: Implement a Default options set
-			dataPoints: [],
-			notify: true,
-			show: true
-		};
-
-	var points = goal.dataPoints ? goal.dataPoints : old.dataPoints;
-
-	var ret = {
-		slug		: goal.slug,
-		title		: goal.title,
-		description	: goal.description,
-		id			: goal.id,
-		limsum		: goal.limsum,
-		initval		: goal.initval,
-		curval		: goal.curval,
-		fullroad	: goal.fullroad,
-		graph_url	: goal.graph_url,
-		thumb_url	: goal.thumb_url,
-		autodata	: goal.autodata,
-
-		losedate	: goal.losedate		* MS,
-		updated_at	: goal.updated_at	* MS,
-		initday		: goal.initday		* MS,
-		curday		: goal.curday		* MS,
-		lastday		: goal.lastday		* MS,
-
-		dataPoints	: points,
-
-		notify		:	old.notify,
-		show		:	old.show,
-	};
-
-	if ( now ) ret.now = now;
-
-	return ret;
-}
